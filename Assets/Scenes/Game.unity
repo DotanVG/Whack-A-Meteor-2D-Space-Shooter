@@ -133,7 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 843986296}
   - component: {fileID: 843986295}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Star Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -313,7 +313,8 @@ GameObject:
   - component: {fileID: 1338030148}
   - component: {fileID: 1338030150}
   - component: {fileID: 1338030151}
-  m_Layer: 0
+  - component: {fileID: 1338030152}
+  m_Layer: 8
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -462,8 +463,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   movementSpeed: 3
-  projectilePrefab: {fileID: 0}
-  projectileSpawnPoint: {fileID: 0}
+  projectilePrefab: {fileID: 4685063427884634883, guid: 612ed831ed318294db9602f5d15b60cc, type: 3}
+  projectileSpawnPoint: {fileID: 1338030147}
 --- !u!96 &1338030151
 TrailRenderer:
   serializedVersion: 3
@@ -577,6 +578,18 @@ TrailRenderer:
   m_Autodestruct: 0
   m_Emitting: 1
   m_ApplyActiveColorSpace: 1
+--- !u!114 &1338030152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1338030145}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b830310794c22ed4398f97dc23f50f0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

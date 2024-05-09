@@ -18,47 +18,62 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
-void Update()
-{
-    Vector3 MousePos = Input.mousePosition;
-    MousePos = Camera.main.ScreenToWorldPoint(MousePos);    
+    private float shootInterval = 0.2f;
+    private float lastShootTime = 0.0f;
 
-    Vector2 rotation = new Vector2(MousePos.x - transform.position.x, MousePos.y - transform.position.y);
-
-    transform.up = rotation;
-
-    if (Input.GetKey(KeyCode.Space))
+    void Update()
     {
-        // Check if the left shift key is pressed and if enough time has passed since the last boost
+        // Rotation control
+        if (Input.GetKey(KeyCode.A))
+        {
+            transform.Rotate(0, 0, 1); // Adjust rotation speed as needed
+        }
+        if (Input.GetKey(KeyCode.D))
+        {
+            transform.Rotate(0, 0, -1); // Adjust rotation speed as needed
+        }
+
+        // Movement control
+        if (Input.GetKey(KeyCode.W))
+        {
+            rb.velocity = transform.up * movementSpeed;
+        }
+
+        // Rapid deceleration with 'S'
+        if (Input.GetKey(KeyCode.S))
+        {
+            rb.velocity *= 0.5f; // Adjust deceleration factor as needed for more responsiveness
+        }
+
+        // Maintain speed with Shift
         if (Input.GetKey(KeyCode.LeftShift) && Time.time - lastBoostTime >= boostCooldown)
         {
-            // Apply the boost
             rb.velocity = transform.up * movementSpeed * boostMultiplier;
-
-            // Update the last boost time and the boost end time
             lastBoostTime = Time.time;
             boostEndTime = Time.time + boostDuration;
         }
         else if (Time.time < boostEndTime)
         {
-            // If the boost is still active, keep the boosted velocity
+            // Continue boosted velocity
             rb.velocity = transform.up * movementSpeed * boostMultiplier;
         }
-        else
+        else if (!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.S))
         {
-            rb.velocity = transform.up * movementSpeed;
+            // Gradual velocity reduction
+            rb.velocity *= 0.999f;
+        }
+
+        // Shooting with Space
+        if (Input.GetKey(KeyCode.Space) && Time.time - lastShootTime >= shootInterval)
+        {
+            Shoot();
+            lastShootTime = Time.time;
         }
     }
-    else
-    {
-        // Reduce the velocity very gradually to simulate floating
-        rb.velocity *= 0.999f;
-    }
-}
 
     void Shoot()
     {
-        // Instantiate a projectile at the spawn point
-        Instantiate(projectilePrefab, projectileSpawnPoint.position, Quaternion.identity);
+        // Instantiate a projectile at the spawn point with the player's rotation
+        Instantiate(projectilePrefab, projectileSpawnPoint.position, transform.rotation);
     }
 }
