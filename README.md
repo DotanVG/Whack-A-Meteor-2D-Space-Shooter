@@ -53,7 +53,15 @@ What you need to run the game:
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details.
 
-## Contributing
+## 🎨 Assets
+
+The game assets used in this project are from [Kenney's Space Shooter Redux](https://kenney.nl/assets/space-shooter-redux). These assets are licensed under the Creative Commons CC0 license.
+
+<div align="center">
+   <a href="https://kenney.nl"><img src="https://kenney.nl/data/img/logo.png" alt="Kenney.nl" width="100"/></a>
+</div>
+
+## 🌟 Contributing
 
 While this project is a personal showcase of my journey in game development, I welcome feedback and contributions that can improve the game and its features.
 <div align="center">
