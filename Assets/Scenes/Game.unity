@@ -122,37 +122,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &178919952
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 178919953}
-  m_Layer: 0
-  m_Name: MediumBrownMeteor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &178919953
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 178919952}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.7174942, y: 1.0300748, z: -0.01531306}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &829610958
 GameObject:
   m_ObjectHideFlags: 0
@@ -539,7 +508,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -946,9 +915,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f30a180d0702a246b992730f4c7afb8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bigMeteorPrefab: {fileID: 2694827308199976832, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
+  bigBrownMeteors:
+  - {fileID: 2694827308199976832, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
+  - {fileID: 7146316073236606956, guid: ece085e4ee8aa06419b7045501e9cb28, type: 3}
+  - {fileID: 4078897165549834831, guid: 7b6cdd0711759e340bc939ac92ea57ea, type: 3}
+  - {fileID: 7764180372039332984, guid: c3ef8eaedc514e444a7c43e917232ea0, type: 3}
+  mediumBrownMeteors:
+  - {fileID: 5818609444630527225, guid: 15d1d1d56d45e024780320511dd35c7e, type: 3}
+  - {fileID: 7484124076825019540, guid: 7488527cbb835064e88c5515fe4359f5, type: 3}
+  smallBrownMeteors:
+  - {fileID: 4345434088806975947, guid: 6370a33ab6ce53149909b22cf933b57a, type: 3}
+  - {fileID: 1930227008665753553, guid: 201be8580279c8243b005e4b4b2117b8, type: 3}
+  tinyBrownMeteors:
+  - {fileID: 835060452514678439, guid: 5a80b74e7e8a55b4b85537060d8e7215, type: 3}
+  - {fileID: 1472119772354446975, guid: 7af5b74c4b815d643bdfa5545ce6d0a6, type: 3}
+  bigGreyMeteors:
+  - {fileID: 6174529001858744821, guid: 3b070e5fb914cac4a8410bebb2c9dc5c, type: 3}
+  - {fileID: 6174529001858744821, guid: 0d411953ff326cd4f89683ed0f605f94, type: 3}
+  - {fileID: 6174529001858744821, guid: 75071f679a3889846b5a45fed3e027ce, type: 3}
+  - {fileID: 6174529001858744821, guid: fd139df5f9b6df5499ca4cc354eae6c4, type: 3}
+  mediumGreyMeteors:
+  - {fileID: 5078826265322672776, guid: cca0feb9b9ea0674fbd00cb8524db87e, type: 3}
+  - {fileID: 7678333234513067925, guid: 7d366a84d9422104e8136e1b6d70474d, type: 3}
+  smallGreyMeteors:
+  - {fileID: 3948544595661446418, guid: f82ff9283408bb04d842ba1945cc9a6b, type: 3}
+  - {fileID: 4478742745821336274, guid: aa31210f7b20d5941bd44d5def7aa0df, type: 3}
+  tinyGreyMeteors:
+  - {fileID: 9134278045956844406, guid: 37072b41cb2137142bb031ad56948b8c, type: 3}
+  - {fileID: 1416879137304550627, guid: 23339771129f8ca469ec6e199e32c7ee, type: 3}
   spawnInterval: 1
-  spawnAreaWidth: 10
+  spawnAreaWidth: 20
   spawnHeight: 10
 --- !u!4 &1913219654
 Transform:
@@ -965,94 +961,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1987033810
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1987033811}
-  m_Layer: 0
-  m_Name: SmallBrownMeteor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1987033811
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1987033810}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.7174942, y: 1.0300748, z: -0.01531306}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1860279482740745856
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 2694827308199976832, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
-      propertyPath: m_Name
-      value: BigBrownMeteor
-      objectReference: {fileID: 0}
-    - target: {fileID: 2727537597317454691, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 2.7174942
-      objectReference: {fileID: 0}
-    - target: {fileID: 2727537597317454691, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.0300748
-      objectReference: {fileID: 0}
-    - target: {fileID: 2727537597317454691, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0.01531306
-      objectReference: {fileID: 0}
-    - target: {fileID: 2727537597317454691, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2727537597317454691, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2727537597317454691, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2727537597317454691, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2727537597317454691, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2727537597317454691, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2727537597317454691, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 6720d2324bad8ba48a8407bab88a4d2d, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1063,6 +971,3 @@ SceneRoots:
   - {fileID: 1775000692}
   - {fileID: 1834195772}
   - {fileID: 1913219654}
-  - {fileID: 1860279482740745856}
-  - {fileID: 178919953}
-  - {fileID: 1987033811}

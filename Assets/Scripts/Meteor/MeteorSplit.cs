@@ -2,38 +2,71 @@ using UnityEngine;
 
 public class MeteorSplit : MonoBehaviour
 {
-    public GameObject mediumMeteorPrefab;
-    public GameObject smallMeteorPrefab;
+    public GameObject[] mediumBrownMeteors;
+    public GameObject[] smallBrownMeteors;
+    public GameObject[] tinyBrownMeteors;
+    public GameObject[] mediumGreyMeteors;
+    public GameObject[] smallGreyMeteors;
+    public GameObject[] tinyGreyMeteors;
 
     public void Split()
     {
-        // Determine which size to split into
-        if (gameObject.CompareTag("BigMeteor"))
+        // Determine which size and color to split into
+        if (gameObject.CompareTag("BigBrownMeteor"))
         {
-            SpawnMediumMeteors();
+            SpawnMeteors(mediumBrownMeteors, "MediumBrownMeteor", 2, 3, smallBrownMeteors);
         }
-        else if (gameObject.CompareTag("MediumMeteor"))
+        else if (gameObject.CompareTag("BigGreyMeteor"))
         {
-            SpawnSmallMeteors();
+            SpawnMeteors(mediumGreyMeteors, "MediumGreyMeteor", 2, 3, smallGreyMeteors);
+        }
+        else if (gameObject.CompareTag("MediumBrownMeteor"))
+        {
+            SpawnMeteors(smallBrownMeteors, "SmallBrownMeteor", 2, 3, tinyBrownMeteors);
+        }
+        else if (gameObject.CompareTag("MediumGreyMeteor"))
+        {
+            SpawnMeteors(smallGreyMeteors, "SmallGreyMeteor", 2, 3, tinyGreyMeteors);
+        }
+        else if (gameObject.CompareTag("SmallBrownMeteor"))
+        {
+            SpawnMeteors(tinyBrownMeteors, "TinyBrownMeteor", 2, 3, null);
+        }
+        else if (gameObject.CompareTag("SmallGreyMeteor"))
+        {
+            SpawnMeteors(tinyGreyMeteors, "TinyGreyMeteor", 2, 3, null);
         }
 
         // Destroy the current meteor
         Destroy(gameObject);
     }
 
-    private void SpawnMediumMeteors()
+    private void SpawnMeteors(GameObject[] meteorArray, string tag, int minCount, int maxCount, GameObject[] nextMeteorArray)
     {
-        for (int i = 0; i < 2; i++)
+        if (meteorArray.Length == 0)
         {
-            Instantiate(mediumMeteorPrefab, transform.position, Quaternion.identity);
+            Debug.LogError("Meteor array is not set up properly!");
+            return;
         }
-    }
 
-    private void SpawnSmallMeteors()
-    {
-        for (int i = 0; i < 2; i++)
+        int count = Random.Range(minCount, maxCount + 1);
+        for (int i = 0; i < count; i++)
         {
-            Instantiate(smallMeteorPrefab, transform.position, Quaternion.identity);
+            int randomIndex = Random.Range(0, meteorArray.Length);
+            GameObject newMeteor = Instantiate(meteorArray[randomIndex], transform.position, Quaternion.identity);
+            newMeteor.tag = tag;
+            Debug.Log("Spawned " + tag + ": " + meteorArray[randomIndex].name);
+
+            if (nextMeteorArray != null)
+            {
+                MeteorSplit splitScript = newMeteor.AddComponent<MeteorSplit>();
+                splitScript.mediumBrownMeteors = mediumBrownMeteors;
+                splitScript.smallBrownMeteors = smallBrownMeteors;
+                splitScript.tinyBrownMeteors = tinyBrownMeteors;
+                splitScript.mediumGreyMeteors = mediumGreyMeteors;
+                splitScript.smallGreyMeteors = smallGreyMeteors;
+                splitScript.tinyGreyMeteors = tinyGreyMeteors;
+            }
         }
     }
 }

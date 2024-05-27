@@ -5,7 +5,14 @@ TagManager:
   serializedVersion: 2
   tags:
   - Projectile
-  - Meteor
+  - BigBrownMeteor
+  - MediumBrownMeteor
+  - SmallBrownMeteor
+  - TinyBrownMeteor
+  - BigGreyMeteor
+  - MediumGreyMeteor
+  - SmallGreyMeteor
+  - TinyGreyMeteor
   layers:
   - Default
   - TransparentFX
