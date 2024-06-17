@@ -26,5 +26,14 @@ public class MeteorMovement : MonoBehaviour
 
         // Rotate the meteor around its own axis
         transform.Rotate(0, 0, rotationSpeed * Time.deltaTime);
+
+        // Destroy the meteor if it goes off-screen
+        if (transform.position.y < -Camera.main.orthographicSize - 1 ||
+            transform.position.y > Camera.main.orthographicSize + 1 ||
+            transform.position.x < -Camera.main.aspect * Camera.main.orthographicSize - 1 ||
+            transform.position.x > Camera.main.aspect * Camera.main.orthographicSize + 1)
+        {
+            Destroy(gameObject);
+        }
     }
 }
