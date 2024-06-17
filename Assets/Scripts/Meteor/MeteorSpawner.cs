@@ -32,10 +32,12 @@ public class MeteorSpawner : MonoBehaviour
         }
     }
 
+    // TODO: Fix the meteors spawn position and remove unnecessary comments and debug logs
     private void SpawnMeteor()
     {
         float randomX = Random.Range(-spawnAreaWidth / 2, spawnAreaWidth / 2);
-        Vector3 spawnPosition = new Vector3(randomX, spawnHeight, 0);
+        Vector3 spawnPosition = new Vector3(0, 0, 0);
+        // Vector3 spawnPosition = new Vector3(randomX, spawnHeight, 0);
 
         // Ensure arrays are not empty
         if (bigBrownMeteors.Length == 0 || mediumBrownMeteors.Length == 0 ||
