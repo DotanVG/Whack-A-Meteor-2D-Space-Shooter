@@ -42,6 +42,9 @@ public class HammerCursorController : MonoBehaviour
             yield return null;
         }
 
+        // Check for meteor hit at the peak of the swing
+        CheckMeteorHit();
+
         // Swing back to the original angle
         elapsedTime = 0f;
         while (elapsedTime < swingDuration)
@@ -54,5 +57,21 @@ public class HammerCursorController : MonoBehaviour
 
         hammerRectTransform.rotation = Quaternion.Euler(0, 0, 0);
         isSwinging = false;
+    }
+
+    private void CheckMeteorHit()
+    {
+        // Perform a raycast from the hammer's position
+        Ray ray = Camera.main.ScreenPointToRay(hammerRectTransform.position);
+        RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
+
+        if (hit.collider != null)
+        {
+            MeteorSplit meteorSplit = hit.collider.GetComponent<MeteorSplit>();
+            if (meteorSplit != null)
+            {
+                meteorSplit.OnHammerHit();
+            }
+        }
     }
 }

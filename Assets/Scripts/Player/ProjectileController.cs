@@ -12,18 +12,6 @@ public class ProjectileController : MonoBehaviour
 
         // Destroy the projectile after 'lifeTime' seconds if it doesn't hit anything
         Destroy(gameObject, lifeTime);
-
-        // Calculate the screen bounds using the camera's viewport
-        Camera mainCamera = Camera.main;
-        if (mainCamera == null)
-        {
-            Debug.LogError("ProjectileController requires a main camera tagged as 'MainCamera'");
-            return;
-        }
-    }
-
-    void Update()
-    {
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -31,20 +19,24 @@ public class ProjectileController : MonoBehaviour
         // Check if the projectile hit an enemy
         if (other.gameObject.CompareTag("Enemy"))
         {
-            // Destroy the projectile
-            Destroy(gameObject);
-
             // TODO: Implement logic for handling enemy hit
             // Add additional code here for what happens when the projectile hits an enemy
+            Destroy(gameObject); // Destroy the projectile
         }
         // Check if the projectile hit a meteor
-        else if (other.gameObject.CompareTag("Meteor"))
+        else if (other.gameObject.CompareTag("BigBrownMeteor") ||
+                 other.gameObject.CompareTag("BigGreyMeteor") ||
+                 other.gameObject.CompareTag("MediumBrownMeteor") ||
+                 other.gameObject.CompareTag("MediumGreyMeteor") ||
+                 other.gameObject.CompareTag("SmallBrownMeteor") ||
+                 other.gameObject.CompareTag("SmallGreyMeteor"))
         {
-            // Destroy the projectile
-            Destroy(gameObject);
-
-            // TODO: Implement logic for handling meteor hit
-            // Add additional code here for what happens when the projectile hits a meteor
+            MeteorSplit meteorSplit = other.gameObject.GetComponent<MeteorSplit>();
+            if (meteorSplit != null)
+            {
+                meteorSplit.OnProjectileHit();
+            }
+            Destroy(gameObject); // Destroy the projectile
         }
     }
 }

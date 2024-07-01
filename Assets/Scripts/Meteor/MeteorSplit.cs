@@ -69,4 +69,25 @@ public class MeteorSplit : MonoBehaviour
             }
         }
     }
+
+    // TODO: Implement method to handle projectile hit
+    public void OnProjectileHit()
+    {
+        // Call Split() method
+        Split();
+        // TODO: Add score
+        // TODO: Play sound effect
+        // TODO: Spawn particle effect
+    }
+
+    // TODO: Implement method to handle hammer hit
+    public void OnHammerHit()
+    {
+        // Call Split() method
+        Split();
+        // TODO: Add score (possibly higher than projectile hit)
+        // TODO: Play hammer hit sound effect
+        // TODO: Spawn hammer hit particle effect
+        // TODO: Apply screen shake
+    }
 }
