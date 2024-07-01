@@ -5,6 +5,7 @@ public class PlayerController : MonoBehaviour
     public float movementSpeed;
     public GameObject projectilePrefab;
     public Transform projectileSpawnPoint;
+    public float rotationSpeed = 100;
 
     private Rigidbody2D rb;
     private float lastBoostTime = -5.0f; // Initialize to -5 so the boost can be used immediately
@@ -26,11 +27,11 @@ public class PlayerController : MonoBehaviour
         // Rotation control
         if (Input.GetKey(KeyCode.A))
         {
-            transform.Rotate(0, 0, 1); // Adjust rotation speed as needed
+            transform.Rotate(0, 0, Time.deltaTime * rotationSpeed); // Adjust rotation speed as needed
         }
         if (Input.GetKey(KeyCode.D))
         {
-            transform.Rotate(0, 0, -1); // Adjust rotation speed as needed
+            transform.Rotate(0, 0, -Time.deltaTime * rotationSpeed); // Adjust rotation speed as needed
         }
 
         // Movement control

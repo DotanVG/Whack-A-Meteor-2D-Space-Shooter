@@ -590,6 +590,7 @@ MonoBehaviour:
   movementSpeed: 3
   projectilePrefab: {fileID: 4685063427884634883, guid: 612ed831ed318294db9602f5d15b60cc, type: 3}
   projectileSpawnPoint: {fileID: 1338030147}
+  rotationSpeed: 100
 --- !u!96 &1338030151
 TrailRenderer:
   serializedVersion: 3
