@@ -276,7 +276,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -393,7 +393,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 8
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -944,8 +944,11 @@ MonoBehaviour:
   - {fileID: 9134278045956844406, guid: 37072b41cb2137142bb031ad56948b8c, type: 3}
   - {fileID: 1416879137304550627, guid: 23339771129f8ca469ec6e199e32c7ee, type: 3}
   spawnInterval: 1
-  spawnAreaWidth: 20
-  spawnHeight: 10
+  ellipseWidthFactor: 2
+  ellipseHeightFactor: 2
+  noiseFactor: 1
+  ellipseResolution: 100
+  ellipseColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
 --- !u!4 &1913219654
 Transform:
   m_ObjectHideFlags: 0
@@ -955,7 +958,7 @@ Transform:
   m_GameObject: {fileID: 1913219652}
   serializedVersion: 2
   m_LocalRotation: {x: 0.08522777, y: 0.44992015, z: -0.63658404, w: 0.6205392}
-  m_LocalPosition: {x: 2.7174942, y: 1.0300748, z: -0.01531306}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.46782908, y: 0.46782908, z: 0.46782908}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -967,7 +970,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 1172052122}
   - {fileID: 843986296}
+  - {fileID: 1913219654}
   - {fileID: 1338030147}
   - {fileID: 1775000692}
   - {fileID: 1834195772}
-  - {fileID: 1913219654}

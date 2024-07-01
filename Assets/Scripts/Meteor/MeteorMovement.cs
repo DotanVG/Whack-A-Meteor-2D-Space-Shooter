@@ -8,15 +8,37 @@ public class MeteorMovement : MonoBehaviour
     private float speed; // Speed of the meteor
     private float rotationSpeed; // Speed and direction of rotation
 
+    // Ellipse parameters
+    private float ellipseWidth;
+    private float ellipseHeight;
+    private Vector3 ellipseCenter;
+
+    // New variables
+    private bool hasEnteredPlayArea = false;
+    private float destroyThreshold = 1.2f; // Slightly larger than the spawn ellipse
+
     void Start()
     {
-        // Assign a random direction and speed when the meteor is instantiated
-        direction = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), 0).normalized;
         speed = Random.Range(minSpeed, maxSpeed);
-        // Assign a random rotation speed between -45 and 45 degrees per second
-        // Negative for counterclockwise, positive for clockwise
         rotationSpeed = Random.Range(-180f, 180f);
-        Debug.Log("Meteor moving with speed: " + speed + " in direction: " + direction + " and rotating at " + rotationSpeed + " degrees per second.");
+
+        // Get ellipse parameters from MeteorSpawner
+        MeteorSpawner spawner = FindObjectOfType<MeteorSpawner>();
+        if (spawner != null)
+        {
+            ellipseWidth = spawner.ellipseWidthFactor * Camera.main.orthographicSize * Camera.main.aspect;
+            ellipseHeight = spawner.ellipseHeightFactor * Camera.main.orthographicSize;
+            ellipseCenter = Camera.main.transform.position;
+        }
+        else
+        {
+            Debug.LogError("MeteorSpawner not found in the scene!");
+        }
+    }
+
+    public void SetInitialDirection(Vector3 initialDirection)
+    {
+        direction = initialDirection.normalized;
     }
 
     void Update()
@@ -27,13 +49,36 @@ public class MeteorMovement : MonoBehaviour
         // Rotate the meteor around its own axis
         transform.Rotate(0, 0, rotationSpeed * Time.deltaTime);
 
-        // Destroy the meteor if it goes off-screen
-        if (transform.position.y < -Camera.main.orthographicSize - 1 ||
-            transform.position.y > Camera.main.orthographicSize + 1 ||
-            transform.position.x < -Camera.main.aspect * Camera.main.orthographicSize - 1 ||
-            transform.position.x > Camera.main.aspect * Camera.main.orthographicSize + 1)
+        // Check if the meteor should be destroyed
+        CheckDestroyCondition();
+    }
+
+    private void CheckDestroyCondition()
+    {
+        if (!hasEnteredPlayArea)
         {
-            Destroy(gameObject);
+            // Check if the meteor has entered the play area
+            if (IsInsideEllipse(1.0f))
+            {
+                hasEnteredPlayArea = true;
+            }
         }
+        else
+        {
+            // Check if the meteor has left the enlarged destroy area
+            if (!IsInsideEllipse(destroyThreshold))
+            {
+                Destroy(gameObject);
+            }
+        }
+    }
+
+    private bool IsInsideEllipse(float threshold)
+    {
+        Vector3 localPos = transform.position - ellipseCenter;
+        float xComponent = (localPos.x * localPos.x) / (ellipseWidth * ellipseWidth);
+        float yComponent = (localPos.y * localPos.y) / (ellipseHeight * ellipseHeight);
+
+        return xComponent + yComponent <= threshold;
     }
 }
