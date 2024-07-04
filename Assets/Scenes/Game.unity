@@ -944,7 +944,7 @@ MonoBehaviour:
   tinyGreyMeteors:
   - {fileID: 9134278045956844406, guid: 37072b41cb2137142bb031ad56948b8c, type: 3}
   - {fileID: 1416879137304550627, guid: 23339771129f8ca469ec6e199e32c7ee, type: 3}
-  spawnInterval: 1
+  spawnInterval: 5
   ellipseWidthFactor: 2
   ellipseHeightFactor: 2
   noiseFactor: 1
