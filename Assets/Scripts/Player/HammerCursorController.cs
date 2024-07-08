@@ -9,18 +9,22 @@ public class HammerCursorController : MonoBehaviour
 {
     [Header("Hammer Settings")]
     public RectTransform hammerRectTransform;  // Reference to the hammer's RectTransform
-    public float swingAngle = 55f;             // Angle of the hammer swing
-    public float swingDuration = 0.1f;         // Duration of the hammer swing
+    public float backswingAngle = 75f;         // Angle of the initial backswing
+    public float forwardSwingAngle = 125f;      // Angle of the forward swing
+    public float returnAngle = 50f;            // Angle to return from after the forward swing
+    public float backswingDuration = 0.15f;     // Duration of the backswing
+    public float forwardSwingDuration = 0.1f; // Duration of the forward swing
+    public float returnDuration = 0.15f;        // Duration of the return swing
 
     [Header("AOE Settings")]
     public float aoeRadius = 0.5f;             // Radius of the AOE circle
     public float spinSpeed = 30f;              // Spin speed of the AOE circle in degrees per second
-    public Color highlightColor = new Color(1f, 1f, 1f, 0.5f);  // Color when AOE is activated
+    public Color highlightColor = new Color(1f, 1f, 1f, 0.0f);  // Color when AOE is activated
 
     [Header("Radar Sweep Settings")]
     public Color radarDotColor = new Color(0.5f, 0.8f, 1f, 0.8f); // Color of the radar dot (blueish)
     public float radarDotSize = 0.05f;         // Size of the radar dot
-    public float radarRotationSpeed = 180f;    // Rotation speed of the radar dot in degrees per second
+    public float radarRotationSpeed = 360f;    // Rotation speed of the radar dot in degrees per second
     public int trailResolution = 60;           // Number of points in the trail (higher for smoother circle)
     public float trailWidth = 0.02f;           // Width of the trail
 
@@ -88,16 +92,18 @@ public class HammerCursorController : MonoBehaviour
     {
         aoeCircle = new GameObject("AOECircle");
         aoeCircle.transform.SetParent(transform);
-        aoeCircle.transform.localPosition = Vector3.zero;
-
+        // Adjust the x component of localPosition to move the AOE circle to the left
+        aoeCircle.transform.localPosition = new Vector3(-1.5f, -1f, 0);
         aoeSpriteRenderer = aoeCircle.AddComponent<SpriteRenderer>();
         aoeSpriteRenderer.sprite = CreateCircleSprite();
-        aoeSpriteRenderer.color = new Color(1f, 1f, 1f, 0.2f);  // Semi-transparent by default
+        aoeSpriteRenderer.color = new Color(1f, 1f, 1f, 0.0f);  // Semi-transparent by default
 
         // Add a CircleCollider2D for precise collision detection
         CircleCollider2D collider = aoeCircle.AddComponent<CircleCollider2D>();
         collider.radius = aoeRadius;
         collider.isTrigger = true;  // Set to trigger so it doesn't affect physics
+                                    // Set the offset of the collider
+        collider.offset = new Vector2(-1.5f, -1f);
 
         aoeCircle.transform.localScale = Vector3.one * aoeRadius;  // Adjust scale to match radius
     }
@@ -145,11 +151,10 @@ public class HammerCursorController : MonoBehaviour
     private void CreateRadarDot()
     {
         radarDot = new GameObject("RadarDot");
-        radarDot.transform.SetParent(transform);
-        radarDot.transform.localPosition = new Vector3(aoeRadius, 0, 0);
-
+        radarDot.transform.SetParent(aoeCircle.transform); // Set as child of aoeCircle
+        radarDot.transform.localPosition = new Vector3(aoeRadius, 0, 0); // Position relative to aoeCircle
         SpriteRenderer dotRenderer = radarDot.AddComponent<SpriteRenderer>();
-        dotRenderer.sprite = CreateCircleSprite();
+        dotRenderer.sprite = CreateCircleSprite(); // Reuse the circle sprite creation method
         dotRenderer.color = radarDotColor;
         radarDot.transform.localScale = Vector3.one * radarDotSize;
     }
@@ -161,8 +166,7 @@ public class HammerCursorController : MonoBehaviour
     {
         GameObject trailObject = new GameObject("CircularTrail");
         trailObject.transform.SetParent(transform);
-        trailObject.transform.localPosition = Vector3.zero;
-
+        trailObject.transform.localPosition = new Vector3(-1.5f, -1f, 0);
         circularTrail = trailObject.AddComponent<LineRenderer>();
         circularTrail.positionCount = trailResolution + 1;
         circularTrail.useWorldSpace = false;
@@ -207,7 +211,7 @@ public class HammerCursorController : MonoBehaviour
     }
 
     /// <summary>
-    /// Coroutine to handle the hammer swing animation and hit detection.
+    /// Coroutine to handle the new three-phase hammer swing animation and hit detection.
     /// </summary>
     private IEnumerator SwingHammer()
     {
@@ -217,28 +221,43 @@ public class HammerCursorController : MonoBehaviour
         // Highlight the AOE circle
         aoeSpriteRenderer.color = highlightColor;
 
-        // Swing animation
-        while (elapsedTime < swingDuration)
+        // Phase 1: Backswing 
+        while (elapsedTime < backswingDuration)
         {
-            float angle = Mathf.Lerp(0, -swingAngle, elapsedTime / swingDuration);
+            float angle = Mathf.Lerp(0, -backswingAngle, elapsedTime / backswingDuration);
             hammerRectTransform.rotation = Quaternion.Euler(0, 0, angle);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        // Check for meteor hits
+        // Reset elapsed time for next phase
+        elapsedTime = 0f;
+
+        // Phase 2: Forward swing 
+        while (elapsedTime < forwardSwingDuration)
+        {
+            float angle = Mathf.Lerp(-backswingAngle, forwardSwingAngle, elapsedTime / forwardSwingDuration);
+            hammerRectTransform.rotation = Quaternion.Euler(0, 0, angle);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // Check for meteor hits at the peak of the forward swing
         CheckMeteorHits();
 
-        // Swing back animation
+        // Reset elapsed time for final phase
         elapsedTime = 0f;
-        while (elapsedTime < swingDuration)
+
+        // Phase 3: Return swing 
+        while (elapsedTime < returnDuration)
         {
-            float angle = Mathf.Lerp(-swingAngle, 0, elapsedTime / swingDuration);
+            float angle = Mathf.Lerp(forwardSwingAngle, 0, elapsedTime / returnDuration);
             hammerRectTransform.rotation = Quaternion.Euler(0, 0, angle);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
+        // Ensure the hammer returns to its starting position
         hammerRectTransform.rotation = Quaternion.Euler(0, 0, 0);
 
         // Restore original AOE circle color
@@ -252,7 +271,10 @@ public class HammerCursorController : MonoBehaviour
     /// </summary>
     private void CheckMeteorHits()
     {
-        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(transform.position, aoeRadius);
+        // Use the AOE circle's position for hit detection
+        Vector3 hitboxCenter = aoeCircle.transform.position;
+
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(hitboxCenter, aoeRadius);
         foreach (Collider2D hitCollider in hitColliders)
         {
             MeteorSplit meteorSplit = hitCollider.GetComponent<MeteorSplit>();
@@ -268,7 +290,10 @@ public class HammerCursorController : MonoBehaviour
     /// </summary>
     void OnDrawGizmos()
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, aoeRadius);
+        if (aoeCircle != null)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(aoeCircle.transform.position, aoeRadius);
+        }
     }
 }

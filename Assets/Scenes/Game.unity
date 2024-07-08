@@ -154,11 +154,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1775000692}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 277}
   m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &829610960
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -312,11 +312,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1775000692}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 277}
   m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1030527642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -330,8 +330,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hammerRectTransform: {fileID: 829610959}
-  swingAngle: -55
-  swingDuration: 0.1
+  backswingAngle: 75
+  forwardSwingAngle: 125
+  returnAngle: 50
+  backswingDuration: 0.15
+  forwardSwingDuration: 0.1
+  returnDuration: 0.15
+  aoeRadius: 1
+  spinSpeed: 30
+  highlightColor: {r: 0.27450982, g: 0.37647063, b: 0.48627454, a: 0.5}
+  radarDotColor: {r: 0.5, g: 0.8, b: 1, a: 0.8}
+  radarDotSize: 0.05
+  radarRotationSpeed: 360
+  trailResolution: 60
+  trailWidth: 0.02
 --- !u!1 &1172052119
 GameObject:
   m_ObjectHideFlags: 0
