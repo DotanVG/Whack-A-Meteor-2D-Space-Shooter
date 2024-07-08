@@ -2,6 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
+/// <summary>
+/// Controls the hammer cursor, AOE circle, and radar sweep effect in the Whack-A-Meteor game.
+/// </summary>
 public class HammerCursorController : MonoBehaviour
 {
     [Header("Hammer Settings")]
@@ -10,41 +13,50 @@ public class HammerCursorController : MonoBehaviour
     public float swingDuration = 0.1f;         // Duration of the hammer swing
 
     [Header("AOE Settings")]
-    public float aoeRadius = 0.5f;
+    public float aoeRadius = 0.5f;             // Radius of the AOE circle
     public float spinSpeed = 30f;              // Spin speed of the AOE circle in degrees per second
     public Color highlightColor = new Color(1f, 1f, 1f, 0.5f);  // Color when AOE is activated
+
+    [Header("Radar Sweep Settings")]
+    public Color radarDotColor = new Color(0.5f, 0.8f, 1f, 0.8f); // Color of the radar dot (blueish)
+    public float radarDotSize = 0.05f;         // Size of the radar dot
+    public float radarRotationSpeed = 180f;    // Rotation speed of the radar dot in degrees per second
+    public int trailResolution = 60;           // Number of points in the trail (higher for smoother circle)
+    public float trailWidth = 0.02f;           // Width of the trail
 
     private bool isSwinging = false;           // Flag to prevent multiple swings
     private GameObject aoeCircle;              // GameObject for the AOE circle
     private SpriteRenderer aoeSpriteRenderer;  // SpriteRenderer for the AOE circle
     private Camera mainCamera;                 // Reference to the main camera
+    private GameObject radarDot;               // GameObject for the radar dot
+    private LineRenderer circularTrail;        // LineRenderer for the circular trail
+    private float currentAngle = 0f;           // Current angle of the radar dot
 
+    /// <summary>
+    /// Initializes the hammer cursor, AOE circle, and radar dot.
+    /// </summary>
     void Start()
     {
         // Hide the default cursor
         Cursor.visible = false;
 
-        // Create the AOE circle
+        // Create the AOE circle and radar dot
         CreateAOECircle();
+        CreateRadarDot();
+        CreateCircularTrail();
 
         // Get reference to the main camera
         mainCamera = Camera.main;
     }
 
+    /// <summary>
+    /// Updates the position of the hammer and AOE circle, rotates the radar dot, and checks for hammer swings.
+    /// </summary>
     void Update()
     {
-        // Move the hammer and AOE circle to the mouse position
-        Vector3 mousePosition = Input.mousePosition;
-        mousePosition.z = -mainCamera.transform.position.z;
-        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(mousePosition);
-        transform.position = worldPosition;
-
-        // Update the hammer's UI position
-        Vector3 screenPos = mainCamera.WorldToScreenPoint(transform.position);
-        hammerRectTransform.position = screenPos;
-
-        // Rotate the AOE circle
-        aoeCircle.transform.Rotate(0, 0, spinSpeed * Time.deltaTime);
+        UpdatePosition();
+        RotateRadarDot();
+        UpdateCircularTrail();
 
         // Check for mouse click to swing the hammer
         if (Input.GetMouseButtonDown(0) && !isSwinging)
@@ -54,7 +66,23 @@ public class HammerCursorController : MonoBehaviour
     }
 
     /// <summary>
-    /// Creates the AOE circle GameObject with necessary components
+    /// Updates the position of the hammer cursor and AOE circle based on mouse position.
+    /// </summary>
+    private void UpdatePosition()
+    {
+        // Convert mouse position to world space
+        Vector3 mousePosition = Input.mousePosition;
+        mousePosition.z = -mainCamera.transform.position.z;
+        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(mousePosition);
+        transform.position = worldPosition;
+
+        // Update the hammer's UI position
+        Vector3 screenPos = mainCamera.WorldToScreenPoint(transform.position);
+        hammerRectTransform.position = screenPos;
+    }
+
+    /// <summary>
+    /// Creates the AOE circle GameObject with necessary components.
     /// </summary>
     private void CreateAOECircle()
     {
@@ -75,9 +103,9 @@ public class HammerCursorController : MonoBehaviour
     }
 
     /// <summary>
-    /// Creates a circular sprite with a fade-out effect at the edges
+    /// Creates a circular sprite with a fade-out effect at the edges.
     /// </summary>
-    /// <returns>A Sprite representing the AOE circle</returns>
+    /// <returns>A Sprite representing the AOE circle or radar dot</returns>
     private Sprite CreateCircleSprite()
     {
         int resolution = 256;
@@ -112,7 +140,74 @@ public class HammerCursorController : MonoBehaviour
     }
 
     /// <summary>
-    /// Coroutine to handle the hammer swing animation and hit detection
+    /// Creates the radar dot GameObject with necessary components.
+    /// </summary>
+    private void CreateRadarDot()
+    {
+        radarDot = new GameObject("RadarDot");
+        radarDot.transform.SetParent(transform);
+        radarDot.transform.localPosition = new Vector3(aoeRadius, 0, 0);
+
+        SpriteRenderer dotRenderer = radarDot.AddComponent<SpriteRenderer>();
+        dotRenderer.sprite = CreateCircleSprite();
+        dotRenderer.color = radarDotColor;
+        radarDot.transform.localScale = Vector3.one * radarDotSize;
+    }
+
+    /// <summary>
+    /// Creates the circular trail using a LineRenderer.
+    /// </summary>
+    private void CreateCircularTrail()
+    {
+        GameObject trailObject = new GameObject("CircularTrail");
+        trailObject.transform.SetParent(transform);
+        trailObject.transform.localPosition = Vector3.zero;
+
+        circularTrail = trailObject.AddComponent<LineRenderer>();
+        circularTrail.positionCount = trailResolution + 1;
+        circularTrail.useWorldSpace = false;
+        circularTrail.startWidth = trailWidth;
+        circularTrail.endWidth = trailWidth;
+        circularTrail.startColor = radarDotColor;
+        circularTrail.endColor = new Color(radarDotColor.r, radarDotColor.g, radarDotColor.b, 0);
+        circularTrail.material = new Material(Shader.Find("Sprites/Default"));
+
+        UpdateCircularTrail();
+    }
+
+    /// <summary>
+    /// Rotates the radar dot around the AOE circle.
+    /// </summary>
+    private void RotateRadarDot()
+    {
+        currentAngle += radarRotationSpeed * Time.deltaTime;
+        currentAngle %= 360f;
+        float radians = currentAngle * Mathf.Deg2Rad;
+        radarDot.transform.localPosition = new Vector3(Mathf.Cos(radians) * aoeRadius, Mathf.Sin(radians) * aoeRadius, 0);
+    }
+
+    /// <summary>
+    /// Updates the circular trail to maintain a full 360-degree outline.
+    /// </summary>
+    private void UpdateCircularTrail()
+    {
+        for (int i = 0; i <= trailResolution; i++)
+        {
+            float angle = (i / (float)trailResolution) * 360f * Mathf.Deg2Rad;
+            Vector3 pos = new Vector3(Mathf.Cos(angle) * aoeRadius, Mathf.Sin(angle) * aoeRadius, 0);
+            circularTrail.SetPosition(i, pos);
+
+            // Calculate color based on distance from the radar dot
+            float distanceFromDot = Mathf.Abs(angle - (currentAngle * Mathf.Deg2Rad));
+            distanceFromDot = Mathf.Min(distanceFromDot, 2 * Mathf.PI - distanceFromDot);
+            float normalizedDistance = distanceFromDot / Mathf.PI;
+            Color pointColor = Color.Lerp(radarDotColor, new Color(radarDotColor.r, radarDotColor.g, radarDotColor.b, 0), normalizedDistance);
+            circularTrail.SetColors(pointColor, pointColor);
+        }
+    }
+
+    /// <summary>
+    /// Coroutine to handle the hammer swing animation and hit detection.
     /// </summary>
     private IEnumerator SwingHammer()
     {
@@ -153,7 +248,7 @@ public class HammerCursorController : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks for meteor hits within the AOE radius
+    /// Checks for meteor hits within the AOE radius.
     /// </summary>
     private void CheckMeteorHits()
     {
@@ -169,7 +264,7 @@ public class HammerCursorController : MonoBehaviour
     }
 
     /// <summary>
-    /// Draws a wire sphere in the Scene view to visualize the AOE radius
+    /// Draws a wire sphere in the Scene view to visualize the AOE radius.
     /// </summary>
     void OnDrawGizmos()
     {
