@@ -602,7 +602,7 @@ MonoBehaviour:
   movementSpeed: 3
   projectilePrefab: {fileID: 4685063427884634883, guid: 612ed831ed318294db9602f5d15b60cc, type: 3}
   projectileSpawnPoint: {fileID: 1338030147}
-  rotationSpeed: 100
+  rotationSpeed: 250
 --- !u!96 &1338030151
 TrailRenderer:
   serializedVersion: 3
@@ -804,7 +804,7 @@ Canvas:
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
-  m_VertexColorAlwaysGammaSpace: 0
+  m_VertexColorAlwaysGammaSpace: 1
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0

@@ -5,7 +5,7 @@ public class PlayerController : MonoBehaviour
     public float movementSpeed;
     public GameObject projectilePrefab;
     public Transform projectileSpawnPoint;
-    public float rotationSpeed = 100;
+    public float rotationSpeed = 250;
 
     private Rigidbody2D rb;
     private float lastBoostTime = -5.0f; // Initialize to -5 so the boost can be used immediately
