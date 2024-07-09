@@ -261,7 +261,7 @@ public class HammerCursorController : MonoBehaviour
         hammerRectTransform.rotation = Quaternion.Euler(0, 0, 0);
 
         // Restore original AOE circle color
-        aoeSpriteRenderer.color = new Color(1f, 1f, 1f, 0.2f);
+        aoeSpriteRenderer.color = new Color(0f, 0f, 0f, 0f);
 
         isSwinging = false;
     }
