@@ -65,7 +65,7 @@ The game assets used in this project are from [Kenney's Space Shooter Redux](htt
 
 While this project is a personal showcase of my journey in game development, I welcome feedback and contributions that can improve the game and its features.
 <div align="center">
-    <img src="https://i.ibb.co/ZxHNrVh/player-Ship1-blue.png" alt="Game Ship Sprite" width="100"/>
+    <img src="./Assets/Sprites/Players/playerShip1_blue.png" alt="Game Ship Sprite" width="100"/>
 </div>
 
 ---
