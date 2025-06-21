@@ -76,8 +76,10 @@ public class MeteorMovement : MonoBehaviour
     private bool IsInsideEllipse(float threshold)
     {
         Vector3 localPos = transform.position - ellipseCenter;
-        float xComponent = (localPos.x * localPos.x) / (ellipseWidth * ellipseWidth);
-        float yComponent = (localPos.y * localPos.y) / (ellipseHeight * ellipseHeight);
+        float semiMajor = ellipseWidth / 2f;
+        float semiMinor = ellipseHeight / 2f;
+        float xComponent = (localPos.x * localPos.x) / (semiMajor * semiMajor);
+        float yComponent = (localPos.y * localPos.y) / (semiMinor * semiMinor);
 
         return xComponent + yComponent <= threshold;
     }
