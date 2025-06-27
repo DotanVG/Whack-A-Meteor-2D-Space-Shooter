@@ -12,40 +12,16 @@ public class MeteorSpawner : MonoBehaviour
     public GameObject[] smallGreyMeteors; // Array of small grey meteor prefabs
     public GameObject[] tinyGreyMeteors; // Array of tiny grey meteor prefabs
     public float spawnInterval = 1f; // Time between spawns
-    public float ellipseWidthFactor = 4f; // Factor to multiply with camera width for ellipse width
-    public float ellipseHeightFactor = 3f; // Factor to multiply with camera height for ellipse height
-    public float noiseFactor = 1f; // Factor to add randomness to spawn positions
-    public int ellipseResolution = 100; // Number of points to use when drawing the ellipse
-    public Color ellipseColor = Color.yellow; // Color of the ellipse in the scene view
+    public float spawnMargin = 1f;   // Distance outside the screen to spawn meteors
 
     private int meteorsLayer;
     private Camera mainCamera;
-    private float ellipseWidth;
-    private float ellipseHeight;
 
     void Start()
     {
         meteorsLayer = LayerMask.NameToLayer("Meteors");
         mainCamera = Camera.main;
-        UpdateEllipseDimensions();
         StartCoroutine(SpawnMeteors());
-    }
-
-    void Update()
-    {
-        UpdateEllipseDimensions();
-    }
-
-    private void UpdateEllipseDimensions()
-    {
-        float cameraHeight = 2f * mainCamera.orthographicSize;
-        float cameraWidth = cameraHeight * mainCamera.aspect;
-
-        ellipseWidth = cameraWidth * ellipseWidthFactor;
-        ellipseHeight = cameraHeight * ellipseHeightFactor;
-
-        Debug.Log($"Camera Width: {cameraWidth}, Camera Height: {cameraHeight}");
-        Debug.Log($"Ellipse Width: {ellipseWidth}, Ellipse Height: {ellipseHeight}");
     }
 
     private IEnumerator SpawnMeteors()
@@ -85,22 +61,29 @@ public class MeteorSpawner : MonoBehaviour
 
     private Vector3 GetSpawnPosition()
     {
-        float angle = Random.Range(0f, 2f * Mathf.PI);
-        float x = ellipseWidth * Mathf.Cos(angle) / 2f;
-        float y = ellipseHeight * Mathf.Sin(angle) / 2f;
+        Vector3 min = mainCamera.ScreenToWorldPoint(new Vector3(0, 0, 0));
+        Vector3 max = mainCamera.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
 
-        float noiseX = Random.Range(-1f, 1f) * noiseFactor;
-        float noiseY = Random.Range(-1f, 1f) * noiseFactor;
+        int side = Random.Range(0, 4);
+        Vector3 spawnPos = Vector3.zero;
 
-        x += noiseX;
-        y += noiseY;
+        switch (side)
+        {
+            case 0: // Left
+                spawnPos = new Vector3(min.x - spawnMargin, Random.Range(min.y, max.y), 0);
+                break;
+            case 1: // Right
+                spawnPos = new Vector3(max.x + spawnMargin, Random.Range(min.y, max.y), 0);
+                break;
+            case 2: // Top
+                spawnPos = new Vector3(Random.Range(min.x, max.x), max.y + spawnMargin, 0);
+                break;
+            default: // Bottom
+                spawnPos = new Vector3(Random.Range(min.x, max.x), min.y - spawnMargin, 0);
+                break;
+        }
 
-        Vector3 worldSpawnPos = mainCamera.transform.position + new Vector3(x, y, 0);
-        worldSpawnPos.z = 0;
-
-        Debug.Log($"Spawn Position: {worldSpawnPos}");
-
-        return worldSpawnPos;
+        return spawnPos;
     }
 
     private GameObject SelectMeteor()
@@ -136,45 +119,5 @@ public class MeteorSpawner : MonoBehaviour
         return meteorArray[Random.Range(0, meteorArray.Length)];
     }
 
-    // This method draws the ellipse in the Scene view
-    private void OnDrawGizmos()
-    {
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-            if (mainCamera == null) return;
-        }
 
-        UpdateEllipseDimensions();
-        Gizmos.color = ellipseColor;
-
-        for (int i = 0; i <= ellipseResolution; i++)
-        {
-            float angle = (i / (float)ellipseResolution) * 2f * Mathf.PI;
-            Vector3 point = GetEllipsePoint(angle);
-            Vector3 nextPoint = GetEllipsePoint(((i + 1) / (float)ellipseResolution) * 2f * Mathf.PI);
-            Gizmos.DrawLine(point, nextPoint);
-        }
-
-        // Draw noise boundary
-        Gizmos.color = new Color(ellipseColor.r, ellipseColor.g, ellipseColor.b, 0.3f);
-        for (int i = 0; i <= ellipseResolution; i++)
-        {
-            float angle = (i / (float)ellipseResolution) * 2f * Mathf.PI;
-            Vector3 innerPoint = GetEllipsePoint(angle, -noiseFactor);
-            Vector3 outerPoint = GetEllipsePoint(angle, noiseFactor);
-            Gizmos.DrawLine(innerPoint, outerPoint);
-        }
-    }
-
-    private Vector3 GetEllipsePoint(float angle, float noiseOffset = 0)
-    {
-        float x = (ellipseWidth / 2f + noiseOffset) * Mathf.Cos(angle);
-        float y = (ellipseHeight / 2f + noiseOffset) * Mathf.Sin(angle);
-
-        Vector3 worldPoint = mainCamera.transform.position + new Vector3(x, y, 0);
-        worldPoint.z = 0;
-
-        return worldPoint;
-    }
 }

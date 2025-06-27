@@ -8,31 +8,25 @@ public class MeteorMovement : MonoBehaviour
     private float speed; // Speed of the meteor
     private float rotationSpeed; // Speed and direction of rotation
 
-    // Ellipse parameters
-    private float ellipseWidth;
-    private float ellipseHeight;
-    private Vector3 ellipseCenter;
-
-    // New variables
-    private bool hasEnteredPlayArea = false;
-    private float destroyThreshold = 1.2f; // Slightly larger than the spawn ellipse
+    // Camera and margin
+    private Camera mainCamera;
+    private float spawnMargin = 1f;
 
     void Start()
     {
         speed = Random.Range(minSpeed, maxSpeed);
         rotationSpeed = Random.Range(-180f, 180f);
 
-        // Get ellipse parameters from MeteorSpawner
         MeteorSpawner spawner = FindObjectOfType<MeteorSpawner>();
         if (spawner != null)
         {
-            ellipseWidth = spawner.ellipseWidthFactor * Camera.main.orthographicSize * Camera.main.aspect;
-            ellipseHeight = spawner.ellipseHeightFactor * Camera.main.orthographicSize;
-            ellipseCenter = Camera.main.transform.position;
+            spawnMargin = spawner.spawnMargin;
         }
-        else
+
+        mainCamera = Camera.main;
+        if (mainCamera == null)
         {
-            Debug.LogError("MeteorSpawner not found in the scene!");
+            Debug.LogError("MeteorMovement requires a camera tagged as 'MainCamera'");
         }
     }
 
@@ -55,32 +49,20 @@ public class MeteorMovement : MonoBehaviour
 
     private void CheckDestroyCondition()
     {
-        if (!hasEnteredPlayArea)
+        if (mainCamera == null)
         {
-            // Check if the meteor has entered the play area
-            if (IsInsideEllipse(1.0f))
-            {
-                hasEnteredPlayArea = true;
-            }
+            return;
         }
-        else
+
+        Vector3 min = mainCamera.ScreenToWorldPoint(new Vector3(0, 0, 0));
+        Vector3 max = mainCamera.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
+
+        if (transform.position.x < min.x - spawnMargin ||
+            transform.position.x > max.x + spawnMargin ||
+            transform.position.y < min.y - spawnMargin ||
+            transform.position.y > max.y + spawnMargin)
         {
-            // Check if the meteor has left the enlarged destroy area
-            if (!IsInsideEllipse(destroyThreshold))
-            {
-                Destroy(gameObject);
-            }
+            Destroy(gameObject);
         }
-    }
-
-    private bool IsInsideEllipse(float threshold)
-    {
-        Vector3 localPos = transform.position - ellipseCenter;
-        float semiMajor = ellipseWidth / 2f;
-        float semiMinor = ellipseHeight / 2f;
-        float xComponent = (localPos.x * localPos.x) / (semiMajor * semiMajor);
-        float yComponent = (localPos.y * localPos.y) / (semiMinor * semiMinor);
-
-        return xComponent + yComponent <= threshold;
     }
 }
