@@ -3,22 +3,30 @@ using UnityEngine;
 public class ScreenWrapper : MonoBehaviour
 {
     private Vector2 screenBounds;
+    private Camera mainCamera;
+    private int lastScreenWidth;
+    private int lastScreenHeight;
 
     void Start()
     {
-        // Calculate screen bounds using the camera's viewport
-        Camera mainCamera = Camera.main;
-        if (mainCamera == null) 
+        // Cache the main camera and calculate the initial screen bounds
+        mainCamera = Camera.main;
+        if (mainCamera == null)
         {
             Debug.LogError("ScreenWrapper requires a main camera tagged as 'MainCamera'");
             return;
         }
 
-        screenBounds = mainCamera.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, mainCamera.transform.position.z));
+        RecalculateBounds();
     }
 
     void Update()
     {
+        if (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight)
+        {
+            RecalculateBounds();
+        }
+
         WrapAround();
     }
 
@@ -56,5 +64,13 @@ public class ScreenWrapper : MonoBehaviour
         {
             transform.position = pos;
         }
+    }
+
+    private void RecalculateBounds()
+    {
+        screenBounds = mainCamera.ScreenToWorldPoint(
+            new Vector3(Screen.width, Screen.height, mainCamera.transform.position.z));
+        lastScreenWidth = Screen.width;
+        lastScreenHeight = Screen.height;
     }
 }
