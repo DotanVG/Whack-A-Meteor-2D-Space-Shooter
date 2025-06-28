@@ -6,6 +6,7 @@ public class MeteorMovement : MonoBehaviour
     public float maxSpeed = 7f; // Maximum speed at which the meteor moves
     private Vector3 direction; // Direction in which the meteor moves
     private float speed; // Speed of the meteor
+    private bool speedInitialized = false; // Flag to track if speed was set externally
     private float rotationSpeed; // Speed and direction of rotation
 
     // Camera and margin
@@ -14,7 +15,10 @@ public class MeteorMovement : MonoBehaviour
 
     void Start()
     {
-        speed = Random.Range(minSpeed, maxSpeed);
+        if (!speedInitialized)
+        {
+            speed = Random.Range(minSpeed, maxSpeed);
+        }
         rotationSpeed = Random.Range(-180f, 180f);
 
         MeteorSpawner spawner = FindObjectOfType<MeteorSpawner>();
@@ -33,6 +37,22 @@ public class MeteorMovement : MonoBehaviour
     public void SetInitialDirection(Vector3 initialDirection)
     {
         direction = initialDirection.normalized;
+    }
+
+    public void SetInitialSpeed(float initialSpeed)
+    {
+        speed = initialSpeed;
+        speedInitialized = true;
+    }
+
+    public Vector3 GetDirection()
+    {
+        return direction;
+    }
+
+    public float GetSpeed()
+    {
+        return speed;
     }
 
     void Update()
