@@ -206,7 +206,8 @@ public class HammerCursorController : MonoBehaviour
             distanceFromDot = Mathf.Min(distanceFromDot, 2 * Mathf.PI - distanceFromDot);
             float normalizedDistance = distanceFromDot / Mathf.PI;
             Color pointColor = Color.Lerp(radarDotColor, new Color(radarDotColor.r, radarDotColor.g, radarDotColor.b, 0), normalizedDistance);
-            circularTrail.SetColors(pointColor, pointColor);
+            circularTrail.startColor = pointColor;
+            circularTrail.endColor = pointColor;
         }
     }
 
