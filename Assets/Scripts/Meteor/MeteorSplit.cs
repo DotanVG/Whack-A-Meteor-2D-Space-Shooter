@@ -9,39 +9,44 @@ public class MeteorSplit : MonoBehaviour
     public GameObject[] smallGreyMeteors;
     public GameObject[] tinyGreyMeteors;
 
+    public float collisionSplitSpeedThreshold = 0.5f;
+
     public void Split()
     {
-        // Determine which size and color to split into
+        SplitWithMomentum(Vector3.zero, 0f);
+    }
+
+    public void SplitWithMomentum(Vector3 baseDirection, float baseSpeed)
+    {
         if (gameObject.CompareTag("BigBrownMeteor"))
         {
-            SpawnMeteors(mediumBrownMeteors, "MediumBrownMeteor", 2, 3, smallBrownMeteors);
+            SpawnMeteors(mediumBrownMeteors, "MediumBrownMeteor", 2, 3, smallBrownMeteors, baseDirection, baseSpeed);
         }
         else if (gameObject.CompareTag("BigGreyMeteor"))
         {
-            SpawnMeteors(mediumGreyMeteors, "MediumGreyMeteor", 2, 3, smallGreyMeteors);
+            SpawnMeteors(mediumGreyMeteors, "MediumGreyMeteor", 2, 3, smallGreyMeteors, baseDirection, baseSpeed);
         }
         else if (gameObject.CompareTag("MediumBrownMeteor"))
         {
-            SpawnMeteors(smallBrownMeteors, "SmallBrownMeteor", 2, 3, tinyBrownMeteors);
+            SpawnMeteors(smallBrownMeteors, "SmallBrownMeteor", 2, 3, tinyBrownMeteors, baseDirection, baseSpeed);
         }
         else if (gameObject.CompareTag("MediumGreyMeteor"))
         {
-            SpawnMeteors(smallGreyMeteors, "SmallGreyMeteor", 2, 3, tinyGreyMeteors);
+            SpawnMeteors(smallGreyMeteors, "SmallGreyMeteor", 2, 3, tinyGreyMeteors, baseDirection, baseSpeed);
         }
         else if (gameObject.CompareTag("SmallBrownMeteor"))
         {
-            SpawnMeteors(tinyBrownMeteors, "TinyBrownMeteor", 2, 3, null);
+            SpawnMeteors(tinyBrownMeteors, "TinyBrownMeteor", 2, 3, null, baseDirection, baseSpeed);
         }
         else if (gameObject.CompareTag("SmallGreyMeteor"))
         {
-            SpawnMeteors(tinyGreyMeteors, "TinyGreyMeteor", 2, 3, null);
+            SpawnMeteors(tinyGreyMeteors, "TinyGreyMeteor", 2, 3, null, baseDirection, baseSpeed);
         }
 
-        // Destroy the current meteor
         Destroy(gameObject);
     }
 
-    private void SpawnMeteors(GameObject[] meteorArray, string tag, int minCount, int maxCount, GameObject[] nextMeteorArray)
+    private void SpawnMeteors(GameObject[] meteorArray, string tag, int minCount, int maxCount, GameObject[] nextMeteorArray, Vector3 baseDirection, float baseSpeed)
     {
         if (meteorArray.Length == 0)
         {
@@ -55,6 +60,15 @@ public class MeteorSplit : MonoBehaviour
             int randomIndex = Random.Range(0, meteorArray.Length);
             GameObject newMeteor = Instantiate(meteorArray[randomIndex], transform.position, Quaternion.identity);
             newMeteor.tag = tag;
+            MeteorMovement move = newMeteor.GetComponent<MeteorMovement>();
+            if (move != null)
+            {
+                if (baseSpeed > 0f)
+                {
+                    Vector3 offsetDir = Quaternion.Euler(0f, 0f, Random.Range(-30f, 30f)) * baseDirection;
+                    move.InitializeMovement(offsetDir, baseSpeed);
+                }
+            }
             Debug.Log("Spawned " + tag + ": " + meteorArray[randomIndex].name);
 
             if (nextMeteorArray != null)
@@ -70,24 +84,65 @@ public class MeteorSplit : MonoBehaviour
         }
     }
 
-    // TODO: Implement method to handle projectile hit
     public void OnProjectileHit()
     {
-        // Call Split() method
-        Split();
+        MeteorMovement move = GetComponent<MeteorMovement>();
+        if (move != null)
+        {
+            SplitWithMomentum(move.CurrentDirection, move.CurrentSpeed);
+        }
+        else
+        {
+            Split();
+        }
         // TODO: Add score
         // TODO: Play sound effect
         // TODO: Spawn particle effect
     }
 
-    // TODO: Implement method to handle hammer hit
     public void OnHammerHit()
     {
-        // Call Split() method
-        Split();
+        MeteorMovement move = GetComponent<MeteorMovement>();
+        if (move != null)
+        {
+            SplitWithMomentum(move.CurrentDirection, move.CurrentSpeed);
+        }
+        else
+        {
+            Split();
+        }
         // TODO: Add score (possibly higher than projectile hit)
         // TODO: Play hammer hit sound effect
         // TODO: Spawn hammer hit particle effect
         // TODO: Apply screen shake
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        MeteorSplit other = collision.gameObject.GetComponent<MeteorSplit>();
+        if (other == null)
+        {
+            return;
+        }
+
+        MeteorMovement movement = GetComponent<MeteorMovement>();
+        if (movement == null)
+        {
+            return;
+        }
+
+        Vector3 myVelocity = movement.CurrentDirection * movement.CurrentSpeed;
+        MeteorMovement otherMove = other.GetComponent<MeteorMovement>();
+        Vector3 otherVelocity = otherMove != null ? otherMove.CurrentDirection * otherMove.CurrentSpeed : Vector3.zero;
+
+        float relativeSpeed = (myVelocity - otherVelocity).magnitude;
+        if (relativeSpeed < collisionSplitSpeedThreshold)
+        {
+            return;
+        }
+
+        Vector3 collisionNormal = collision.GetContact(0).normal;
+        Vector3 dir = Vector3.Reflect(movement.CurrentDirection, collisionNormal);
+        SplitWithMomentum(dir, movement.CurrentSpeed);
     }
 }
