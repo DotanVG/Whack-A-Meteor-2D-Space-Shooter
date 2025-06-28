@@ -9,7 +9,7 @@ public class GameOverController : MonoBehaviour
     {
         centerStyle = new GUIStyle(GUI.skin.label);
         centerStyle.alignment = TextAnchor.MiddleCenter;
-        centerStyle.fontSize = 40;
+        centerStyle.fontSize = 20; // smaller game over menu text
     }
 
     void OnGUI()

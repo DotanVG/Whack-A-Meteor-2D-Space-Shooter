@@ -36,19 +36,19 @@ public class GameManager : MonoBehaviour
         // initialize GUI styles without using GUI.skin since Awake can run
         // outside of the OnGUI context
         hudStyle = new GUIStyle();
-        hudStyle.fontSize = 32;
+        hudStyle.fontSize = 16; // smaller HUD text
         hudStyle.fontStyle = FontStyle.Bold;
         hudStyle.normal.textColor = Color.white;
 
         centerStyle = new GUIStyle();
         centerStyle.alignment = TextAnchor.MiddleCenter;
-        centerStyle.fontSize = 60;
+        centerStyle.fontSize = 30; // half size countdown and pause text
         centerStyle.fontStyle = FontStyle.Bold;
         centerStyle.normal.textColor = Color.white;
 
         gameOverStyle = new GUIStyle();
         gameOverStyle.alignment = TextAnchor.MiddleCenter;
-        gameOverStyle.fontSize = 80;
+        gameOverStyle.fontSize = 40; // smaller game over text
         gameOverStyle.fontStyle = FontStyle.Bold;
         gameOverStyle.normal.textColor = Color.white;
     }

@@ -17,7 +17,7 @@ public class MeteorSpawner : MonoBehaviour
     private int meteorsLayer;
     private Camera mainCamera;
     private Coroutine spawnRoutine;
-    public bool autoStart = true;
+    public bool autoStart = false; // start via GameManager after countdown
 
     void Start()
     {
