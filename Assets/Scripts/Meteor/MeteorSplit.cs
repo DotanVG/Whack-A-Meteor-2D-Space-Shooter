@@ -10,6 +10,21 @@ public class MeteorSplit : MonoBehaviour
     public GameObject[] tinyGreyMeteors;
 
     public float collisionSplitSpeedThreshold = 0.5f;
+    public float collisionSplitEnableDelay = 0.5f;
+
+    private bool collisionSplitEnabled = false;
+
+    private void OnEnable()
+    {
+        collisionSplitEnabled = false;
+        StartCoroutine(EnableCollisionSplit());
+    }
+
+    private System.Collections.IEnumerator EnableCollisionSplit()
+    {
+        yield return new WaitForSeconds(collisionSplitEnableDelay);
+        collisionSplitEnabled = true;
+    }
 
     public void Split()
     {
@@ -119,6 +134,11 @@ public class MeteorSplit : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        if (!collisionSplitEnabled)
+        {
+            return;
+        }
+
         MeteorSplit other = collision.gameObject.GetComponent<MeteorSplit>();
         if (other == null)
         {
