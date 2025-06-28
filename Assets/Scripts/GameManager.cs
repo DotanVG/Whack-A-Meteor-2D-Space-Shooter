@@ -14,25 +14,46 @@ public class GameManager : MonoBehaviour
     private float countdown = 3f;
     private bool showingCountdown = true;
     private bool isPaused = false;
+    private bool isGameOver = false;
+    private float gameOverTimer = 0f;
+
     private GUIStyle centerStyle;
+    private GUIStyle hudStyle;
+    private GUIStyle gameOverStyle;
 
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
-        else
+        else if (Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+
+        hudStyle = new GUIStyle(GUI.skin.label);
+        hudStyle.fontSize = 24;
+
+        centerStyle = new GUIStyle(GUI.skin.label);
+        centerStyle.alignment = TextAnchor.MiddleCenter;
+        centerStyle.fontSize = 40;
+
+        gameOverStyle = new GUIStyle(GUI.skin.label);
+        gameOverStyle.alignment = TextAnchor.MiddleCenter;
+        gameOverStyle.fontSize = 60;
+        gameOverStyle.fontStyle = FontStyle.Bold;
     }
 
     void Start()
     {
         Lives = GameConstants.StartingLives;
         Score = 0;
+        isPaused = false;
+        isGameOver = false;
+        showingCountdown = true;
+        countdown = 3f;
         if (spawner == null)
         {
             spawner = FindObjectOfType<MeteorSpawner>();
@@ -41,9 +62,6 @@ public class GameManager : MonoBehaviour
         {
             player = FindObjectOfType<PlayerHealth>();
         }
-        centerStyle = new GUIStyle(GUI.skin.label);
-        centerStyle.alignment = TextAnchor.MiddleCenter;
-        centerStyle.fontSize = 40;
     }
 
     void Update()
@@ -60,17 +78,39 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-        else if (!isPaused && Lives <= 0)
+        else if (!isPaused && !isGameOver && Lives <= 0)
         {
-            EndGame();
+            StartGameOver();
         }
 
-        if (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape))
+        if (isGameOver)
+        {
+            gameOverTimer += Time.unscaledDeltaTime;
+
+            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Return))
+            {
+                Time.timeScale = 1f;
+                SceneManager.LoadScene("MainMenu");
+            }
+            else if (Input.GetKeyDown(KeyCode.R))
+            {
+                Time.timeScale = 1f;
+                SceneManager.LoadScene("Game");
+            }
+            else if (gameOverTimer >= 3f)
+            {
+                Time.timeScale = 1f;
+                SceneManager.LoadScene("MainMenu");
+            }
+            return;
+        }
+
+        if (!isGameOver && (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape)))
         {
             TogglePause();
         }
 
-        if (isPaused && Input.GetKeyDown(KeyCode.Q))
+        if (!isGameOver && isPaused && Input.GetKeyDown(KeyCode.Q))
         {
             SceneManager.LoadScene("MainMenu");
             Time.timeScale = 1f;
@@ -87,6 +127,13 @@ public class GameManager : MonoBehaviour
         Lives -= 1;
     }
 
+    void StartGameOver()
+    {
+        isGameOver = true;
+        gameOverTimer = 0f;
+        Time.timeScale = 0f;
+    }
+
     void TogglePause()
     {
         isPaused = !isPaused;
@@ -95,14 +142,13 @@ public class GameManager : MonoBehaviour
 
     public void EndGame()
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene("GameOver");
+        StartGameOver();
     }
 
     void OnGUI()
     {
-        GUI.Label(new Rect(10, 10, 150, 30), $"Score: {Score}");
-        GUI.Label(new Rect(10, 40, 150, 30), $"Lives: {Lives}");
+        GUI.Label(new Rect(20, 20, 200, 40), $"Score: {Score}", hudStyle);
+        GUI.Label(new Rect(Screen.width - 220, 20, 200, 40), $"Lives: {Lives}", hudStyle);
 
         if (showingCountdown)
         {
@@ -130,6 +176,12 @@ public class GameManager : MonoBehaviour
                 Time.timeScale = 1f;
                 SceneManager.LoadScene("MainMenu");
             }
+        }
+
+        if (isGameOver)
+        {
+            GUI.Label(new Rect(Screen.width/2-150, Screen.height/2-30, 300,60), "GAME OVER", gameOverStyle);
+            GUI.Label(new Rect(Screen.width/2-150, Screen.height/2+40, 300,30), "R - Restart    Enter/Esc - Menu", centerStyle);
         }
     }
 }
