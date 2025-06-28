@@ -33,17 +33,24 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        hudStyle = new GUIStyle(GUI.skin.label);
-        hudStyle.fontSize = 24;
+        // initialize GUI styles without using GUI.skin since Awake can run
+        // outside of the OnGUI context
+        hudStyle = new GUIStyle();
+        hudStyle.fontSize = 32;
+        hudStyle.fontStyle = FontStyle.Bold;
+        hudStyle.normal.textColor = Color.white;
 
-        centerStyle = new GUIStyle(GUI.skin.label);
+        centerStyle = new GUIStyle();
         centerStyle.alignment = TextAnchor.MiddleCenter;
-        centerStyle.fontSize = 40;
+        centerStyle.fontSize = 60;
+        centerStyle.fontStyle = FontStyle.Bold;
+        centerStyle.normal.textColor = Color.white;
 
-        gameOverStyle = new GUIStyle(GUI.skin.label);
+        gameOverStyle = new GUIStyle();
         gameOverStyle.alignment = TextAnchor.MiddleCenter;
-        gameOverStyle.fontSize = 60;
+        gameOverStyle.fontSize = 80;
         gameOverStyle.fontStyle = FontStyle.Bold;
+        gameOverStyle.normal.textColor = Color.white;
     }
 
     void Start()
@@ -124,7 +131,12 @@ public class GameManager : MonoBehaviour
 
     public void LoseLife()
     {
+        if (isGameOver) return;
         Lives -= 1;
+        if (Lives <= 0)
+        {
+            StartGameOver();
+        }
     }
 
     void StartGameOver()
@@ -147,8 +159,8 @@ public class GameManager : MonoBehaviour
 
     void OnGUI()
     {
-        GUI.Label(new Rect(20, 20, 200, 40), $"Score: {Score}", hudStyle);
-        GUI.Label(new Rect(Screen.width - 220, 20, 200, 40), $"Lives: {Lives}", hudStyle);
+        GUI.Label(new Rect(20, 20, 300, 50), $"SCORE: {Score}", hudStyle);
+        GUI.Label(new Rect(Screen.width - 320, 20, 300, 50), $"LIVES: {Lives}", hudStyle);
 
         if (showingCountdown)
         {
