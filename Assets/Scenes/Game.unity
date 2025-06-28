@@ -405,7 +405,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 8
+  orthographic size: 15
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -520,7 +520,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -599,7 +599,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4aa43fc83a75f64fa4dd9fc854b4cd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementSpeed: 3
+  movementSpeed: 4
   projectilePrefab: {fileID: 4685063427884634883, guid: 612ed831ed318294db9602f5d15b60cc, type: 3}
   projectileSpawnPoint: {fileID: 1338030147}
   rotationSpeed: 250
@@ -957,11 +957,7 @@ MonoBehaviour:
   - {fileID: 9134278045956844406, guid: 37072b41cb2137142bb031ad56948b8c, type: 3}
   - {fileID: 1416879137304550627, guid: 23339771129f8ca469ec6e199e32c7ee, type: 3}
   spawnInterval: 5
-  ellipseWidthFactor: 2
-  ellipseHeightFactor: 2
-  noiseFactor: 1
-  ellipseResolution: 100
-  ellipseColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  spawnMargin: 1
 --- !u!4 &1913219654
 Transform:
   m_ObjectHideFlags: 0
