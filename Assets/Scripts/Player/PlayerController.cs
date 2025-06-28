@@ -7,6 +7,12 @@ public class PlayerController : MonoBehaviour
     public Transform projectileSpawnPoint;
     public float rotationSpeed = 250;
 
+    [Header("Tilt Settings")]
+    public float tiltMaxAngle = 30f; // Maximum angle for Y axis tilt
+    public float tiltSmooth = 5f;    // How quickly the tilt adjusts
+
+    private float currentTilt = 0f;  // Current Y axis tilt
+
     private Rigidbody2D rb;
     private float lastBoostTime = -5.0f; // Initialize to -5 so the boost can be used immediately
     private float boostEndTime = 0.0f;
@@ -24,15 +30,24 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        // Rotation control
+        // Rotation control with tilt
+        float targetTilt = 0f;
+
         if (Input.GetKey(KeyCode.A))
         {
             transform.Rotate(0, 0, Time.deltaTime * rotationSpeed); // Adjust rotation speed as needed
+            targetTilt = tiltMaxAngle;
         }
-        if (Input.GetKey(KeyCode.D))
+        else if (Input.GetKey(KeyCode.D))
         {
             transform.Rotate(0, 0, -Time.deltaTime * rotationSpeed); // Adjust rotation speed as needed
+            targetTilt = -tiltMaxAngle;
         }
+
+        currentTilt = Mathf.Lerp(currentTilt, targetTilt, tiltSmooth * Time.deltaTime);
+        Vector3 euler = transform.eulerAngles;
+        euler.y = currentTilt;
+        transform.eulerAngles = euler;
 
         // Movement control
         if (Input.GetKey(KeyCode.W))
