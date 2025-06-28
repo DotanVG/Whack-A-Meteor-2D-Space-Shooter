@@ -16,12 +16,17 @@ public class MeteorSpawner : MonoBehaviour
 
     private int meteorsLayer;
     private Camera mainCamera;
+    private Coroutine spawnRoutine;
+    public bool autoStart = true;
 
     void Start()
     {
         meteorsLayer = LayerMask.NameToLayer("Meteors");
         mainCamera = Camera.main;
-        StartCoroutine(SpawnMeteors());
+        if (autoStart)
+        {
+            StartSpawning();
+        }
     }
 
     private IEnumerator SpawnMeteors()
@@ -30,6 +35,23 @@ public class MeteorSpawner : MonoBehaviour
         {
             SpawnMeteor();
             yield return new WaitForSeconds(spawnInterval);
+        }
+    }
+
+    public void StartSpawning()
+    {
+        if (spawnRoutine == null)
+        {
+            spawnRoutine = StartCoroutine(SpawnMeteors());
+        }
+    }
+
+    public void StopSpawning()
+    {
+        if (spawnRoutine != null)
+        {
+            StopCoroutine(spawnRoutine);
+            spawnRoutine = null;
         }
     }
 

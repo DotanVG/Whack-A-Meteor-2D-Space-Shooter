@@ -130,7 +130,11 @@ public class MeteorSplit : MonoBehaviour
         {
             Split();
         }
-        // TODO: Add score
+        if (GameManager.Instance != null)
+        {
+            int points = GameConstants.GetScoreByTag(gameObject.tag);
+            GameManager.Instance.AddScore(points);
+        }
         // TODO: Play sound effect
         // TODO: Spawn particle effect
     }
@@ -145,6 +149,11 @@ public class MeteorSplit : MonoBehaviour
         else
         {
             Split();
+        }
+        if (GameManager.Instance != null)
+        {
+            int points = GameConstants.GetScoreByTag(gameObject.tag);
+            GameManager.Instance.AddScore(points);
         }
         // TODO: Add score (possibly higher than projectile hit)
         // TODO: Play hammer hit sound effect
