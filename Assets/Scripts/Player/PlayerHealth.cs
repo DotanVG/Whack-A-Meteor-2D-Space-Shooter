@@ -14,11 +14,21 @@ public class PlayerHealth : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
+        HandleMeteorCollision(other.gameObject);
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        HandleMeteorCollision(collision.gameObject);
+    }
+
+    private void HandleMeteorCollision(GameObject obj)
+    {
         if (invincible) return;
-        if (other.CompareTag("BigBrownMeteor") || other.CompareTag("BigGreyMeteor") ||
-            other.CompareTag("MediumBrownMeteor") || other.CompareTag("MediumGreyMeteor") ||
-            other.CompareTag("SmallBrownMeteor") || other.CompareTag("SmallGreyMeteor") ||
-            other.CompareTag("TinyBrownMeteor") || other.CompareTag("TinyGreyMeteor"))
+        if (obj.CompareTag("BigBrownMeteor") || obj.CompareTag("BigGreyMeteor") ||
+            obj.CompareTag("MediumBrownMeteor") || obj.CompareTag("MediumGreyMeteor") ||
+            obj.CompareTag("SmallBrownMeteor") || obj.CompareTag("SmallGreyMeteor") ||
+            obj.CompareTag("TinyBrownMeteor") || obj.CompareTag("TinyGreyMeteor"))
         {
             if (GameManager.Instance != null)
             {
