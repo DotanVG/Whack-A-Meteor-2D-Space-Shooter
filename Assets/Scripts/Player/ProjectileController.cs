@@ -29,7 +29,9 @@ public class ProjectileController : MonoBehaviour
                  other.gameObject.CompareTag("MediumBrownMeteor") ||
                  other.gameObject.CompareTag("MediumGreyMeteor") ||
                  other.gameObject.CompareTag("SmallBrownMeteor") ||
-                 other.gameObject.CompareTag("SmallGreyMeteor"))
+                 other.gameObject.CompareTag("SmallGreyMeteor") ||
+                 other.gameObject.CompareTag("TinyBrownMeteor") ||
+                 other.gameObject.CompareTag("TinyGreyMeteor"))
         {
             MeteorSplit meteorSplit = other.gameObject.GetComponent<MeteorSplit>();
             if (meteorSplit != null)
