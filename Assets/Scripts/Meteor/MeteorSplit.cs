@@ -14,6 +14,26 @@ public class MeteorSplit : MonoBehaviour
 
     private bool collisionSplitEnabled = false;
 
+    private void Awake()
+    {
+        MeteorSpawner spawner = FindObjectOfType<MeteorSpawner>();
+        if (spawner != null)
+        {
+            if (mediumBrownMeteors == null || mediumBrownMeteors.Length == 0)
+                mediumBrownMeteors = spawner.mediumBrownMeteors;
+            if (smallBrownMeteors == null || smallBrownMeteors.Length == 0)
+                smallBrownMeteors = spawner.smallBrownMeteors;
+            if (tinyBrownMeteors == null || tinyBrownMeteors.Length == 0)
+                tinyBrownMeteors = spawner.tinyBrownMeteors;
+            if (mediumGreyMeteors == null || mediumGreyMeteors.Length == 0)
+                mediumGreyMeteors = spawner.mediumGreyMeteors;
+            if (smallGreyMeteors == null || smallGreyMeteors.Length == 0)
+                smallGreyMeteors = spawner.smallGreyMeteors;
+            if (tinyGreyMeteors == null || tinyGreyMeteors.Length == 0)
+                tinyGreyMeteors = spawner.tinyGreyMeteors;
+        }
+    }
+
     private void OnEnable()
     {
         collisionSplitEnabled = false;
