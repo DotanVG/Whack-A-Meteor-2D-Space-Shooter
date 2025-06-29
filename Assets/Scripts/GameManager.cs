@@ -160,15 +160,15 @@ public class GameManager : MonoBehaviour
     void OnGUI()
     {
         GUI.Label(new Rect(20, 20, 300, 50), $"SCORE: {Score}", hudStyle);
-        GUI.Label(new Rect(Screen.width - 320, 20, 300, 50), $"LIVES: {Lives}", hudStyle);
+        GUI.Label(new Rect(Screen.width - 120, 20, 100, 50), $"LIVES: {Lives}", hudStyle);
 
         if (showingCountdown)
         {
             int number = Mathf.CeilToInt(countdown);
             float alpha = countdown - (number - 1);
             Color prev = GUI.color;
-            GUI.color = new Color(1f,1f,1f,alpha);
-            GUI.Label(new Rect(Screen.width/2-50, Screen.height/2-25, 100,50), number.ToString(), centerStyle);
+            GUI.color = new Color(1f, 1f, 1f, alpha);
+            GUI.Label(new Rect(Screen.width / 2 - 50, Screen.height / 2 - 25, 100, 50), number.ToString(), centerStyle);
             GUI.color = prev;
         }
 
@@ -176,14 +176,14 @@ public class GameManager : MonoBehaviour
         {
             float pulse = (Mathf.Sin(Time.realtimeSinceStartup * 3f) + 1f) / 2f;
             Color prev = GUI.color;
-            GUI.color = new Color(1f,1f,1f,pulse);
-            GUI.Label(new Rect(Screen.width/2-50, Screen.height/2-60, 100,30), "PAUSE", centerStyle);
+            GUI.color = new Color(1f, 1f, 1f, pulse);
+            GUI.Label(new Rect(Screen.width / 2 - 50, Screen.height / 2 - 60, 100, 30), "PAUSE", centerStyle);
             GUI.color = prev;
-            if (GUI.Button(new Rect(Screen.width/2-50, Screen.height/2, 100,30), "Resume"))
+            if (GUI.Button(new Rect(Screen.width / 2 - 50, Screen.height / 2, 100, 30), "Resume"))
             {
                 TogglePause();
             }
-            if (GUI.Button(new Rect(Screen.width/2-50, Screen.height/2+40, 100,30), "Quit Game"))
+            if (GUI.Button(new Rect(Screen.width / 2 - 50, Screen.height / 2 + 40, 100, 30), "Quit Game"))
             {
                 Time.timeScale = 1f;
                 SceneManager.LoadScene("MainMenu");
@@ -192,8 +192,8 @@ public class GameManager : MonoBehaviour
 
         if (isGameOver)
         {
-            GUI.Label(new Rect(Screen.width/2-150, Screen.height/2-30, 300,60), "GAME OVER", gameOverStyle);
-            GUI.Label(new Rect(Screen.width/2-150, Screen.height/2+40, 300,30), "R - Restart    Enter/Esc - Menu", centerStyle);
+            GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height / 2 - 30, 300, 60), "GAME OVER", gameOverStyle);
+            GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height / 2 + 40, 300, 30), "R - Restart    Enter/Esc - Menu", centerStyle);
         }
     }
 }
