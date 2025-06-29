@@ -9,6 +9,10 @@ public class MeteorSplit : MonoBehaviour
     public GameObject[] smallGreyMeteors;
     public GameObject[] tinyGreyMeteors;
 
+    public AudioClip projectileHitClip;
+    public AudioClip hammerHitClip;
+    public GameObject hitParticles;
+
     public float collisionSplitSpeedThreshold = 0.5f;
     public float collisionSplitEnableDelay = 0.5f;
 
@@ -135,8 +139,15 @@ public class MeteorSplit : MonoBehaviour
             int points = GameConstants.GetScoreByTag(gameObject.tag);
             GameManager.Instance.AddScore(points);
         }
-        // TODO: Play sound effect
-        // TODO: Spawn particle effect
+
+        if (projectileHitClip != null)
+        {
+            AudioSource.PlayClipAtPoint(projectileHitClip, transform.position);
+        }
+        if (hitParticles != null)
+        {
+            Instantiate(hitParticles, transform.position, Quaternion.identity);
+        }
     }
 
     public void OnHammerHit()
@@ -152,13 +163,22 @@ public class MeteorSplit : MonoBehaviour
         }
         if (GameManager.Instance != null)
         {
-            int points = GameConstants.GetScoreByTag(gameObject.tag);
+            int points = GameConstants.GetScoreByTag(gameObject.tag) * 2;
             GameManager.Instance.AddScore(points);
         }
-        // TODO: Add score (possibly higher than projectile hit)
-        // TODO: Play hammer hit sound effect
-        // TODO: Spawn hammer hit particle effect
-        // TODO: Apply screen shake
+
+        if (hammerHitClip != null)
+        {
+            AudioSource.PlayClipAtPoint(hammerHitClip, transform.position);
+        }
+        if (hitParticles != null)
+        {
+            Instantiate(hitParticles, transform.position, Quaternion.identity);
+        }
+        if (CameraShake.Instance != null)
+        {
+            CameraShake.Instance.Shake();
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)

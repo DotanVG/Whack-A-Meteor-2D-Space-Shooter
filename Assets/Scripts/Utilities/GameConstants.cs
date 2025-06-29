@@ -6,6 +6,7 @@ public static class GameConstants
     public const int ScoreMediumMeteor = 10;
     public const int ScoreSmallMeteor = 15;
     public const int ScoreTinyMeteor = 20;
+    public const int ScoreEnemy = 25;
 
     public const int StartingLives = 3;
     public const float InvincibilityDuration = 3f;

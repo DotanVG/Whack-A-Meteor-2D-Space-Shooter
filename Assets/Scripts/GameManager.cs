@@ -20,6 +20,11 @@ public class GameManager : MonoBehaviour
     private float livesHitTimer = 0f;
     private bool livesRecentlyHit = false;
 
+    public Texture2D lifeIcon;
+    public Texture2D[] digitSprites;
+    public Vector2 digitSize = new Vector2(20, 28);
+    public Vector2 lifeIconSize = new Vector2(32, 32);
+
     private GUIStyle centerStyle;
     private GUIStyle hudStyle;
     private GUIStyle gameOverStyle;
@@ -179,22 +184,23 @@ public class GameManager : MonoBehaviour
 
     void OnGUI()
     {
-        GUI.Label(new Rect(20, 20, 300, 50), $"SCORE: {Score}", hudStyle);
+        GUI.Label(new Rect(20, 20, 70, 30), "SCORE:", hudStyle);
+        DrawNumber(new Vector2(90, 20), Score);
 
-        // Animate LIVES label if recently hit
-        Rect livesRect = new Rect(Screen.width - 120, 20, 100, 50);
-        GUIStyle livesStyle = hudStyle;
+        float lifeWidth = lifeIconSize.x;
+        float lifeHeight = lifeIconSize.y;
+        float spacing = 5f;
+        Rect livesRect = new Rect(Screen.width - lifeWidth * Lives - spacing * (Lives - 1) - 20, 20, lifeWidth, lifeHeight);
 
         if (livesRecentlyHit)
         {
             float animTime = livesHitTimer;
             Matrix4x4 oldMatrix = GUI.matrix;
-            Vector2 center = new Vector2(livesRect.x + livesRect.width / 2, livesRect.y + livesRect.height / 2);
+            Vector2 center = new Vector2(livesRect.x + lifeWidth / 2, livesRect.y + lifeHeight / 2);
 
             if (animTime < 1f)
             {
-                // Scale up and shake for 1 second
-                float scale = 1.0f + Mathf.Sin(animTime * 12f) * 0.18f + Mathf.Lerp(0.25f, 0f, animTime / 1f);
+                float scale = 1.0f + Mathf.Sin(animTime * 12f) * 0.18f + Mathf.Lerp(0.25f, 0f, animTime);
                 float shake = Mathf.Sin(animTime * 40f) * 6f;
                 GUI.matrix = Matrix4x4.TRS(
                     new Vector3(center.x + shake, center.y, 0),
@@ -204,21 +210,23 @@ public class GameManager : MonoBehaviour
             }
             else if (animTime < 2f)
             {
-                // Blink for 1 second
                 float blink = Mathf.PingPong((animTime - 1f) * 6f, 1f);
                 Color prevColor = GUI.color;
                 GUI.color = new Color(1, 1, 1, blink > 0.5f ? 1f : 0.2f);
-                GUI.Label(livesRect, $"LIVES: {Lives}", livesStyle);
+                GUI.DrawTexture(livesRect, lifeIcon);
                 GUI.color = prevColor;
-                return; // Don't draw again below
+                GUI.matrix = oldMatrix;
+                return;
             }
 
-            GUI.Label(livesRect, $"LIVES: {Lives}", livesStyle);
+            GUI.DrawTexture(livesRect, lifeIcon);
             GUI.matrix = oldMatrix;
         }
-        else
+
+        for (int i = 0; i < Lives; i++)
         {
-            GUI.Label(livesRect, $"LIVES: {Lives}", livesStyle);
+            Rect r = new Rect(Screen.width - lifeWidth * (i + 1) - spacing * i - 20, 20, lifeWidth, lifeHeight);
+            GUI.DrawTexture(r, lifeIcon);
         }
 
         if (showingCountdown)
@@ -227,7 +235,7 @@ public class GameManager : MonoBehaviour
             float alpha = countdown - (number - 1);
             Color prev = GUI.color;
             GUI.color = new Color(1f, 1f, 1f, alpha);
-            GUI.Label(new Rect(Screen.width / 2 - 50, Screen.height / 2 - 25, 100, 50), number.ToString(), centerStyle);
+            DrawDigit(number, new Rect(Screen.width / 2 - digitSize.x / 2, Screen.height / 2 - digitSize.y / 2, digitSize.x, digitSize.y));
             GUI.color = prev;
         }
 
@@ -253,6 +261,29 @@ public class GameManager : MonoBehaviour
         {
             GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height / 2 - 30, 300, 60), "GAME OVER", gameOverStyle);
             GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height / 2 + 40, 300, 30), "R - Restart    Enter/Esc - Menu", centerStyle);
+        }
+    }
+
+    void DrawDigit(int digit, Rect rect)
+    {
+        if (digitSprites == null || digitSprites.Length == 0) return;
+        digit = Mathf.Clamp(digit, 0, digitSprites.Length - 1);
+        Texture2D tex = digitSprites[digit];
+        if (tex != null)
+        {
+            GUI.DrawTexture(rect, tex);
+        }
+    }
+
+    void DrawNumber(Vector2 position, int number)
+    {
+        if (digitSprites == null || digitSprites.Length == 0) return;
+        string s = Mathf.Max(0, number).ToString();
+        for (int i = 0; i < s.Length; i++)
+        {
+            int d = s[i] - '0';
+            Rect r = new Rect(position.x + i * digitSize.x, position.y, digitSize.x, digitSize.y);
+            DrawDigit(d, r);
         }
     }
 }

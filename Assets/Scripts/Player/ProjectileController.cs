@@ -4,6 +4,8 @@ public class ProjectileController : MonoBehaviour
 {
     public float speed = 50f;  // Speed at which the projectile moves
     public float lifeTime = 2f; // Lifetime of the projectile
+    public AudioClip enemyHitClip;
+    public GameObject hitParticles;
 
     void Start()
     {
@@ -19,9 +21,20 @@ public class ProjectileController : MonoBehaviour
         // Check if the projectile hit an enemy
         if (other.gameObject.CompareTag("Enemy"))
         {
-            // TODO: Implement logic for handling enemy hit
-            // Add additional code here for what happens when the projectile hits an enemy
-            Destroy(gameObject); // Destroy the projectile
+            if (enemyHitClip != null)
+            {
+                AudioSource.PlayClipAtPoint(enemyHitClip, transform.position);
+            }
+            if (hitParticles != null)
+            {
+                Instantiate(hitParticles, other.transform.position, Quaternion.identity);
+            }
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.AddScore(GameConstants.ScoreEnemy);
+            }
+            Destroy(other.gameObject);
+            Destroy(gameObject);
         }
         // Check if the projectile hit a meteor
         else if (other.gameObject.CompareTag("BigBrownMeteor") ||
