@@ -154,7 +154,7 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver) return;
         Lives -= 1;
-        lostLifeIndex = Mathf.Max(Lives, 0);
+        lostLifeIndex = Lives; // animate the leftmost remaining heart
         livesHitTimer = 0f;
         livesRecentlyHit = true;
         if (Lives <= 0)
@@ -189,43 +189,40 @@ public class GameManager : MonoBehaviour
         float lifeWidth = lifeIconSize.x;
         float lifeHeight = lifeIconSize.y;
         float spacing = 5f;
-        if (livesRecentlyHit)
-        {
-            int indexForRect = lostLifeIndex;
-            Rect livesRect = new Rect(Screen.width - lifeWidth * (indexForRect + 1) - spacing * indexForRect - 20, 20, lifeWidth, lifeHeight);
-            float animTime = livesHitTimer;
-            Matrix4x4 oldMatrix = GUI.matrix;
-            Vector2 center = new Vector2(livesRect.x + lifeWidth / 2, livesRect.y + lifeHeight / 2);
 
-            if (animTime < 1f)
-            {
-                float scale = 1.0f + Mathf.Sin(animTime * 12f) * 0.18f + Mathf.Lerp(0.25f, 0f, animTime);
-                float shake = Mathf.Sin(animTime * 40f) * 6f;
-                GUI.matrix = Matrix4x4.TRS(
-                    new Vector3(center.x + shake, center.y, 0),
-                    Quaternion.identity,
-                    new Vector3(scale, scale, 1)
-                ) * Matrix4x4.TRS(-center, Quaternion.identity, Vector3.one);
-            }
-            else if (animTime < 2f)
-            {
-                float blink = Mathf.PingPong((animTime - 1f) * 6f, 1f);
-                Color prevColor = GUI.color;
-                GUI.color = new Color(1, 1, 1, blink > 0.5f ? 1f : 0.2f);
-                GUI.DrawTexture(livesRect, lifeIcon);
-                GUI.color = prevColor;
-                GUI.matrix = oldMatrix;
-                return;
-            }
-
-            GUI.DrawTexture(livesRect, lifeIcon);
-            GUI.matrix = oldMatrix;
-        }
-
+        // draw remaining lives
         for (int i = 0; i < Lives; i++)
         {
             Rect r = new Rect(Screen.width - lifeWidth * (i + 1) - spacing * i - 20, 20, lifeWidth, lifeHeight);
             GUI.DrawTexture(r, lifeIcon);
+        }
+
+        // animate the lost life icon on the left
+        if (livesRecentlyHit && lostLifeIndex >= 0)
+        {
+            Rect rect = new Rect(Screen.width - lifeWidth * (lostLifeIndex + 1) - spacing * lostLifeIndex - 20, 20, lifeWidth, lifeHeight);
+            float t = livesHitTimer;
+
+            Matrix4x4 prevMatrix = GUI.matrix;
+            Color prevColor = GUI.color;
+
+            // blinking alpha
+            float blink = Mathf.PingPong(t * 6f, 1f) > 0.5f ? 1f : 0.2f;
+            GUI.color = new Color(1f, 1f, 1f, blink);
+
+            // scale animation during first second
+            float scale = 1f;
+            if (t < 1f)
+            {
+                scale = 1f + Mathf.Sin(t * Mathf.PI) * 0.5f;
+            }
+
+            Vector2 center = new Vector2(rect.x + rect.width / 2f, rect.y + rect.height / 2f);
+            GUI.matrix = Matrix4x4.TRS(center, Quaternion.identity, new Vector3(scale, scale, 1f)) * Matrix4x4.TRS(-center, Quaternion.identity, Vector3.one);
+            GUI.DrawTexture(rect, lifeIcon);
+
+            GUI.matrix = prevMatrix;
+            GUI.color = prevColor;
         }
 
         if (showingCountdown)
