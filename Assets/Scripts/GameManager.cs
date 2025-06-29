@@ -17,6 +17,9 @@ public class GameManager : MonoBehaviour
     private bool isGameOver = false;
     private float gameOverTimer = 0f;
 
+    private float livesHitTimer = 0f;
+    private bool livesRecentlyHit = false;
+
     private GUIStyle centerStyle;
     private GUIStyle hudStyle;
     private GUIStyle gameOverStyle;
@@ -122,6 +125,17 @@ public class GameManager : MonoBehaviour
             SceneManager.LoadScene("MainMenu");
             Time.timeScale = 1f;
         }
+
+        // Update lives hit animation timer
+        if (livesRecentlyHit)
+        {
+            livesHitTimer += Time.deltaTime;
+            if (livesHitTimer > 2f) // 1s shake+scale, 1s blink
+            {
+                livesRecentlyHit = false;
+                livesHitTimer = 0f;
+            }
+        }
     }
 
     public void AddScore(int amount)
@@ -133,6 +147,12 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver) return;
         Lives -= 1;
+        // Only animate if lives remain
+        if (Lives > 0)
+        {
+            livesHitTimer = 0f;
+            livesRecentlyHit = true;
+        }
         if (Lives <= 0)
         {
             StartGameOver();
@@ -160,7 +180,46 @@ public class GameManager : MonoBehaviour
     void OnGUI()
     {
         GUI.Label(new Rect(20, 20, 300, 50), $"SCORE: {Score}", hudStyle);
-        GUI.Label(new Rect(Screen.width - 120, 20, 100, 50), $"LIVES: {Lives}", hudStyle);
+
+        // Animate LIVES label if recently hit
+        Rect livesRect = new Rect(Screen.width - 120, 20, 100, 50);
+        GUIStyle livesStyle = hudStyle;
+
+        if (livesRecentlyHit)
+        {
+            float animTime = livesHitTimer;
+            Matrix4x4 oldMatrix = GUI.matrix;
+            Vector2 center = new Vector2(livesRect.x + livesRect.width / 2, livesRect.y + livesRect.height / 2);
+
+            if (animTime < 1f)
+            {
+                // Scale up and shake for 1 second
+                float scale = 1.0f + Mathf.Sin(animTime * 12f) * 0.18f + Mathf.Lerp(0.25f, 0f, animTime / 1f);
+                float shake = Mathf.Sin(animTime * 40f) * 6f;
+                GUI.matrix = Matrix4x4.TRS(
+                    new Vector3(center.x + shake, center.y, 0),
+                    Quaternion.identity,
+                    new Vector3(scale, scale, 1)
+                ) * Matrix4x4.TRS(-center, Quaternion.identity, Vector3.one);
+            }
+            else if (animTime < 2f)
+            {
+                // Blink for 1 second
+                float blink = Mathf.PingPong((animTime - 1f) * 6f, 1f);
+                Color prevColor = GUI.color;
+                GUI.color = new Color(1, 1, 1, blink > 0.5f ? 1f : 0.2f);
+                GUI.Label(livesRect, $"LIVES: {Lives}", livesStyle);
+                GUI.color = prevColor;
+                return; // Don't draw again below
+            }
+
+            GUI.Label(livesRect, $"LIVES: {Lives}", livesStyle);
+            GUI.matrix = oldMatrix;
+        }
+        else
+        {
+            GUI.Label(livesRect, $"LIVES: {Lives}", livesStyle);
+        }
 
         if (showingCountdown)
         {
