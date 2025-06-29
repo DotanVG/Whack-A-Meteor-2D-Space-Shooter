@@ -19,10 +19,11 @@ public class GameManager : MonoBehaviour
 
     private float livesHitTimer = 0f;
     private bool livesRecentlyHit = false;
+    private int lostLifeIndex = -1;
 
     public Texture2D lifeIcon;
     public Texture2D[] digitSprites;
-    public Vector2 digitSize = new Vector2(20, 28);
+    public Vector2 digitSize = new Vector2(16, 22);
     public Vector2 lifeIconSize = new Vector2(32, 32);
 
     private GUIStyle centerStyle;
@@ -139,6 +140,7 @@ public class GameManager : MonoBehaviour
             {
                 livesRecentlyHit = false;
                 livesHitTimer = 0f;
+                lostLifeIndex = -1;
             }
         }
     }
@@ -152,12 +154,9 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver) return;
         Lives -= 1;
-        // Only animate if lives remain
-        if (Lives > 0)
-        {
-            livesHitTimer = 0f;
-            livesRecentlyHit = true;
-        }
+        lostLifeIndex = Mathf.Max(Lives, 0);
+        livesHitTimer = 0f;
+        livesRecentlyHit = true;
         if (Lives <= 0)
         {
             StartGameOver();
@@ -190,10 +189,10 @@ public class GameManager : MonoBehaviour
         float lifeWidth = lifeIconSize.x;
         float lifeHeight = lifeIconSize.y;
         float spacing = 5f;
-        Rect livesRect = new Rect(Screen.width - lifeWidth * Lives - spacing * (Lives - 1) - 20, 20, lifeWidth, lifeHeight);
-
         if (livesRecentlyHit)
         {
+            int indexForRect = lostLifeIndex;
+            Rect livesRect = new Rect(Screen.width - lifeWidth * (indexForRect + 1) - spacing * indexForRect - 20, 20, lifeWidth, lifeHeight);
             float animTime = livesHitTimer;
             Matrix4x4 oldMatrix = GUI.matrix;
             Vector2 center = new Vector2(livesRect.x + lifeWidth / 2, livesRect.y + lifeHeight / 2);
