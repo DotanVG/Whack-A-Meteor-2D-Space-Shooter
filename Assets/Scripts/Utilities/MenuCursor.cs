@@ -11,11 +11,6 @@ public class MenuCursor : MonoBehaviour
 
     void Awake()
     {
-        if (cursorTexture == null)
-        {
-            cursorTexture = Resources.Load<Texture2D>("UI/cursor");
-        }
-
         if (cursorTexture != null)
         {
             Cursor.SetCursor(cursorTexture, hotspot, CursorMode.Auto);
