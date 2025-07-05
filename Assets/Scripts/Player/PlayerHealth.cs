@@ -34,6 +34,8 @@ public class PlayerHealth : MonoBehaviour
             {
                 GameManager.Instance.LoseLife();
             }
+            // destroy the meteor after losing a life and start invincibility
+            Destroy(obj);
             StartCoroutine(Invincibility());
         }
     }
