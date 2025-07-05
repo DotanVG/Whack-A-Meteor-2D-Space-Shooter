@@ -21,6 +21,10 @@ public class GameManager : MonoBehaviour
     private bool livesRecentlyHit = false;
     private int lostLifeIndex = -1;
 
+    private PlayerController playerController;
+    private ScreenWrapper playerWrapper;
+    private TrailRenderer playerTrail;
+
     public Texture2D lifeIcon;
     public Texture2D[] digitSprites;
     public Vector2 digitSize = new Vector2(16, 22);
@@ -78,6 +82,33 @@ public class GameManager : MonoBehaviour
         {
             player = FindObjectOfType<PlayerHealth>();
         }
+
+        PreparePlayerStart();
+    }
+
+    void PreparePlayerStart()
+    {
+        if (player == null)
+        {
+            player = FindObjectOfType<PlayerHealth>();
+            if (player == null) return;
+        }
+
+        playerController = player.GetComponent<PlayerController>();
+        playerWrapper = player.GetComponent<ScreenWrapper>();
+        playerTrail = player.GetComponent<TrailRenderer>();
+
+        if (playerTrail != null)
+        {
+            playerTrail.Clear();
+            playerTrail.enabled = false;
+        }
+
+        if (playerController != null) playerController.enabled = false;
+        if (playerWrapper != null) playerWrapper.enabled = false;
+
+        player.transform.position = Vector3.zero;
+        player.transform.rotation = Quaternion.identity;
     }
 
     void Update()
@@ -91,6 +122,14 @@ public class GameManager : MonoBehaviour
                 if (spawner != null)
                 {
                     spawner.StartSpawning();
+                }
+
+                if (playerController != null) playerController.enabled = true;
+                if (playerWrapper != null) playerWrapper.enabled = true;
+                if (playerTrail != null)
+                {
+                    playerTrail.Clear();
+                    playerTrail.enabled = true;
                 }
             }
         }
