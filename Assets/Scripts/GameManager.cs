@@ -32,6 +32,7 @@ public class GameManager : MonoBehaviour
     private bool movingPlayer = false;
     private PlayerController playerController;
     private ScreenWrapper playerWrapper;
+    private Rigidbody2D playerRb;
 
     private GUIStyle centerStyle;
     private GUIStyle hudStyle;
@@ -102,6 +103,7 @@ public class GameManager : MonoBehaviour
         {
             playerWrapper.enabled = false;
         }
+        playerRb = player.GetComponent<Rigidbody2D>();
 
         Camera cam = Camera.main;
         if (cam != null)
@@ -112,6 +114,11 @@ public class GameManager : MonoBehaviour
             targetPos.z = 0f;
 
             player.transform.position = startPos;
+            if (playerRb != null)
+            {
+                Vector2 vel = (targetPos - startPos) / startCountdownValue;
+                playerRb.velocity = vel;
+            }
             movingPlayer = true;
         }
     }
@@ -120,17 +127,6 @@ public class GameManager : MonoBehaviour
     {
         if (movingPlayer && player != null)
         {
-            float t = Mathf.Clamp01((startCountdownValue - countdown) / startCountdownValue);
-            Vector3 newPos = Vector3.Lerp(startPos, targetPos, t);
-            Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
-            if (rb != null)
-            {
-                rb.MovePosition(newPos);
-            }
-            else
-            {
-                player.transform.position = newPos;
-            }
             if (!showingCountdown)
             {
                 movingPlayer = false;
@@ -140,8 +136,12 @@ public class GameManager : MonoBehaviour
                 }
                 if (playerController != null)
                 {
-                    if (rb != null) rb.velocity = Vector2.zero;
+                    if (playerRb != null) playerRb.velocity = Vector2.zero;
                     playerController.enabled = true;
+                }
+                if (playerRb != null)
+                {
+                    player.transform.position = targetPos;
                 }
             }
         }
