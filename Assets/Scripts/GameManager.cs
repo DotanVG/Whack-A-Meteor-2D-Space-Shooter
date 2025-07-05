@@ -26,6 +26,13 @@ public class GameManager : MonoBehaviour
     public Vector2 digitSize = new Vector2(16, 22);
     public Vector2 lifeIconSize = new Vector2(32, 32);
 
+    private float startCountdownValue = 3f;
+    private Vector3 startPos;
+    private Vector3 targetPos;
+    private bool movingPlayer = false;
+    private PlayerController playerController;
+    private ScreenWrapper playerWrapper;
+
     private GUIStyle centerStyle;
     private GUIStyle hudStyle;
     private GUIStyle gameOverStyle;
@@ -70,6 +77,7 @@ public class GameManager : MonoBehaviour
         isGameOver = false;
         showingCountdown = true;
         countdown = 3f;
+        startCountdownValue = countdown;
         if (spawner == null)
         {
             spawner = FindObjectOfType<MeteorSpawner>();
@@ -78,10 +86,66 @@ public class GameManager : MonoBehaviour
         {
             player = FindObjectOfType<PlayerHealth>();
         }
+        PreparePlayerStart();
+    }
+
+    void PreparePlayerStart()
+    {
+        if (player == null) return;
+        playerController = player.GetComponent<PlayerController>();
+        if (playerController != null)
+        {
+            playerController.enabled = false;
+        }
+        playerWrapper = player.GetComponent<ScreenWrapper>();
+        if (playerWrapper != null)
+        {
+            playerWrapper.enabled = false;
+        }
+
+        Camera cam = Camera.main;
+        if (cam != null)
+        {
+            startPos = cam.ScreenToWorldPoint(new Vector3(Screen.width / 2f, -50f, 0f));
+            startPos.z = 0f;
+            targetPos = cam.ScreenToWorldPoint(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+            targetPos.z = 0f;
+
+            player.transform.position = startPos;
+            movingPlayer = true;
+        }
     }
 
     void Update()
     {
+        if (movingPlayer && player != null)
+        {
+            float t = Mathf.Clamp01((startCountdownValue - countdown) / startCountdownValue);
+            Vector3 newPos = Vector3.Lerp(startPos, targetPos, t);
+            Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.MovePosition(newPos);
+            }
+            else
+            {
+                player.transform.position = newPos;
+            }
+            if (!showingCountdown)
+            {
+                movingPlayer = false;
+                if (playerWrapper != null)
+                {
+                    playerWrapper.enabled = true;
+                }
+                if (playerController != null)
+                {
+                    if (rb != null) rb.velocity = Vector2.zero;
+                    playerController.enabled = true;
+                }
+            }
+        }
+
         if (showingCountdown)
         {
             countdown -= Time.deltaTime;
