@@ -183,7 +183,7 @@ public class GameManager : MonoBehaviour
 
     void OnGUI()
     {
-        GUI.Label(new Rect(20, 20, 70, 30), "SCORE:", hudStyle);
+        GUI.Label(new Rect(25, 25, 70, 30), "SCORE:", hudStyle);
         DrawNumber(new Vector2(90, 20), Score);
 
         float lifeWidth = lifeIconSize.x;
