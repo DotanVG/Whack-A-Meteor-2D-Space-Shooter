@@ -108,7 +108,9 @@ public class GameManager : MonoBehaviour
         Camera cam = Camera.main;
         if (cam != null)
         {
-            startPos = cam.ScreenToWorldPoint(new Vector3(Screen.width / 2f, -50f, 0f));
+            // Begin the ship slightly above the bottom of the screen so
+            // the trail doesn't immediately wrap from being off screen.
+            startPos = cam.ScreenToWorldPoint(new Vector3(Screen.width / 2f, 30f, 0f));
             startPos.z = 0f;
             targetPos = cam.ScreenToWorldPoint(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
             targetPos.z = 0f;
