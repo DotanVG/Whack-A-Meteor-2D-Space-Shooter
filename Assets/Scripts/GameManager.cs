@@ -108,8 +108,9 @@ public class GameManager : MonoBehaviour
         Camera cam = Camera.main;
         if (cam != null)
         {
-            // Start the ship just inside the bottom of the screen
-            startPos = cam.ScreenToWorldPoint(new Vector3(Screen.width / 2f, 50f, 0f));
+            // Start slightly below the center, inside the screen
+            float offset = Screen.height * 0.25f;
+            startPos = cam.ScreenToWorldPoint(new Vector3(Screen.width / 2f, offset, 0f));
             startPos.z = 0f;
             targetPos = cam.ScreenToWorldPoint(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
             targetPos.z = 0f;
@@ -139,10 +140,6 @@ public class GameManager : MonoBehaviour
                 {
                     if (playerRb != null) playerRb.velocity = Vector2.zero;
                     playerController.enabled = true;
-                }
-                if (playerRb != null)
-                {
-                    player.transform.position = targetPos;
                 }
             }
         }
