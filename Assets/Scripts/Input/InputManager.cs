@@ -24,6 +24,7 @@ public class InputManager : MonoBehaviour
 
     private Camera mainCamera;
     private Gamepad currentGamepad; // Track the active gamepad
+    private float lastRightTriggerValue = 0f; // Track previous frame's trigger value for press detection
 
     /// <summary>
     /// Auto-creates InputManager if it doesn't exist
@@ -88,8 +89,9 @@ public class InputManager : MonoBehaviour
         // Detect active input device
         DetectActiveInputDevice();
 
-        // Update hammer cursor position for gamepad
-        if (isUsingGamepad && currentGamepad != null)
+        // Update hammer cursor position for gamepad (right stick controls hammer like mouse)
+        // Always update if gamepad is connected to allow seamless switching
+        if (currentGamepad != null)
         {
             UpdateHammerCursorPosition();
         }
@@ -162,8 +164,10 @@ public class InputManager : MonoBehaviour
                     currentGamepad.buttonEast.isPressed ||
                     currentGamepad.buttonNorth.isPressed ||
                     currentGamepad.rightShoulder.isPressed ||
+                    currentGamepad.leftShoulder.isPressed ||
                     currentGamepad.rightTrigger.isPressed ||
                     currentGamepad.leftTrigger.isPressed ||
+                    currentGamepad.leftStickButton.isPressed ||
                     currentGamepad.startButton.isPressed ||
                     currentGamepad.dpad.ReadValue().magnitude > 0.1f
                 );
@@ -245,47 +249,54 @@ public class InputManager : MonoBehaviour
     public float GetMoveForward()
     {
         float value = 0f;
-        
+
         // Check keyboard first (WASD)
         if (Keyboard.current != null && Keyboard.current.wKey.isPressed)
         {
             value = 1f;
         }
-        
-        // Check gamepad (only if keyboard not pressed, or if gamepad is actively being used)
+
+        // Check gamepad: Mario Kart style - Forward (D-pad up) OR A button (buttonSouth) OR Left stick forward
         if (currentGamepad != null && (isUsingGamepad || value == 0f))
         {
             try
             {
+                // Left stick forward
                 float stickY = currentGamepad.leftStick.y.ReadValue();
                 if (stickY > gamepadDeadzone)
                 {
                     value = Mathf.Max(value, stickY);
                 }
-                
-                float trigger = currentGamepad.rightTrigger.ReadValue();
-                if (trigger > gamepadDeadzone)
+
+                // D-pad up (Forward)
+                if (currentGamepad.dpad.up.isPressed)
                 {
-                    value = Mathf.Max(value, trigger);
+                    value = Mathf.Max(value, 1f);
+                }
+
+                // A button (buttonSouth) - Mario Kart style acceleration
+                if (currentGamepad.buttonSouth.isPressed)
+                {
+                    value = Mathf.Max(value, 1f);
                 }
             }
             catch { FindActiveGamepad(); }
         }
-        
+
         return value;
     }
 
     public float GetMoveBackward()
     {
         float value = 0f;
-        
+
         // Check keyboard first (WASD)
         if (Keyboard.current != null && Keyboard.current.sKey.isPressed)
         {
             value = 1f;
         }
-        
-        // Check gamepad (only if keyboard not pressed, or if gamepad is actively being used)
+
+        // Check gamepad - only left stick backward (LT is for shooting, not movement)
         if (currentGamepad != null && (isUsingGamepad || value == 0f))
         {
             try
@@ -295,29 +306,23 @@ public class InputManager : MonoBehaviour
                 {
                     value = Mathf.Max(value, -stickY);
                 }
-                
-                float trigger = currentGamepad.leftTrigger.ReadValue();
-                if (trigger > gamepadDeadzone)
-                {
-                    value = Mathf.Max(value, trigger);
-                }
             }
             catch { FindActiveGamepad(); }
         }
-        
+
         return value;
     }
 
     public float GetRotateLeft()
     {
         float value = 0f;
-        
+
         // Check keyboard first (WASD)
         if (Keyboard.current != null && Keyboard.current.aKey.isPressed)
         {
             value = 1f;
         }
-        
+
         // Check gamepad (only if keyboard not pressed, or if gamepad is actively being used)
         if (currentGamepad != null && (isUsingGamepad || value == 0f))
         {
@@ -328,7 +333,7 @@ public class InputManager : MonoBehaviour
                 {
                     value = Mathf.Max(value, -stickX);
                 }
-                
+
                 if (currentGamepad.dpad.left.isPressed)
                 {
                     value = Mathf.Max(value, 1f);
@@ -336,20 +341,20 @@ public class InputManager : MonoBehaviour
             }
             catch { FindActiveGamepad(); }
         }
-        
+
         return value;
     }
 
     public float GetRotateRight()
     {
         float value = 0f;
-        
+
         // Check keyboard first (WASD)
         if (Keyboard.current != null && Keyboard.current.dKey.isPressed)
         {
             value = 1f;
         }
-        
+
         // Check gamepad (only if keyboard not pressed, or if gamepad is actively being used)
         if (currentGamepad != null && (isUsingGamepad || value == 0f))
         {
@@ -360,7 +365,7 @@ public class InputManager : MonoBehaviour
                 {
                     value = Mathf.Max(value, stickX);
                 }
-                
+
                 if (currentGamepad.dpad.right.isPressed)
                 {
                     value = Mathf.Max(value, 1f);
@@ -368,7 +373,7 @@ public class InputManager : MonoBehaviour
             }
             catch { FindActiveGamepad(); }
         }
-        
+
         return value;
     }
 
@@ -377,12 +382,13 @@ public class InputManager : MonoBehaviour
         // Check keyboard first (Shift)
         if (Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed)
             return true;
-        // Check gamepad (only if not using keyboard/mouse)
-        if (isUsingGamepad && currentGamepad != null)
+        // Check gamepad: LS click (leftStickButton) OR LB (leftShoulder)
+        // Check even if not actively using gamepad, to allow seamless switching
+        if (currentGamepad != null)
         {
             try
             {
-                return currentGamepad.rightShoulder.isPressed;
+                return currentGamepad.leftStickButton.isPressed || currentGamepad.leftShoulder.isPressed;
             }
             catch { FindActiveGamepad(); }
         }
@@ -394,12 +400,13 @@ public class InputManager : MonoBehaviour
         // Check keyboard first (Shift)
         if (Keyboard.current != null && Keyboard.current.leftShiftKey.wasPressedThisFrame)
             return true;
-        // Check gamepad (only if not using keyboard/mouse)
-        if (isUsingGamepad && currentGamepad != null)
+        // Check gamepad: LS click (leftStickButton) OR LB (leftShoulder)
+        // Check even if not actively using gamepad, to allow seamless switching
+        if (currentGamepad != null)
         {
             try
             {
-                return currentGamepad.rightShoulder.wasPressedThisFrame;
+                return currentGamepad.leftStickButton.wasPressedThisFrame || currentGamepad.leftShoulder.wasPressedThisFrame;
             }
             catch { FindActiveGamepad(); }
         }
@@ -411,12 +418,14 @@ public class InputManager : MonoBehaviour
         // Check keyboard first (Space)
         if (Keyboard.current != null && Keyboard.current.spaceKey.isPressed)
             return true;
-        // Check gamepad (only if not using keyboard/mouse)
-        if (isUsingGamepad && currentGamepad != null)
+        // Check gamepad: LT (leftTrigger) OR X button (buttonWest)
+        // Check even if not actively using gamepad, to allow seamless switching
+        if (currentGamepad != null)
         {
             try
             {
-                return currentGamepad.buttonSouth.isPressed || currentGamepad.rightTrigger.isPressed;
+                float leftTrigger = currentGamepad.leftTrigger.ReadValue();
+                return (leftTrigger > gamepadDeadzone) || currentGamepad.buttonWest.isPressed;
             }
             catch { FindActiveGamepad(); }
         }
@@ -428,12 +437,15 @@ public class InputManager : MonoBehaviour
         // Check keyboard first (Space)
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
             return true;
-        // Check gamepad (only if not using keyboard/mouse)
-        if (isUsingGamepad && currentGamepad != null)
+        // Check gamepad: LT (leftTrigger) OR X button (buttonWest)
+        // Check even if not actively using gamepad, to allow seamless switching
+        if (currentGamepad != null)
         {
             try
             {
-                return currentGamepad.buttonSouth.wasPressedThisFrame || currentGamepad.rightTrigger.wasPressedThisFrame;
+                float leftTrigger = currentGamepad.leftTrigger.ReadValue();
+                bool triggerPressed = leftTrigger > gamepadDeadzone && leftTrigger > 0.5f; // Require significant press
+                return triggerPressed || currentGamepad.buttonWest.wasPressedThisFrame;
             }
             catch { FindActiveGamepad(); }
         }
@@ -445,12 +457,17 @@ public class InputManager : MonoBehaviour
         // Check mouse first (left click)
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             return true;
-        // Check gamepad (only if not using mouse)
-        if (isUsingGamepad && currentGamepad != null)
+        // Check gamepad: RT (rightTrigger) for hammer hit
+        // Check even if not actively using gamepad, to allow seamless switching
+        if (currentGamepad != null)
         {
             try
             {
-                return currentGamepad.buttonWest.wasPressedThisFrame || currentGamepad.rightShoulder.wasPressedThisFrame;
+                float rightTrigger = currentGamepad.rightTrigger.ReadValue();
+                // Detect trigger press: current value is high and previous was low
+                bool triggerPressed = rightTrigger > 0.5f && lastRightTriggerValue <= 0.3f;
+                lastRightTriggerValue = rightTrigger;
+                return triggerPressed;
             }
             catch { FindActiveGamepad(); }
         }
@@ -465,16 +482,17 @@ public class InputManager : MonoBehaviour
             Vector2 mousePos = Mouse.current.position.ReadValue();
             // Update tracked position for smooth transition
             hammerScreenPosition = mousePos;
-            isUsingGamepad = false; // Mouse input means we're not using gamepad
+            // Don't set isUsingGamepad to false here - let DetectActiveInputDevice handle it
             return mousePos;
         }
-        
-        // If using gamepad and no mouse, return gamepad-controlled position
-        if (isUsingGamepad)
+
+        // If gamepad is connected, use right stick to control cursor position (works in-game and in menus)
+        // Always return gamepad position if gamepad is connected, even if we're also using keyboard
+        if (currentGamepad != null)
         {
-            return hammerScreenPosition;
+            return hammerScreenPosition; // Updated by UpdateHammerCursorPosition()
         }
-        
+
         // Fallback: return current tracked position
         return hammerScreenPosition;
     }
@@ -483,7 +501,7 @@ public class InputManager : MonoBehaviour
     public Vector2 GetNavigate()
     {
         Vector2 value = Vector2.zero;
-        
+
         // Check keyboard
         if (Keyboard.current != null)
         {
@@ -492,27 +510,31 @@ public class InputManager : MonoBehaviour
             if (Keyboard.current.leftArrowKey.isPressed) value.x -= 1f;
             if (Keyboard.current.rightArrowKey.isPressed) value.x += 1f;
         }
-        
-        // Check gamepad (works with all gamepad types)
+
+        // Check gamepad - always check, not just when isUsingGamepad
         if (currentGamepad != null)
         {
             try
             {
-                Vector2 stick = currentGamepad.leftStick.ReadValue();
-                if (stick.magnitude > gamepadDeadzone)
-                {
-                    value = stick;
-                }
-                
+                // D-pad takes priority for menu navigation
                 Vector2 dpad = currentGamepad.dpad.ReadValue();
                 if (dpad.magnitude > 0.1f)
                 {
                     value = dpad;
                 }
+                else
+                {
+                    // Fallback to left stick if D-pad not used
+                    Vector2 stick = currentGamepad.leftStick.ReadValue();
+                    if (stick.magnitude > gamepadDeadzone)
+                    {
+                        value = stick;
+                    }
+                }
             }
             catch { FindActiveGamepad(); }
         }
-        
+
         return value;
     }
 
