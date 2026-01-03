@@ -1,0 +1,351 @@
+{
+    "m_Name": "GameInputActions",
+    "m_Maps": [
+        {
+            "m_Name": "Gameplay",
+            "m_Id": "a1b2c3d4e5f6g7h8",
+            "m_Actions": [
+                {
+                    "m_Name": "MoveForward",
+                    "m_Id": "moveforward123",
+                    "m_Type": 1,
+                    "m_ExpectedControlType": "Axis",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Keyboard>/w",
+                            "m_Action": "MoveForward",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/leftStick/y",
+                            "m_Action": "MoveForward",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/rightTrigger",
+                            "m_Action": "MoveForward",
+                            "m_Flags": 0
+                        }
+                    ]
+                },
+                {
+                    "m_Name": "MoveBackward",
+                    "m_Id": "movebackward123",
+                    "m_Type": 1,
+                    "m_ExpectedControlType": "Axis",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Keyboard>/s",
+                            "m_Action": "MoveBackward",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/leftStick/y",
+                            "m_Action": "MoveBackward",
+                            "m_Flags": 0,
+                            "m_Modifiers": [
+                                {
+                                    "m_Name": "Invert",
+                                    "m_Type": "Invert",
+                                    "m_Value": 1.0
+                                }
+                            ]
+                        },
+                        {
+                            "m_Path": "<Gamepad>/leftTrigger",
+                            "m_Action": "MoveBackward",
+                            "m_Flags": 0
+                        }
+                    ]
+                },
+                {
+                    "m_Name": "RotateLeft",
+                    "m_Id": "rotateleft123",
+                    "m_Type": 1,
+                    "m_ExpectedControlType": "Axis",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Keyboard>/a",
+                            "m_Action": "RotateLeft",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/leftStick/x",
+                            "m_Action": "RotateLeft",
+                            "m_Flags": 0,
+                            "m_Modifiers": [
+                                {
+                                    "m_Name": "Invert",
+                                    "m_Type": "Invert",
+                                    "m_Value": 1.0
+                                }
+                            ]
+                        },
+                        {
+                            "m_Path": "<Gamepad>/dpad/left",
+                            "m_Action": "RotateLeft",
+                            "m_Flags": 0
+                        }
+                    ]
+                },
+                {
+                    "m_Name": "RotateRight",
+                    "m_Id": "rotateright123",
+                    "m_Type": 1,
+                    "m_ExpectedControlType": "Axis",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Keyboard>/d",
+                            "m_Action": "RotateRight",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/leftStick/x",
+                            "m_Action": "RotateRight",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/dpad/right",
+                            "m_Action": "RotateRight",
+                            "m_Flags": 0
+                        }
+                    ]
+                },
+                {
+                    "m_Name": "Boost",
+                    "m_Id": "boost123",
+                    "m_Type": 0,
+                    "m_ExpectedControlType": "Button",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Keyboard>/leftShift",
+                            "m_Action": "Boost",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/rightShoulder",
+                            "m_Action": "Boost",
+                            "m_Flags": 0
+                        }
+                    ]
+                },
+                {
+                    "m_Name": "Shoot",
+                    "m_Id": "shoot123",
+                    "m_Type": 0,
+                    "m_ExpectedControlType": "Button",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Keyboard>/space",
+                            "m_Action": "Shoot",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/buttonSouth",
+                            "m_Action": "Shoot",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/rightTrigger",
+                            "m_Action": "Shoot",
+                            "m_Flags": 0
+                        }
+                    ]
+                },
+                {
+                    "m_Name": "HammerSwing",
+                    "m_Id": "hammerswing123",
+                    "m_Type": 0,
+                    "m_ExpectedControlType": "Button",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Mouse>/leftButton",
+                            "m_Action": "HammerSwing",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/buttonWest",
+                            "m_Action": "HammerSwing",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/rightShoulder",
+                            "m_Action": "HammerSwing",
+                            "m_Flags": 0
+                        }
+                    ]
+                },
+                {
+                    "m_Name": "HammerPosition",
+                    "m_Id": "hammerposition123",
+                    "m_Type": 2,
+                    "m_ExpectedControlType": "Vector2",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Mouse>/position",
+                            "m_Action": "HammerPosition",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/rightStick",
+                            "m_Action": "HammerPosition",
+                            "m_Flags": 0
+                        }
+                    ]
+                }
+            ],
+            "m_Bindings": [],
+            "m_ControlSchemes": []
+        },
+        {
+            "m_Name": "Menu",
+            "m_Id": "menu12345678",
+            "m_Actions": [
+                {
+                    "m_Name": "Navigate",
+                    "m_Id": "navigate123",
+                    "m_Type": 2,
+                    "m_ExpectedControlType": "Vector2",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Keyboard>/upArrow",
+                            "m_Action": "Navigate",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Keyboard>/downArrow",
+                            "m_Action": "Navigate",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Keyboard>/leftArrow",
+                            "m_Action": "Navigate",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Keyboard>/rightArrow",
+                            "m_Action": "Navigate",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/dpad",
+                            "m_Action": "Navigate",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/leftStick",
+                            "m_Action": "Navigate",
+                            "m_Flags": 0
+                        }
+                    ]
+                },
+                {
+                    "m_Name": "Submit",
+                    "m_Id": "submit123",
+                    "m_Type": 0,
+                    "m_ExpectedControlType": "Button",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Keyboard>/enter",
+                            "m_Action": "Submit",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/buttonSouth",
+                            "m_Action": "Submit",
+                            "m_Flags": 0
+                        }
+                    ]
+                },
+                {
+                    "m_Name": "Cancel",
+                    "m_Id": "cancel123",
+                    "m_Type": 0,
+                    "m_ExpectedControlType": "Button",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Keyboard>/escape",
+                            "m_Action": "Cancel",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/buttonEast",
+                            "m_Action": "Cancel",
+                            "m_Flags": 0
+                        }
+                    ]
+                },
+                {
+                    "m_Name": "Pause",
+                    "m_Id": "pause123",
+                    "m_Type": 0,
+                    "m_ExpectedControlType": "Button",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Keyboard>/p",
+                            "m_Action": "Pause",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Keyboard>/escape",
+                            "m_Action": "Pause",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/start",
+                            "m_Action": "Pause",
+                            "m_Flags": 0
+                        }
+                    ]
+                },
+                {
+                    "m_Name": "Restart",
+                    "m_Id": "restart123",
+                    "m_Type": 0,
+                    "m_ExpectedControlType": "Button",
+                    "m_Processors": "",
+                    "m_Interactions": "",
+                    "m_Bindings": [
+                        {
+                            "m_Path": "<Keyboard>/r",
+                            "m_Action": "Restart",
+                            "m_Flags": 0
+                        },
+                        {
+                            "m_Path": "<Gamepad>/buttonNorth",
+                            "m_Action": "Restart",
+                            "m_Flags": 0
+                        }
+                    ]
+                }
+            ],
+            "m_Bindings": [],
+            "m_ControlSchemes": []
+        }
+    ],
+    "m_ControlSchemes": []
+}

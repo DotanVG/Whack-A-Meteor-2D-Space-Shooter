@@ -35,6 +35,7 @@ public class HammerCursorController : MonoBehaviour
     private GameObject radarDot;               // GameObject for the radar dot
     private LineRenderer circularTrail;        // LineRenderer for the circular trail
     private float currentAngle = 0f;           // Current angle of the radar dot
+    private InputManager inputManager;        // Reference to InputManager
 
     /// <summary>
     /// Initializes the hammer cursor, AOE circle, and radar dot.
@@ -51,6 +52,9 @@ public class HammerCursorController : MonoBehaviour
 
         // Get reference to the main camera
         mainCamera = Camera.main;
+
+        // Auto-create InputManager if it doesn't exist
+        inputManager = InputManager.GetOrCreateInstance();
     }
 
     /// <summary>
@@ -62,26 +66,48 @@ public class HammerCursorController : MonoBehaviour
         RotateRadarDot();
         UpdateCircularTrail();
 
-        // Check for mouse click to swing the hammer
-        if (Input.GetMouseButtonDown(0) && !isSwinging)
+        // Check for hammer swing input (mouse click or gamepad button)
+        bool shouldSwing = false;
+        if (inputManager != null)
+        {
+            shouldSwing = inputManager.GetHammerSwing();
+        }
+        else
+        {
+            // Fallback to old Input system
+            shouldSwing = Input.GetMouseButtonDown(0);
+        }
+
+        if (shouldSwing && !isSwinging)
         {
             StartCoroutine(SwingHammer());
         }
     }
 
     /// <summary>
-    /// Updates the position of the hammer cursor and AOE circle based on mouse position.
+    /// Updates the position of the hammer cursor and AOE circle based on input (mouse or gamepad).
     /// </summary>
     private void UpdatePosition()
     {
-        // Convert mouse position to world space
-        Vector3 mousePosition = Input.mousePosition;
-        mousePosition.z = -mainCamera.transform.position.z;
-        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(mousePosition);
+        Vector2 screenPosition;
+
+        if (inputManager != null)
+        {
+            // Get position from InputManager (handles both mouse and gamepad)
+            screenPosition = inputManager.GetHammerPosition();
+        }
+        else
+        {
+            // Fallback to old Input system - use mouse position
+            screenPosition = Input.mousePosition;
+        }
+        
+        // Convert screen position to world space
+        Vector3 screenPos = new Vector3(screenPosition.x, screenPosition.y, -mainCamera.transform.position.z);
+        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(screenPos);
         transform.position = worldPosition;
 
         // Update the hammer's UI position
-        Vector3 screenPos = mainCamera.WorldToScreenPoint(transform.position);
         hammerRectTransform.position = screenPos;
     }
 
