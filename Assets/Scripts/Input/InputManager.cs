@@ -102,10 +102,16 @@ public class InputManager : MonoBehaviour
     /// </summary>
     private void FindActiveGamepad()
     {
+        Gamepad previousGamepad = currentGamepad;
+        
         // Try Gamepad.current first (Xbox controllers)
         if (Gamepad.current != null)
         {
             currentGamepad = Gamepad.current;
+            if (previousGamepad != currentGamepad)
+            {
+                Debug.Log($"Gamepad detected: {currentGamepad.name} (Gamepad.current)");
+            }
             return;
         }
 
@@ -115,28 +121,24 @@ public class InputManager : MonoBehaviour
             if (device is Gamepad gamepad)
             {
                 currentGamepad = gamepad;
+                if (previousGamepad != currentGamepad)
+                {
+                    Debug.Log($"Gamepad detected: {currentGamepad.name} (device scan)");
+                }
                 return;
             }
         }
 
+        if (previousGamepad != null && previousGamepad != null)
+        {
+            Debug.Log("Gamepad disconnected");
+        }
         currentGamepad = null;
     }
 
     private void DetectActiveInputDevice()
     {
-        // Mouse input always takes priority (if mouse moved or clicked, we're using mouse)
-        if (Mouse.current != null)
-        {
-            Vector2 mouseDelta = Mouse.current.delta.ReadValue();
-            if (mouseDelta.magnitude > 0.01f || Mouse.current.leftButton.isPressed || Mouse.current.leftButton.wasPressedThisFrame)
-            {
-                isUsingGamepad = false;
-                lastInputTime = Time.time;
-                return;
-            }
-        }
-
-        // Check for keyboard activity
+        // Check for keyboard activity (for movement, shooting, etc.)
         bool keyboardActive = Keyboard.current != null && (
             Keyboard.current.wKey.isPressed ||
             Keyboard.current.aKey.isPressed ||
@@ -150,7 +152,7 @@ public class InputManager : MonoBehaviour
             Keyboard.current.downArrowKey.isPressed
         );
 
-        // Check for gamepad activity (using currentGamepad which works with all gamepad types)
+        // Check for gamepad activity (excluding right stick which is handled in GetHammerPosition)
         bool gamepadActive = false;
         if (currentGamepad != null)
         {
@@ -158,7 +160,6 @@ public class InputManager : MonoBehaviour
             {
                 gamepadActive = (
                     currentGamepad.leftStick.ReadValue().magnitude > gamepadDeadzone ||
-                    currentGamepad.rightStick.ReadValue().magnitude > gamepadDeadzone ||
                     currentGamepad.buttonSouth.isPressed ||
                     currentGamepad.buttonWest.isPressed ||
                     currentGamepad.buttonEast.isPressed ||
@@ -179,7 +180,9 @@ public class InputManager : MonoBehaviour
             }
         }
 
-        // Update device status
+        // Update device status based on keyboard/gamepad activity
+        // Note: Mouse activity is handled in GetHammerPosition() for unified cursor control
+        bool previousGamepadStatus = isUsingGamepad;
         if (keyboardActive)
         {
             isUsingGamepad = false;
@@ -190,18 +193,11 @@ public class InputManager : MonoBehaviour
             isUsingGamepad = true;
             lastInputTime = Time.time;
         }
-        else if (Time.time - lastInputTime > INPUT_TIMEOUT)
+        
+        // Debug: Log device status changes
+        if (previousGamepadStatus != isUsingGamepad)
         {
-            // If no input for a while, check if gamepad is connected and keyboard is not
-            // Default to keyboard/mouse if both are available
-            if (Keyboard.current != null || Mouse.current != null)
-            {
-                isUsingGamepad = false;
-            }
-            else if (currentGamepad != null)
-            {
-                isUsingGamepad = true;
-            }
+            Debug.Log($"Input device changed to: {(isUsingGamepad ? "Gamepad" : "Keyboard/Mouse")}");
         }
     }
 
@@ -212,7 +208,7 @@ public class InputManager : MonoBehaviour
         try
         {
             Vector2 rightStick = currentGamepad.rightStick.ReadValue();
-
+            
             // Apply deadzone
             if (rightStick.magnitude < gamepadDeadzone)
             {
@@ -236,6 +232,9 @@ public class InputManager : MonoBehaviour
                 // Clamp to screen bounds
                 hammerScreenPosition.x = Mathf.Clamp(hammerScreenPosition.x, 0f, Screen.width);
                 hammerScreenPosition.y = Mathf.Clamp(hammerScreenPosition.y, 0f, Screen.height);
+                
+                // Debug: Log when right stick is actively moving cursor
+                Debug.Log($"Right stick moving cursor to: ({hammerScreenPosition.x:F1}, {hammerScreenPosition.y:F1})");
             }
         }
         catch
@@ -476,21 +475,50 @@ public class InputManager : MonoBehaviour
 
     public Vector2 GetHammerPosition()
     {
-        // Always check mouse first if available (mouse takes priority)
+        // UNIFIED CURSOR SYSTEM: Mouse and right stick control the same cursor position
+        
+        // If mouse is being actively used (significant movement or click), update position from mouse
         if (Mouse.current != null)
         {
-            Vector2 mousePos = Mouse.current.position.ReadValue();
-            // Update tracked position for smooth transition
-            hammerScreenPosition = mousePos;
-            // Don't set isUsingGamepad to false here - let DetectActiveInputDevice handle it
-            return mousePos;
+            Vector2 mouseDelta = Mouse.current.delta.ReadValue();
+            bool mouseActive = mouseDelta.magnitude > 2.0f || 
+                              Mouse.current.leftButton.isPressed || 
+                              Mouse.current.leftButton.wasPressedThisFrame;
+            
+            if (mouseActive)
+            {
+                Vector2 mousePos = Mouse.current.position.ReadValue();
+                hammerScreenPosition = mousePos;
+                bool wasGamepad = isUsingGamepad;
+                isUsingGamepad = false; // Switch to mouse mode
+                lastInputTime = Time.time;
+                
+                if (wasGamepad)
+                {
+                    Debug.Log($"Switched to mouse control at: ({hammerScreenPosition.x:F1}, {hammerScreenPosition.y:F1})");
+                }
+                return hammerScreenPosition;
+            }
         }
 
-        // If gamepad is connected, use right stick to control cursor position (works in-game and in menus)
-        // Always return gamepad position if gamepad is connected, even if we're also using keyboard
+        // If gamepad right stick is being used, continue with current position
         if (currentGamepad != null)
         {
-            return hammerScreenPosition; // Updated by UpdateHammerCursorPosition()
+            Vector2 rightStick = currentGamepad.rightStick.ReadValue();
+            if (rightStick.magnitude > gamepadDeadzone)
+            {
+                bool wasMouse = !isUsingGamepad;
+                isUsingGamepad = true; // Switch to gamepad mode
+                lastInputTime = Time.time;
+                
+                if (wasMouse)
+                {
+                    Debug.Log($"Switched to gamepad control from: ({hammerScreenPosition.x:F1}, {hammerScreenPosition.y:F1})");
+                }
+            }
+            
+            // Always return the current tracked position (whether updated by mouse or right stick)
+            return hammerScreenPosition;
         }
 
         // Fallback: return current tracked position
@@ -671,6 +699,24 @@ public class InputManager : MonoBehaviour
     public bool IsUsingGamepad()
     {
         return isUsingGamepad;
+    }
+
+    /// <summary>
+    /// Manually force gamepad mode (for testing/debugging)
+    /// </summary>
+    public void ForceGamepadMode(bool enable)
+    {
+        isUsingGamepad = enable;
+        lastInputTime = Time.time;
+        Debug.Log($"Gamepad mode manually {(enable ? "enabled" : "disabled")}");
+    }
+
+    /// <summary>
+    /// Get current gamepad name for debugging
+    /// </summary>
+    public string GetGamepadName()
+    {
+        return currentGamepad != null ? currentGamepad.name : "None";
     }
 
     // Map control methods (for compatibility, but not needed with direct queries)
