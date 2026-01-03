@@ -29,6 +29,7 @@ public class GameManager : MonoBehaviour
     private GUIStyle centerStyle;
     private GUIStyle hudStyle;
     private GUIStyle gameOverStyle;
+    private InputManager inputManager;
 
     void Awake()
     {
@@ -78,6 +79,9 @@ public class GameManager : MonoBehaviour
         {
             player = FindObjectOfType<PlayerHealth>();
         }
+
+        // Auto-create InputManager if it doesn't exist
+        inputManager = InputManager.GetOrCreateInstance();
     }
 
     void Update()
@@ -103,17 +107,35 @@ public class GameManager : MonoBehaviour
         {
             gameOverTimer += Time.unscaledDeltaTime;
 
-            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Return))
+            if (inputManager != null)
             {
-                Time.timeScale = 1f;
-                SceneManager.LoadScene("MainMenu");
+                if (inputManager.GetCancel() || inputManager.GetSubmit())
+                {
+                    Time.timeScale = 1f;
+                    SceneManager.LoadScene("MainMenu");
+                }
+                else if (inputManager.GetRestart())
+                {
+                    Time.timeScale = 1f;
+                    SceneManager.LoadScene("Game");
+                }
             }
-            else if (Input.GetKeyDown(KeyCode.R))
+            else
             {
-                Time.timeScale = 1f;
-                SceneManager.LoadScene("Game");
+                // Fallback to old input system
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Return))
+                {
+                    Time.timeScale = 1f;
+                    SceneManager.LoadScene("MainMenu");
+                }
+                else if (Input.GetKeyDown(KeyCode.R))
+                {
+                    Time.timeScale = 1f;
+                    SceneManager.LoadScene("Game");
+                }
             }
-            else if (gameOverTimer >= 3f)
+
+            if (gameOverTimer >= 3f)
             {
                 Time.timeScale = 1f;
                 SceneManager.LoadScene("MainMenu");
@@ -121,15 +143,32 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (!isGameOver && (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape)))
+        if (inputManager != null)
         {
-            TogglePause();
-        }
+            if (!isGameOver && inputManager.GetPause())
+            {
+                TogglePause();
+            }
 
-        if (!isGameOver && isPaused && Input.GetKeyDown(KeyCode.Q))
+            if (!isGameOver && isPaused && inputManager.GetCancel())
+            {
+                SceneManager.LoadScene("MainMenu");
+                Time.timeScale = 1f;
+            }
+        }
+        else
         {
-            SceneManager.LoadScene("MainMenu");
-            Time.timeScale = 1f;
+            // Fallback to old input system
+            if (!isGameOver && (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape)))
+            {
+                TogglePause();
+            }
+
+            if (!isGameOver && isPaused && Input.GetKeyDown(KeyCode.Q))
+            {
+                SceneManager.LoadScene("MainMenu");
+                Time.timeScale = 1f;
+            }
         }
 
         // Update lives hit animation timer
@@ -256,7 +295,14 @@ public class GameManager : MonoBehaviour
         if (isGameOver)
         {
             GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height / 2 - 30, 300, 60), "GAME OVER", gameOverStyle);
-            GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height / 2 + 40, 300, 30), "R - Restart    Enter/Esc - Menu", centerStyle);
+            
+            // Show appropriate controls based on input device
+            string controlsText = "R - Restart    Enter/Esc - Menu";
+            if (inputManager != null && inputManager.IsUsingGamepad())
+            {
+                controlsText = "Y - Restart    A/B - Menu";
+            }
+            GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height / 2 + 40, 300, 30), controlsText, centerStyle);
         }
     }
 

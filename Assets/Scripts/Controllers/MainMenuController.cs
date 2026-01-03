@@ -7,12 +7,88 @@ using UnityEngine.SceneManagement;
 public class MainMenuController : MonoBehaviour
 {
     private bool confirmQuit = false;
+    private InputManager inputManager;
+    private int selectedButtonIndex = 0;
+    private float lastNavigateTime = 0f;
+    private const float NAVIGATE_COOLDOWN = 0.3f;
+
+    void Start()
+    {
+        // Auto-create InputManager if it doesn't exist
+        inputManager = InputManager.GetOrCreateInstance();
+    }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (inputManager != null)
         {
-            confirmQuit = true;
+            if (inputManager.GetCancel())
+            {
+                if (confirmQuit)
+                {
+                    confirmQuit = false;
+                }
+                else
+                {
+                    confirmQuit = true;
+                }
+            }
+
+            // Handle gamepad navigation
+            Vector2 navigate = inputManager.GetNavigate();
+            if (navigate.magnitude > 0.5f && Time.time - lastNavigateTime > NAVIGATE_COOLDOWN)
+            {
+                if (navigate.y > 0.5f)
+                {
+                    selectedButtonIndex = Mathf.Max(0, selectedButtonIndex - 1);
+                }
+                else if (navigate.y < -0.5f)
+                {
+                    selectedButtonIndex = Mathf.Min(confirmQuit ? 1 : 2, selectedButtonIndex + 1);
+                }
+                lastNavigateTime = Time.time;
+            }
+
+            // Handle submit (A button on gamepad, Enter on keyboard)
+            if (inputManager.GetSubmit())
+            {
+                if (confirmQuit)
+                {
+                    if (selectedButtonIndex == 0) // Yes
+                    {
+                        Application.Quit();
+                    }
+                    else // No
+                    {
+                        confirmQuit = false;
+                        selectedButtonIndex = 0;
+                    }
+                }
+                else
+                {
+                    switch (selectedButtonIndex)
+                    {
+                        case 0:
+                            StartGame();
+                            break;
+                        case 1:
+                            OpenSettings();
+                            break;
+                        case 2:
+                            confirmQuit = true;
+                            selectedButtonIndex = 0; // Reset to "Yes" in quit dialog
+                            break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Fallback to old input system
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                confirmQuit = true;
+            }
         }
     }
 

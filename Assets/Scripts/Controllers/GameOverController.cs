@@ -4,12 +4,28 @@ using UnityEngine.SceneManagement;
 public class GameOverController : MonoBehaviour
 {
     private GUIStyle centerStyle;
+    private InputManager inputManager;
 
     void Start()
     {
         centerStyle = new GUIStyle(GUI.skin.label);
         centerStyle.alignment = TextAnchor.MiddleCenter;
         centerStyle.fontSize = 20; // smaller game over menu text
+
+        // Auto-create InputManager if it doesn't exist
+        inputManager = InputManager.GetOrCreateInstance();
+    }
+
+    void Update()
+    {
+        if (inputManager != null)
+        {
+            // Handle submit or cancel to go to main menu
+            if (inputManager.GetSubmit() || inputManager.GetCancel())
+            {
+                SceneManager.LoadScene("MainMenu");
+            }
+        }
     }
 
     void OnGUI()

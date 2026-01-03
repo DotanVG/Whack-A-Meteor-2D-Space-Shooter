@@ -14,9 +14,13 @@ public class PlayerController : MonoBehaviour
     private float boostCooldown = 5.0f;
     private float boostMultiplier = 3.0f; // Change this to control the strength of the boost
 
+    private InputManager inputManager;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        // Auto-create InputManager if it doesn't exist
+        inputManager = InputManager.GetOrCreateInstance();
     }
 
     private float shootInterval = 0.2f;
@@ -24,14 +28,79 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        // Use InputManager if available, otherwise fallback to old Input system
+        if (inputManager == null)
+        {
+            // Fallback to old Input system for keyboard/mouse
+            UpdateWithOldInput();
+            return;
+        }
+
+        // Rotation control - support analog input from gamepad
+        float rotateLeft = inputManager.GetRotateLeft();
+        float rotateRight = inputManager.GetRotateRight();
+        
+        if (rotateLeft > 0f)
+        {
+            transform.Rotate(0, 0, Time.deltaTime * rotationSpeed * rotateLeft); // Scale by input magnitude for analog support
+        }
+        if (rotateRight > 0f)
+        {
+            transform.Rotate(0, 0, -Time.deltaTime * rotationSpeed * rotateRight); // Scale by input magnitude for analog support
+        }
+
+        // Movement control - support analog input from gamepad
+        float moveForward = inputManager.GetMoveForward();
+        float moveBackward = inputManager.GetMoveBackward();
+
+        if (moveForward > 0f)
+        {
+            rb.velocity = transform.up * movementSpeed * moveForward; // Scale by input magnitude for analog support
+        }
+
+        // Rapid deceleration
+        if (moveBackward > 0f)
+        {
+            rb.velocity *= 0.5f; // Adjust deceleration factor as needed for more responsiveness
+        }
+
+        // Maintain speed with Boost
+        if (inputManager.GetBoostDown() && Time.time - lastBoostTime >= boostCooldown)
+        {
+            rb.velocity = transform.up * movementSpeed * boostMultiplier;
+            lastBoostTime = Time.time;
+            boostEndTime = Time.time + boostDuration;
+        }
+        else if (Time.time < boostEndTime)
+        {
+            // Continue boosted velocity
+            rb.velocity = transform.up * movementSpeed * boostMultiplier;
+        }
+        else if (moveForward <= 0f && moveBackward <= 0f)
+        {
+            // Gradual velocity reduction when no input
+            rb.velocity *= 0.999f;
+        }
+
+        // Shooting
+        if (inputManager.GetShoot() && Time.time - lastShootTime >= shootInterval)
+        {
+            Shoot();
+            lastShootTime = Time.time;
+        }
+    }
+
+    // Fallback method using old Input system
+    private void UpdateWithOldInput()
+    {
         // Rotation control
         if (Input.GetKey(KeyCode.A))
         {
-            transform.Rotate(0, 0, Time.deltaTime * rotationSpeed); // Adjust rotation speed as needed
+            transform.Rotate(0, 0, Time.deltaTime * rotationSpeed);
         }
         if (Input.GetKey(KeyCode.D))
         {
-            transform.Rotate(0, 0, -Time.deltaTime * rotationSpeed); // Adjust rotation speed as needed
+            transform.Rotate(0, 0, -Time.deltaTime * rotationSpeed);
         }
 
         // Movement control
@@ -43,7 +112,7 @@ public class PlayerController : MonoBehaviour
         // Rapid deceleration with 'S'
         if (Input.GetKey(KeyCode.S))
         {
-            rb.velocity *= 0.5f; // Adjust deceleration factor as needed for more responsiveness
+            rb.velocity *= 0.5f;
         }
 
         // Maintain speed with Shift
