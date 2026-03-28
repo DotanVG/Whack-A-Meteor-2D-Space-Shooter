@@ -122,6 +122,51 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &130753216
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 130753218}
+  - component: {fileID: 130753217}
+  m_Layer: 0
+  m_Name: SpawnDirector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &130753217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 130753216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fde36d5a8816a04f9af2493869b859d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemySpawner: {fileID: 1144557513}
+--- !u!4 &130753218
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 130753216}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &829610958
 GameObject:
   m_ObjectHideFlags: 0
@@ -376,6 +421,7 @@ MonoBehaviour:
   balanceService: {fileID: 0}
   economyService: {fileID: 0}
   levelService: {fileID: 0}
+  skillService: {fileID: 0}
   runStateService: {fileID: 0}
   progressionService: {fileID: 0}
   economyHUD: {fileID: 0}
@@ -390,6 +436,61 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 2.2898831, y: 0.272394, z: -0.1800499}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1144557512
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1144557514}
+  - component: {fileID: 1144557513}
+  m_Layer: 0
+  m_Name: EnemySpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1144557513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1144557512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: baf51e79327910a4b87ffa68e595afd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  blackPrefabs:
+  - {fileID: 8662070428913389687, guid: 93f0ac145847ad64b8bbe13fb4893283, type: 3}
+  bluePrefabs:
+  - {fileID: 6864762912057655706, guid: 78bf71cc37a08d44a9306ec1b7e62f37, type: 3}
+  greenPrefabs:
+  - {fileID: 5074696003152426344, guid: 91d98540df76d7c40b2287f09b1595ff, type: 3}
+  redPrefabs:
+  - {fileID: 1530947336738916286, guid: 180af9532ff28624caf2160622aa60de, type: 3}
+  bossPrefab: {fileID: 531910153536660594, guid: f810623ab19cdfa4796a652d489ea9ce, type: 3}
+  spawnInterval: 3
+  maxEnemies: 12
+--- !u!4 &1144557514
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1144557512}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -993,6 +1094,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1913219654}
   - component: {fileID: 1913219653}
+  - component: {fileID: 1913219655}
   m_Layer: 0
   m_Name: MeteorSpawner
   m_TagString: Untagged
@@ -1058,6 +1160,26 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 42.734, y: 37.769, z: -76.217}
+--- !u!114 &1913219655
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1913219652}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bce0cd6cd6a66646a7b44aa2b7c88dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  meteorSpawner: {fileID: 1913219653}
+  spawnDirector: {fileID: 130753217}
+  currentWave: 1
+  timeBetweenWaves: 5
+  spawnRateDecrement: 0.15
+  speedIncrement: 0.5
+  minSpawnRate: 0.3
+  maxMeteorIncrement: 2
 --- !u!1 &2000000000
 GameObject:
   m_ObjectHideFlags: 0
@@ -1068,6 +1190,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2000000002}
   - component: {fileID: 2000000001}
+  - component: {fileID: 2000000003}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1118,6 +1241,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2000000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce1b59aa11d54914b960a260940acca3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  powerupPrefabs:
+  - {fileID: 2305631693699206941, guid: 0995aa678a16c3749841728e14bbb1ac, type: 3}
+  - {fileID: 8579876486840839671, guid: 03a420b5b11d65246b1c25acb4c35897, type: 3}
+  - {fileID: 149186794844977707, guid: 17d813c73260f6447b1ac257f78404e7, type: 3}
+  - {fileID: 4477426613902191119, guid: 588fe3d9189287a46833a4a889588b7c, type: 3}
+  - {fileID: 7402233666359524220, guid: 8f84f1c255d15f64b8a6d9a967c38b5e, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1129,3 +1270,5 @@ SceneRoots:
   - {fileID: 1834195772}
   - {fileID: 2000000002}
   - {fileID: 1091657863}
+  - {fileID: 1144557514}
+  - {fileID: 130753218}

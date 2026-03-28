@@ -194,3 +194,8 @@ MonoBehaviour:
   tinyGreyMeteors:
   - {fileID: 9134278045956844406, guid: 37072b41cb2137142bb031ad56948b8c, type: 3}
   - {fileID: 1416879137304550627}
+  projectileHitClip: {fileID: 0}
+  hammerHitClip: {fileID: 0}
+  hitParticles: {fileID: 8132656756040459272, guid: 125fd5d315e397d469b4e02c248a3ea4, type: 3}
+  collisionSplitSpeedThreshold: 0.5
+  collisionSplitEnableDelay: 0.5
