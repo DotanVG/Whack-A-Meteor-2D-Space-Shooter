@@ -98,13 +98,13 @@ public class ShopController : MonoBehaviour
         float sw = Screen.width;
         float sh = Screen.height;
 
-        // ── Background tint ───────────────────────────────────────────────────
-        GUI.color = new Color(0f, 0f, 0f, 0.55f);
-        GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
-        GUI.color = Color.white;
-
         // ── Top bar (height 72) ────────────────────────────────────────────────
         GUI.Box(new Rect(0, 0, sw, 72), GUIContent.none);
+
+        // ── Background tint below the top bar only ────────────────────────────
+        GUI.color = new Color(0f, 0f, 0f, 0.55f);
+        GUI.DrawTexture(new Rect(0, 72, sw, sh - 72), Texture2D.whiteTexture);
+        GUI.color = Color.white;
 
         // Currency — top LEFT (matches in-game HUD position)
         float cy = 10f;
