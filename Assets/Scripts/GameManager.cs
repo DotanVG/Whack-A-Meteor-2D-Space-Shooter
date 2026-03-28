@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// Guarantee GameManager.Start() runs before any service script.
+// Services read Lives/Score in their own Start(), so GameManager must go first.
+[DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
@@ -77,6 +80,9 @@ public class GameManager : MonoBehaviour
         isGameOver = false;
         showingCountdown = true;
         countdown = 3f;
+        // Fire initial state so RunStateService mirrors correct values on first frame
+        OnLivesChanged?.Invoke(Lives);
+        OnScoreChanged?.Invoke(Score);
         OnRunStarted?.Invoke();
         if (spawner == null)
         {

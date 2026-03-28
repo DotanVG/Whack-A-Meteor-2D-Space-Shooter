@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -36,15 +37,23 @@ public class GameServices : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("[GameServices] All services online:" +
+        // Delay one frame so child service Start() logs appear before this summary.
+        StartCoroutine(LogServicesReady());
+    }
+
+    IEnumerator LogServicesReady()
+    {
+        yield return null; // wait one frame
+        Debug.Log("========== [GameServices] All services online ==========" +
                   $"\n  BalanceService     : {(balanceService     != null ? "OK" : "MISSING")}" +
                   $"\n  EconomyService     : {(economyService     != null ? "OK" : "MISSING")}" +
                   $"\n  RunStateService    : {(runStateService    != null ? "OK" : "MISSING")}" +
                   $"\n  ProgressionService : {(progressionService != null ? "OK" : "MISSING")}" +
-                  $"\n  Active flags — Economy:{GameFeatureFlags.UseEconomy}" +
-                  $" CSVBalance:{GameFeatureFlags.UseCSVBalance}" +
+                  $"\n  Flags — Economy:{GameFeatureFlags.UseEconomy}" +
+                  $" CSV:{GameFeatureFlags.UseCSVBalance}" +
                   $" Store:{GameFeatureFlags.UseStore}" +
-                  $" SkillTree:{GameFeatureFlags.UseSkillTree}");
+                  $" SkillTree:{GameFeatureFlags.UseSkillTree}" +
+                  "\n=======================================================");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

@@ -51,17 +51,12 @@ public class RunStateService : MonoBehaviour
 
     void Start()
     {
-        // Mirror initial state from GameManager
-        if (GameManager.Instance != null)
-        {
-            Score = GameManager.Instance.Score;
-            Lives = GameManager.Instance.Lives;
-        }
         IsRunning  = true;
         IsPaused   = false;
         IsGameOver = false;
-
-        Debug.Log($"[RunStateService] Initialized — Score:{Score} Lives:{Lives}");
+        // Initial Score/Lives arrive via OnLivesChanged + OnScoreChanged fired by
+        // GameManager.Start() (which runs first due to [DefaultExecutionOrder(-100)]).
+        // Logging happens in HandleRunStarted once those values are set.
     }
 
     // ── Handlers ─────────────────────────────────────────────────────────────
@@ -89,6 +84,9 @@ public class RunStateService : MonoBehaviour
     {
         IsRunning  = true;
         IsGameOver = false;
+        // By the time this fires, OnLivesChanged + OnScoreChanged have already
+        // updated our mirrors, so these values are correct.
+        Debug.Log($"[RunStateService] Initialized — Score:{Score} Lives:{Lives}");
         OnRunStarted?.Invoke();
     }
 }

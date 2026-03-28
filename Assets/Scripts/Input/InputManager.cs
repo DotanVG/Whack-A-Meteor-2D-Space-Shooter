@@ -475,53 +475,56 @@ public class InputManager : MonoBehaviour
 
     public Vector2 GetHammerPosition()
     {
-        // UNIFIED CURSOR SYSTEM: Mouse and right stick control the same cursor position
-        
-        // If mouse is being actively used (significant movement or click), update position from mouse
+        // UNIFIED CURSOR SYSTEM: Mouse and right stick control the same cursor position.
+        //
+        // BUG FIX: the old code only updated hammerScreenPosition when mouse delta > 2px,
+        // causing the hammer to freeze on slow movement then jump when speed exceeded the
+        // threshold. Fix: in mouse mode always read the current mouse position directly;
+        // the threshold is only used to detect a switch FROM gamepad mode.
+
         if (Mouse.current != null)
         {
-            Vector2 mouseDelta = Mouse.current.delta.ReadValue();
-            bool mouseActive = mouseDelta.magnitude > 2.0f || 
-                              Mouse.current.leftButton.isPressed || 
-                              Mouse.current.leftButton.wasPressedThisFrame;
-            
-            if (mouseActive)
+            Vector2 currentMousePos = Mouse.current.position.ReadValue();
+            Vector2 mouseDelta      = Mouse.current.delta.ReadValue();
+
+            // Switch back to mouse mode if the user moves the mouse or clicks.
+            if (isUsingGamepad)
             {
-                Vector2 mousePos = Mouse.current.position.ReadValue();
-                hammerScreenPosition = mousePos;
-                bool wasGamepad = isUsingGamepad;
-                isUsingGamepad = false; // Switch to mouse mode
-                lastInputTime = Time.time;
-                
-                if (wasGamepad)
+                bool mouseActive = mouseDelta.sqrMagnitude > 4f ||    // ~2px movement
+                                   Mouse.current.leftButton.isPressed ||
+                                   Mouse.current.leftButton.wasPressedThisFrame;
+                if (mouseActive)
                 {
-                    Debug.Log($"Switched to mouse control at: ({hammerScreenPosition.x:F1}, {hammerScreenPosition.y:F1})");
+                    isUsingGamepad = false;
+                    lastInputTime  = Time.time;
+                    Debug.Log($"Switched to mouse control at: ({currentMousePos.x:F1}, {currentMousePos.y:F1})");
                 }
+            }
+
+            // In mouse mode: always track current mouse position — no delta threshold.
+            if (!isUsingGamepad)
+            {
+                hammerScreenPosition = currentMousePos;
                 return hammerScreenPosition;
             }
         }
 
-        // If gamepad right stick is being used, continue with current position
+        // Gamepad right-stick: detect switch to gamepad mode.
         if (currentGamepad != null)
         {
             Vector2 rightStick = currentGamepad.rightStick.ReadValue();
             if (rightStick.magnitude > gamepadDeadzone)
             {
-                bool wasMouse = !isUsingGamepad;
-                isUsingGamepad = true; // Switch to gamepad mode
-                lastInputTime = Time.time;
-                
-                if (wasMouse)
+                if (!isUsingGamepad)
                 {
+                    isUsingGamepad = true;
+                    lastInputTime  = Time.time;
                     Debug.Log($"Switched to gamepad control from: ({hammerScreenPosition.x:F1}, {hammerScreenPosition.y:F1})");
                 }
             }
-            
-            // Always return the current tracked position (whether updated by mouse or right stick)
-            return hammerScreenPosition;
         }
 
-        // Fallback: return current tracked position
+        // Gamepad mode (or no input device): return position updated by UpdateHammerCursorPosition().
         return hammerScreenPosition;
     }
 
