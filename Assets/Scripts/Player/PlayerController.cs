@@ -70,6 +70,7 @@ public class PlayerController : MonoBehaviour
             rb.velocity = transform.up * movementSpeed * boostMultiplier;
             lastBoostTime = Time.time;
             boostEndTime = Time.time + boostDuration;
+            GameLogger.PlayerBoost(boostCooldown, boostMultiplier);
         }
         else if (Time.time < boostEndTime)
         {

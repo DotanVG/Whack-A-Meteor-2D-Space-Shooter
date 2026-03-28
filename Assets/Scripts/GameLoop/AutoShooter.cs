@@ -79,8 +79,10 @@ public class AutoShooter : MonoBehaviour
         (Transform target, Vector2 targetVel) = FindNearestTarget();
         if (target == null) return;
 
+        float dist = Vector2.Distance(firePoint.position, target.position);
         Vector2 aimDir = ComputeLeadAim((Vector2)target.position, targetVel);
         FireProjectile(aimDir);
+        GameLogger.AutoShooterFired(target.tag, dist, accuracySpread);
         _nextFireTime = Time.time + 1f / fireRate;
     }
 

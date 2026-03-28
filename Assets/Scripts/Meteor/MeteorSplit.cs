@@ -108,7 +108,7 @@ public class MeteorSplit : MonoBehaviour
                     move.InitializeMovement(offsetDir, baseSpeed);
                 }
             }
-            Debug.Log("Spawned " + tag + ": " + meteorArray[randomIndex].name);
+            GameLogger.MeteorSplitSpawned(gameObject.tag, tag, count);
 
             if (nextMeteorArray != null)
             {
@@ -125,60 +125,48 @@ public class MeteorSplit : MonoBehaviour
 
     public void OnProjectileHit()
     {
+        string hitTag  = gameObject.tag;
+        bool   splits  = !hitTag.StartsWith("Tiny");
+        int    points  = GameConstants.GetScoreByTag(hitTag);
+
         MeteorMovement move = GetComponent<MeteorMovement>();
-        if (move != null)
-        {
-            SplitWithMomentum(move.CurrentDirection, move.CurrentSpeed);
-        }
-        else
-        {
-            Split();
-        }
+        if (move != null) SplitWithMomentum(move.CurrentDirection, move.CurrentSpeed);
+        else              Split();
+
         if (GameManager.Instance != null)
         {
-            int points = GameConstants.GetScoreByTag(gameObject.tag);
             GameManager.Instance.AddScore(points);
+            GameLogger.MeteorKilledByProjectile(hitTag, points, GameManager.Instance.Score, splits);
         }
 
         if (projectileHitClip != null)
-        {
             AudioSource.PlayClipAtPoint(projectileHitClip, transform.position);
-        }
         if (hitParticles != null)
-        {
             Instantiate(hitParticles, transform.position, Quaternion.identity);
-        }
     }
 
     public void OnHammerHit()
     {
+        string hitTag  = gameObject.tag;
+        bool   splits  = !hitTag.StartsWith("Tiny");
+        int    points  = GameConstants.GetScoreByTag(hitTag) * 2;
+
         MeteorMovement move = GetComponent<MeteorMovement>();
-        if (move != null)
-        {
-            SplitWithMomentum(move.CurrentDirection, move.CurrentSpeed);
-        }
-        else
-        {
-            Split();
-        }
+        if (move != null) SplitWithMomentum(move.CurrentDirection, move.CurrentSpeed);
+        else              Split();
+
         if (GameManager.Instance != null)
         {
-            int points = GameConstants.GetScoreByTag(gameObject.tag) * 2;
             GameManager.Instance.AddScore(points);
+            GameLogger.MeteorKilledByHammer(hitTag, points, GameManager.Instance.Score, splits);
         }
 
         if (hammerHitClip != null)
-        {
             AudioSource.PlayClipAtPoint(hammerHitClip, transform.position);
-        }
         if (hitParticles != null)
-        {
             Instantiate(hitParticles, transform.position, Quaternion.identity);
-        }
         if (CameraShake.Instance != null)
-        {
             CameraShake.Instance.Shake();
-        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -209,6 +197,8 @@ public class MeteorSplit : MonoBehaviour
         {
             return;
         }
+
+        GameLogger.MeteorCollisionSplit(gameObject.tag, collision.gameObject.tag, relativeSpeed);
 
         Vector3 collisionNormal = collision.GetContact(0).normal;
         Vector3 dir = Vector3.Reflect(movement.CurrentDirection, collisionNormal);

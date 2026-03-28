@@ -30,6 +30,10 @@ public class GameManager : MonoBehaviour
     private bool livesRecentlyHit = false;
     private int lostLifeIndex = -1;
 
+    // Session timer — starts when countdown ends, used by logging
+    public float SessionTime { get; private set; } = 0f;
+    private bool sessionRunning = false;
+
     public Texture2D lifeIcon;
     public Texture2D[] digitSprites;
     public Vector2 digitSize = new Vector2(16, 22);
@@ -99,12 +103,16 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
+        if (sessionRunning && !isPaused && !isGameOver)
+            SessionTime += Time.deltaTime;
+
         if (showingCountdown)
         {
             countdown -= Time.deltaTime;
             if (countdown <= 0f)
             {
                 showingCountdown = false;
+                sessionRunning = true;
                 if (spawner != null)
                 {
                     spawner.StartSpawning();
@@ -219,10 +227,13 @@ public class GameManager : MonoBehaviour
 
     void StartGameOver()
     {
+        sessionRunning = false;
         isGameOver = true;
         gameOverTimer = 0f;
         Time.timeScale = 0f;
         OnGameOver?.Invoke();
+        // Log is deferred to let RunStateService/ProgressionService receive the event first
+        GameLogger.PlayerGameOver(Score, wave: 0, SessionTime);
     }
 
     void TogglePause()
