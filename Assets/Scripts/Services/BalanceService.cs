@@ -134,6 +134,52 @@ public class BalanceService : MonoBehaviour
         Set("wave.spawn_rate_decrement",  0.15f);
         Set("wave.speed_increment",       0.5f);
         Set("wave.min_spawn_rate",        0.3f);
+
+        // Enemy factions — HP
+        Set("enemy.hp_black", 3f);
+        Set("enemy.hp_blue",  2f);
+        Set("enemy.hp_green", 1f);
+        Set("enemy.hp_red",   2f);
+
+        // Enemy factions — move speed
+        Set("enemy.speed_black", 1.5f);
+        Set("enemy.speed_blue",  2.5f);
+        Set("enemy.speed_green", 4.0f);
+        Set("enemy.speed_red",   2.0f);
+
+        // Red faction shooting
+        Set("enemy.red_fire_rate",          2.0f);
+        Set("enemy.red_projectile_speed",   5.0f);
+        Set("enemy.red_projectile_lifetime",3.0f);
+
+        // Enemy spawner
+        Set("enemy.max_active_count", 12f);
+        Set("enemy.spawn_rate",        3.0f);
+        Set("spawn.enemy_intro_wave",  4f);
+
+        // Economy — Metal drops per faction
+        Set("economy.metal_enemy_black", 5f);
+        Set("economy.metal_enemy_blue",  2f);
+        Set("economy.metal_enemy_green", 1f);
+        Set("economy.metal_enemy_red",   3f);
+
+        // Boss
+        Set("boss.hp",         20f);
+        Set("boss.speed",       1.0f);
+        Set("boss.scale",       2.5f);
+        Set("boss.metal_drop", 20f);
+
+        // Power-ups
+        Set("powerup.drop_chance",          0.15f);
+        Set("powerup.extra_life_chance",    0.05f);
+        Set("powerup.drift_speed",          1.5f);
+        Set("powerup.lifetime",             8.0f);
+        Set("powerup.speed_boost_duration", 5.0f);
+        Set("powerup.speed_boost_mult",     1.5f);
+        Set("powerup.double_fire_duration", 10.0f);
+        Set("powerup.double_fire_mult",     2.0f);
+        Set("powerup.score_mult_duration",  10.0f);
+        Set("powerup.score_mult",           2.0f);
     }
 
     void Set(string key, float value) => _table[key] = value;

@@ -142,6 +142,7 @@ public class SettingsController : MonoBehaviour
         for (int i = 0; i < SkillService.SkillCount; i++)
             PlayerPrefs.DeleteKey($"Skill.{i}");
         SkillService.Instance?.ResetAll();
+        PlayerPrefs.DeleteKey("Progression.SaveSlot"); // clears run count + last score
         PlayerPrefs.Save();
         _confirmReset = false;
         selectedButtonIndex = 0;

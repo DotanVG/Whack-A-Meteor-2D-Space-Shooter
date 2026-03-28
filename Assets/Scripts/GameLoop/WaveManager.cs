@@ -23,7 +23,8 @@ using UnityEngine;
 public class WaveManager : MonoBehaviour
 {
     [Header("References")]
-    public MeteorSpawnerGL meteorSpawner;     // Assign in Inspector
+    public MeteorSpawner meteorSpawner;       // Assign in Inspector
+    public SpawnDirector spawnDirector;       // Assign in Inspector (auto-found if null)
 
     [Header("Wave Config")]
     public int currentWave = 1;
@@ -50,25 +51,33 @@ public class WaveManager : MonoBehaviour
                       $"TimeBetween:{timeBetweenWaves:F1}s  SpawnRateDec:{spawnRateDecrement:F2}  " +
                       $"SpeedInc:{speedIncrement:F2}  MinSpawn:{minSpawnRate:F2}s");
         }
+
+        // Auto-find SpawnDirector if not assigned in Inspector
+        if (spawnDirector == null)
+            spawnDirector = FindObjectOfType<SpawnDirector>();
+
         StartCoroutine(RunWave(currentWave));
     }
 
     IEnumerator RunWave(int wave)
     {
         _waveActive = true;
+
+        // Notify SpawnDirector before anything else
+        spawnDirector?.OnWaveStarted(wave);
+
         GameLogger.WaveStarted(wave,
-            meteorSpawner != null ? meteorSpawner.spawnRate : 0f,
-            meteorSpawner != null ? meteorSpawner.meteorSpeed : 0f,
-            meteorSpawner != null ? meteorSpawner.maxMeteors : 0);
+            meteorSpawner != null ? meteorSpawner.spawnInterval : 0f,
+            0f,
+            0);
 
         UIManager.Instance?.UpdateWave(wave);
 
         // Apply difficulty scaling to spawner
         if (meteorSpawner != null)
         {
-            meteorSpawner.spawnRate = Mathf.Max(minSpawnRate, meteorSpawner.spawnRate - spawnRateDecrement * (wave - 1));
-            meteorSpawner.meteorSpeed += speedIncrement * (wave - 1);
-            meteorSpawner.maxMeteors += maxMeteorIncrement * (wave - 1);
+            meteorSpawner.spawnInterval = Mathf.Max(minSpawnRate,
+                meteorSpawner.spawnInterval - spawnRateDecrement * (wave - 1));
         }
 
         // Wait until all enemies are cleared

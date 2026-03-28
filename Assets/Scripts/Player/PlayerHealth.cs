@@ -12,6 +12,7 @@ public class PlayerHealth : MonoBehaviour
     {
         sr     = GetComponent<SpriteRenderer>();
         shield = GetComponent<ShieldController>() ?? gameObject.AddComponent<ShieldController>();
+        if (GetComponent<PlayerPowerupHandler>() == null) gameObject.AddComponent<PlayerPowerupHandler>();
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -28,7 +29,7 @@ public class PlayerHealth : MonoBehaviour
     {
         if (invincible)
         {
-            bool isThreat = obj.CompareTag("Enemy")              ||
+            bool isThreat = obj.CompareTag("Enemy")              || obj.CompareTag("EnemyProjectile") ||
                             obj.CompareTag("BigBrownMeteor")     || obj.CompareTag("BigGreyMeteor")    ||
                             obj.CompareTag("MediumBrownMeteor")  || obj.CompareTag("MediumGreyMeteor") ||
                             obj.CompareTag("SmallBrownMeteor")   || obj.CompareTag("SmallGreyMeteor")  ||
@@ -52,6 +53,12 @@ public class PlayerHealth : MonoBehaviour
             TakeDamage(obj.tag);
             Destroy(obj);
         }
+        else if (obj.CompareTag("EnemyProjectile"))
+        {
+            // EnemyProjectile already destroyed itself in EnemyProjectile.OnTriggerEnter2D
+            if (shield != null && shield.TryAbsorbHit()) return;
+            TakeDamage(obj.tag);
+        }
     }
 
     private void TakeDamage(string sourceTag)
@@ -65,6 +72,21 @@ public class PlayerHealth : MonoBehaviour
                 GameLogger.EnemyRammedPlayer(transform.position, GameManager.Instance.Lives);
         }
         StartCoroutine(Invincibility());
+        StartCoroutine(HitPulse());
+    }
+
+    IEnumerator HitPulse()
+    {
+        float elapsed = 0f, dur = 0.25f;
+        Vector3 orig = transform.localScale;
+        while (elapsed < dur)
+        {
+            float s = 1f + Mathf.Sin((elapsed / dur) * Mathf.PI) * 0.3f;
+            transform.localScale = orig * s;
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        transform.localScale = orig;
     }
 
     IEnumerator Invincibility()

@@ -117,11 +117,17 @@ public class AutoShooter : MonoBehaviour
         (Transform target, Vector2 targetVel) = FindNearestTarget();
         if (target == null) return;
 
+        // Apply DoubleFire powerup multiplier
+        float effectiveRate = fireRate;
+        PlayerPowerupHandler ph = GetComponent<PlayerPowerupHandler>();
+        if (ph != null && ph.IsDoubleFire)
+            effectiveRate *= BalanceService.Instance?.GetFloat("powerup.double_fire_mult", 2f) ?? 2f;
+
         float dist = Vector2.Distance(firePoint.position, target.position);
         Vector2 aimDir = ComputeLeadAim((Vector2)target.position, targetVel);
         FireProjectile(aimDir);
         GameLogger.AutoShooterFired(target.tag, dist, accuracySpread);
-        _nextFireTime = Time.time + 1f / fireRate;
+        _nextFireTime = Time.time + 1f / effectiveRate;
     }
 
     // ─── Target search ───────────────────────────────────────────────────────

@@ -18,24 +18,14 @@ public class ProjectileController : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        // Check if the projectile hit an enemy
+        // Check if the projectile hit an enemy — scoring/economy handled by EnemyHealth.Die()
         if (other.gameObject.CompareTag("Enemy"))
         {
             if (enemyHitClip != null)
                 AudioSource.PlayClipAtPoint(enemyHitClip, transform.position);
             if (hitParticles != null)
                 Instantiate(hitParticles, other.transform.position, Quaternion.identity);
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.AddScore(GameConstants.ScoreEnemy);
-                GameLogger.EnemyKilledByProjectile(
-                    (Vector2)other.transform.position,
-                    GameConstants.ScoreEnemy,
-                    GameManager.Instance.Score);
-            }
-            // Metal from enemy kills — wired when new enemy ship types are added (Phase 2+)
-            // EconomyService.Instance?.EarnMetalFromEnemy();
-            Destroy(other.gameObject);
+            other.GetComponent<EnemyHealth>()?.TakeDamage(1);
             Destroy(gameObject);
         }
         // Check if the projectile hit a meteor

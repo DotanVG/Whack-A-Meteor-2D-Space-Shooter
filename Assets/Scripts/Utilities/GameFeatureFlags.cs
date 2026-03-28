@@ -20,8 +20,8 @@ public static class GameFeatureFlags
     public const bool UseSkillTree = true;
 
     // Phase 5: enemy factions + SpawnDirector
-    public const bool UseSpawnDirector = false;
+    public const bool UseSpawnDirector = true;
 
     // Phase 6: power-up collectible system
-    public const bool UsePowerups = false;
+    public const bool UsePowerups = true;
 }

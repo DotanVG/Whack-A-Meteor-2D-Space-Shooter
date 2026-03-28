@@ -41,15 +41,25 @@ public class ShieldController : MonoBehaviour
     IEnumerator AbsorbFeedback()
     {
         _absorbing = true;
+        Color shieldBlue = new Color(0.3f, 0.7f, 1f);
         for (int i = 0; i < 4; i++)
         {
-            if (_sr) _sr.color = new Color(0.3f, 0.7f, 1f);
+            if (_sr) _sr.color = shieldBlue;
             yield return new WaitForSeconds(0.08f);
             if (_sr) _sr.color = Color.white;
             yield return new WaitForSeconds(0.08f);
         }
+        ScreenFlash.Trigger(shieldBlue, 0.4f, 2f);
         _absorbing = false;
     }
 
     public int Charges => _charges;
+
+    /// <summary>Add n charges from a powerup pickup, capped at the skill-tree max.</summary>
+    public void AddCharge(int n)
+    {
+        int cap = SkillService.Instance?.GetShieldCharges() ?? 0;
+        _charges = Mathf.Min(_charges + n, Mathf.Max(cap, 1)); // always allow at least 1 if shield is active
+        Debug.Log($"[Shield] +{n} charge from powerup. Charges: {_charges}");
+    }
 }

@@ -99,6 +99,9 @@ public class GameManager : MonoBehaviour
 
         // Auto-create InputManager if it doesn't exist
         inputManager = InputManager.GetOrCreateInstance();
+
+        // Cache WaveManager for wave number HUD
+        _waveManager = FindObjectOfType<WaveManager>();
     }
 
     void Update()
@@ -192,8 +195,23 @@ public class GameManager : MonoBehaviour
 
     public void AddScore(int amount)
     {
+        // Apply score multiplier powerup if active
+        PlayerPowerupHandler ph = player?.GetComponent<PlayerPowerupHandler>();
+        if (ph != null && ph.IsScoreMultiplied)
+            amount = Mathf.RoundToInt(amount * (BalanceService.Instance?.GetFloat("powerup.score_mult", 2f) ?? 2f));
+
         Score += amount;
         OnScoreChanged?.Invoke(Score);
+    }
+
+    public void AddLife()
+    {
+        if (isGameOver) return;
+        int maxLives = BalanceService.Instance?.GetInt("ship.lives_max", GameConstants.StartingLives) ?? GameConstants.StartingLives;
+        if (Lives >= maxLives) return;
+        Lives++;
+        OnLivesChanged?.Invoke(Lives);
+        Debug.Log($"[GameManager] +1 life from powerup (total: {Lives}/{maxLives})");
     }
 
     public void LoseLife()
@@ -233,10 +251,19 @@ public class GameManager : MonoBehaviour
         StartGameOver();
     }
 
+    private WaveManager _waveManager;
+
     void OnGUI()
     {
         // XP/Score intentionally not shown — players see level-up popups instead.
         // LevelService accumulates XP from score events and fires OnLevelUp.
+
+        // Wave number HUD (top-center)
+        if (!showingCountdown && !isGameOver && _waveManager != null)
+        {
+            GUI.Label(new Rect(Screen.width / 2f - 40f, 10f, 80f, 24f),
+                      $"Wave {_waveManager.currentWave}", hudStyle);
+        }
 
         float lifeWidth = lifeIconSize.x;
         float lifeHeight = lifeIconSize.y;

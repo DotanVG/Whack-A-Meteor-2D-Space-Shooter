@@ -46,7 +46,42 @@ progression_xp_growth,progression,xp_growth,1,1.5,flat,0,0,0,Exponential growth 
 # ── Meteor safety cap ────────────────────────────────────────────────────────
 meteor_max_active,meteor,max_active_count,1,80,flat,0,0,0,Hard cap on simultaneous active meteors (prevents cascade crash)
 # ── Wave difficulty ───────────────────────────────────────────────────────────
-wave_time_between,wave,time_between_waves,1,5,flat,0,0,0,Seconds between waves
+wave_time_between,wave,time_between_waves,1,5,flat,0,0,45,Seconds between waves (capped at 45s)
 wave_spawn_rate_dec,wave,spawn_rate_decrement,1,0.15,flat,0,0,0,Spawn rate reduction per wave
 wave_speed_inc,wave,speed_increment,1,0.5,flat,0,0,0,Meteor speed increase per wave
 wave_min_spawn,wave,min_spawn_rate,1,0.3,flat,0,0,0,Minimum spawn interval floor (seconds)
+# ── Enemy factions ────────────────────────────────────────────────────────────
+enemy_hp_black,enemy,hp_black,1,3,flat,0,0,0,Black faction HP (tanky)
+enemy_hp_blue,enemy,hp_blue,1,2,flat,0,0,0,Blue faction HP (standard)
+enemy_hp_green,enemy,hp_green,1,1,flat,0,0,0,Green faction HP (fragile/fast)
+enemy_hp_red,enemy,hp_red,1,2,flat,0,0,0,Red faction HP (shooter)
+enemy_speed_black,enemy,speed_black,1,1.5,flat,0,0,0,Black faction move speed
+enemy_speed_blue,enemy,speed_blue,1,2.5,flat,0,0,0,Blue faction move speed
+enemy_speed_green,enemy,speed_green,1,4.0,flat,0,0,0,Green faction move speed (fast)
+enemy_speed_red,enemy,speed_red,1,2.0,flat,0,0,0,Red faction move speed
+enemy_red_fire_rate,enemy,red_fire_rate,1,2.0,flat,0,0,0,Seconds between Red enemy shots
+enemy_red_proj_speed,enemy,red_projectile_speed,1,5.0,flat,0,0,0,Red enemy projectile speed
+enemy_red_proj_life,enemy,red_projectile_lifetime,1,3.0,flat,0,0,0,Red enemy projectile lifetime
+enemy_max_active,enemy,max_active_count,1,12,flat,0,0,0,Hard cap on simultaneous live enemies
+enemy_spawn_rate,enemy,spawn_rate,1,3.0,flat,0,0,0,Seconds between enemy spawns
+spawn_intro_wave,spawn,enemy_intro_wave,1,4,flat,0,0,0,Wave number when enemies first appear
+eco_met_black,economy,metal_enemy_black,1,5,flat,0,0,0,Metal from Black kill (tanky)
+eco_met_blue,economy,metal_enemy_blue,1,2,flat,0,0,0,Metal from Blue kill
+eco_met_green,economy,metal_enemy_green,1,1,flat,0,0,0,Metal from Green kill (fast/weak)
+eco_met_red,economy,metal_enemy_red,1,3,flat,0,0,0,Metal from Red kill (shooter)
+# ── Boss ─────────────────────────────────────────────────────────────────────
+boss_hp,boss,hp,1,20,flat,0,0,0,Boss HP
+boss_speed,boss,speed,1,1.0,flat,0,0,0,Boss move speed
+boss_scale,boss,scale,1,2.5,flat,0,0,0,Boss visual scale multiplier
+boss_metal_drop,boss,metal_drop,1,20,flat,0,0,0,Metal reward for boss kill
+# ── Power-ups ─────────────────────────────────────────────────────────────────
+powerup_drop_chance,powerup,drop_chance,1,0.15,flat,0,0,1,Probability an enemy drops a powerup on death
+powerup_extra_life_chance,powerup,extra_life_chance,1,0.05,flat,0,0,1,Fraction of drops that are ExtraLife
+powerup_drift_speed,powerup,drift_speed,1,1.5,flat,0,0,0,Downward drift speed of powerup
+powerup_lifetime,powerup,lifetime,1,8.0,flat,0,0,0,Seconds before powerup auto-despawns
+powerup_speed_boost_dur,powerup,speed_boost_duration,1,5.0,flat,0,0,0,Speed boost duration (seconds)
+powerup_speed_boost_mult,powerup,speed_boost_mult,1,1.5,flat,0,0,0,Speed boost multiplier
+powerup_double_fire_dur,powerup,double_fire_duration,1,10.0,flat,0,0,0,Double fire duration (seconds)
+powerup_double_fire_mult,powerup,double_fire_mult,1,2.0,flat,0,0,0,Fire rate multiplier for DoubleFire
+powerup_score_mult_dur,powerup,score_mult_duration,1,10.0,flat,0,0,0,Score multiplier duration (seconds)
+powerup_score_mult,powerup,score_mult,1,2.0,flat,0,0,0,Score multiplier value

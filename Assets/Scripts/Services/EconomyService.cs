@@ -54,12 +54,25 @@ public class EconomyService : MonoBehaviour
 
     /// <summary>
     /// Award Metal from an enemy ship kill.
-    /// Called by enemy kill handlers; amount from BalanceService.
+    /// Pass the faction for faction-specific drop amounts; omit for the generic fallback.
     /// </summary>
-    public void EarnMetalFromEnemy()
+    public void EarnMetalFromEnemy(Faction? faction = null)
     {
         if (!GameFeatureFlags.UseEconomy) return;
-        AddMetal(GetInt("economy.metal_enemy", 2), "Enemy");
+        int amount;
+        string source;
+        if (faction.HasValue)
+        {
+            string key = $"economy.metal_enemy_{faction.Value.ToString().ToLower()}";
+            amount = GetInt(key, GetInt("economy.metal_enemy", 2));
+            source = faction.Value.ToString();
+        }
+        else
+        {
+            amount = GetInt("economy.metal_enemy", 2);
+            source = "Enemy";
+        }
+        AddMetal(amount, source);
     }
 
     // ── Spend (Phase 3 Store will use this) ───────────────────────────────────
@@ -120,7 +133,7 @@ public class EconomyService : MonoBehaviour
         Debug.Log($"[Economy] +{amount} Stardust from {source}  (total: {Stardust})");
     }
 
-    void AddMetal(int amount, string source)
+    public void AddMetal(int amount, string source = "Direct")
     {
         if (amount <= 0) return;
         Metal += amount;

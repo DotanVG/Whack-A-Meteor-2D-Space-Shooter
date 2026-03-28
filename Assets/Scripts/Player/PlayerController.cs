@@ -30,6 +30,15 @@ public class PlayerController : MonoBehaviour
     private float shootInterval = 0.2f;
     private float lastShootTime = 0.0f;
 
+    /// <summary>Returns movementSpeed multiplied by the SpeedBoost powerup if active.</summary>
+    float EffectiveSpeed()
+    {
+        PlayerPowerupHandler ph = GetComponent<PlayerPowerupHandler>();
+        if (ph != null && ph.IsSpeedBoosted)
+            return movementSpeed * (BalanceService.Instance?.GetFloat("powerup.speed_boost_mult", 1.5f) ?? 1.5f);
+        return movementSpeed;
+    }
+
     void Update()
     {
         // Use InputManager if available, otherwise fallback to old Input system
@@ -59,7 +68,7 @@ public class PlayerController : MonoBehaviour
 
         if (moveForward > 0f)
         {
-            rb.velocity = transform.up * movementSpeed * moveForward; // Scale by input magnitude for analog support
+            rb.velocity = transform.up * EffectiveSpeed() * moveForward; // Scale by input magnitude for analog support
         }
 
         // Rapid deceleration
@@ -71,7 +80,7 @@ public class PlayerController : MonoBehaviour
         // Maintain speed with Boost
         if (inputManager.GetBoostDown() && Time.time - lastBoostTime >= boostCooldown)
         {
-            rb.velocity = transform.up * movementSpeed * boostMultiplier;
+            rb.velocity = transform.up * EffectiveSpeed() * boostMultiplier;
             lastBoostTime = Time.time;
             boostEndTime = Time.time + boostDuration;
             GameLogger.PlayerBoost(boostCooldown, boostMultiplier);
@@ -79,7 +88,7 @@ public class PlayerController : MonoBehaviour
         else if (Time.time < boostEndTime)
         {
             // Continue boosted velocity
-            rb.velocity = transform.up * movementSpeed * boostMultiplier;
+            rb.velocity = transform.up * EffectiveSpeed() * boostMultiplier;
         }
         else if (moveForward <= 0f && moveBackward <= 0f)
         {
@@ -112,7 +121,7 @@ public class PlayerController : MonoBehaviour
         // Movement control
         if (Input.GetKey(KeyCode.W))
         {
-            rb.velocity = transform.up * movementSpeed;
+            rb.velocity = transform.up * EffectiveSpeed();
         }
 
         // Rapid deceleration with 'S'
@@ -124,14 +133,14 @@ public class PlayerController : MonoBehaviour
         // Maintain speed with Shift
         if (Input.GetKey(KeyCode.LeftShift) && Time.time - lastBoostTime >= boostCooldown)
         {
-            rb.velocity = transform.up * movementSpeed * boostMultiplier;
+            rb.velocity = transform.up * EffectiveSpeed() * boostMultiplier;
             lastBoostTime = Time.time;
             boostEndTime = Time.time + boostDuration;
         }
         else if (Time.time < boostEndTime)
         {
             // Continue boosted velocity
-            rb.velocity = transform.up * movementSpeed * boostMultiplier;
+            rb.velocity = transform.up * EffectiveSpeed() * boostMultiplier;
         }
         else if (!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.S))
         {

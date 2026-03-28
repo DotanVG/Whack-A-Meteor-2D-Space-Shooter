@@ -157,6 +157,7 @@ public class MeteorSplit : MonoBehaviour
             GameManager.Instance.AddScore(points);
             GameLogger.MeteorKilledByProjectile(hitTag, points, GameManager.Instance.Score, splits);
         }
+        ScorePopup.Spawn(transform.position, points);
 
         EconomyService.Instance?.EarnFromMeteor(hitTag);
 
@@ -181,6 +182,7 @@ public class MeteorSplit : MonoBehaviour
             GameManager.Instance.AddScore(points);
             GameLogger.MeteorKilledByHammer(hitTag, points, GameManager.Instance.Score, splits);
         }
+        ScorePopup.Spawn(transform.position, points);
 
         EconomyService.Instance?.EarnFromMeteor(hitTag);
 
