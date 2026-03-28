@@ -4,12 +4,12 @@ using UnityEngine.SceneManagement;
 /// <summary>
 /// ShopController — The Hyperdrive Shop.
 ///
-/// Two tabs navigable with Q/E (keyboard) or LB/RB (gamepad):
-///   [0] Skills      — skill tree upgrades (Phase 3 implementation)
-///   [1] Ship Skins  — cosmetic ship variants (Phase 3 implementation)
+/// Self-contained scene (no GameServices required).
+/// Reads Stardust + Metal directly from PlayerPrefs.
 ///
-/// Shows current Stardust + Metal balance at the top.
-/// Back → MainMenu.
+/// Tabs: Skills (Phase 3) | Ship Skins (Phase 3)
+/// Navigate tabs: Q/E keyboard  or  LB/RB gamepad.
+/// Back / ESC → MainMenu.
 /// </summary>
 public class ShopController : MonoBehaviour
 {
@@ -19,59 +19,61 @@ public class ShopController : MonoBehaviour
 
     private InputManager inputManager;
 
-    // Cached currency values — updated via events
     private int _stardust;
     private int _metal;
+    private int _level;
 
-    // GUI styles
+    // Styles
     private GUIStyle _titleStyle;
+    private GUIStyle _subtitleStyle;
     private GUIStyle _tabActiveStyle;
     private GUIStyle _tabInactiveStyle;
     private GUIStyle _currencyStyle;
-    private GUIStyle _placeholderStyle;
+    private GUIStyle _bodyStyle;
+    private GUIStyle _nodeLockedStyle;
+    private GUIStyle _nodeAvailableStyle;
+    private GUIStyle _nodeMaxStyle;
     private bool _stylesReady;
 
     private static readonly string[] TabNames = { "  Skills  ", "  Ship Skins  " };
 
-    void Start()
+    void Awake()
     {
-        inputManager = InputManager.GetOrCreateInstance();
-
-        // Read current wallet from EconomyService if available
-        if (EconomyService.Instance != null)
+        // Ensure a camera exists so OnGUI renders (scene may be minimal)
+        if (Camera.main == null)
         {
-            _stardust = EconomyService.Instance.Stardust;
-            _metal    = EconomyService.Instance.Metal;
+            var camGO = new GameObject("Main Camera");
+            camGO.tag = "MainCamera";
+            var cam = camGO.AddComponent<Camera>();
+            cam.clearFlags    = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.05f, 0.06f, 0.14f);
+            cam.orthographic  = true;
         }
     }
 
-    void OnEnable()
+    void Start()
     {
-        EconomyService.OnStardustChanged += OnStardustChanged;
-        EconomyService.OnMetalChanged    += OnMetalChanged;
+        inputManager = InputManager.GetOrCreateInstance();
+        LoadWallet();
     }
 
-    void OnDisable()
+    void LoadWallet()
     {
-        EconomyService.OnStardustChanged -= OnStardustChanged;
-        EconomyService.OnMetalChanged    -= OnMetalChanged;
+        _stardust = PlayerPrefs.GetInt("Economy.Stardust", 0);
+        _metal    = PlayerPrefs.GetInt("Economy.Metal",    0);
+        _level    = PlayerPrefs.GetInt("Progression.Level", 1);
     }
-
-    void OnStardustChanged(int val) => _stardust = val;
-    void OnMetalChanged(int val)    => _metal    = val;
 
     void Update()
     {
         if (inputManager == null) return;
 
-        // Back to main menu
         if (inputManager.GetCancel())
         {
             SceneManager.LoadScene("MainMenu");
             return;
         }
 
-        // Tab navigation — Q / LB = left,  E / RB = right
         if (Time.time - _lastTabNav > TAB_COOLDOWN)
         {
             if (inputManager.GetTabLeft())
@@ -91,78 +93,250 @@ public class ShopController : MonoBehaviour
     {
         EnsureStyles();
 
-        // ── Header bar ───────────────────────────────────────────────────────
-        GUI.Box(new Rect(0, 0, Screen.width, 50), GUIContent.none);
+        float sw = Screen.width;
+        float sh = Screen.height;
 
-        // Title
-        GUI.Label(new Rect(Screen.width / 2f - 150, 8, 300, 36),
-                  "THE HYPERDRIVE SHOP", _titleStyle);
+        // ── Background tint ───────────────────────────────────────────────────
+        GUI.color = new Color(0f, 0f, 0f, 0.55f);
+        GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
+        GUI.color = Color.white;
 
-        // Currency display — top right of header
-        GUI.Label(new Rect(Screen.width - 260, 8, 250, 18),
-                  $"Stardust: {_stardust}", _currencyStyle);
-        GUI.Label(new Rect(Screen.width - 260, 28, 250, 18),
-                  $"Metal:    {_metal}",    _currencyStyle);
+        // ── Top bar (height 56) ────────────────────────────────────────────────
+        GUI.Box(new Rect(0, 0, sw, 56), GUIContent.none);
 
-        // Back button — top left
-        if (GUI.Button(new Rect(10, 10, 80, 30), "← Back"))
+        // Currency — top LEFT (matches in-game HUD position)
+        float cy = 10f;
+        GUIStyle sdStyle = new GUIStyle(_currencyStyle) { normal = { textColor = new Color(1f, 0.85f, 0.2f) } };
+        GUIStyle metStyle = new GUIStyle(_currencyStyle) { normal = { textColor = new Color(0.75f, 0.78f, 0.82f) } };
+        GUI.Label(new Rect(12, cy,      180, 20), $"Stardust:  {_stardust}", sdStyle);
+        GUI.Label(new Rect(12, cy + 20, 180, 20), $"Metal:     {_metal}",    metStyle);
+
+        // Level indicator
+        GUI.Label(new Rect(12, cy + 40, 180, 16),
+                  $"Level {_level}",
+                  new GUIStyle(_bodyStyle) { fontSize = 12, normal = { textColor = new Color(0.6f, 0.6f, 0.6f) } });
+
+        // Title — center
+        GUI.Label(new Rect(sw / 2f - 200, 10, 400, 38), "THE HYPERDRIVE SHOP", _titleStyle);
+
+        // Top-right buttons
+        float btnW = 130f, btnH = 28f, btnX = sw - btnW - 8f;
+        if (GUI.Button(new Rect(btnX, 8,  btnW, btnH), "▶  Play Game"))
+        {
+            SceneManager.LoadScene("Game");
+        }
+        if (GUI.Button(new Rect(btnX - btnW - 6, 8, btnW, btnH), "← Main Menu"))
+        {
             SceneManager.LoadScene("MainMenu");
+        }
 
-        // ── Tab bar ──────────────────────────────────────────────────────────
-        float tabY = 58f;
-        float tabX = Screen.width / 2f - (TabNames.Length * 110f) / 2f;
+        // ── Tab bar (y=62) ────────────────────────────────────────────────────
+        float tabY  = 62f;
+        float tabW  = 130f;
+        float tabStartX = sw / 2f - (TabNames.Length * tabW) / 2f;
         for (int i = 0; i < TabNames.Length; i++)
         {
-            GUIStyle style = (i == _activeTab) ? _tabActiveStyle : _tabInactiveStyle;
-            if (GUI.Button(new Rect(tabX + i * 115f, tabY, 108f, 32f), TabNames[i], style))
+            GUIStyle st = (i == _activeTab) ? _tabActiveStyle : _tabInactiveStyle;
+            if (GUI.Button(new Rect(tabStartX + i * (tabW + 4), tabY, tabW, 32), TabNames[i], st))
                 _activeTab = i;
         }
 
-        // Tab hint
-        GUI.Label(new Rect(Screen.width / 2f - 120, tabY + 34, 240, 18),
-                  "Q / LB  ◄   ►  E / RB", _placeholderStyle);
+        // Tab nav hint
+        GUI.Label(new Rect(sw / 2f - 120, tabY + 34, 240, 16),
+                  "  Q / LB  ◄   ►  E / RB",
+                  new GUIStyle(_bodyStyle) { fontSize = 11, alignment = TextAnchor.MiddleCenter,
+                                             normal = { textColor = new Color(0.5f, 0.5f, 0.5f) } });
 
-        // ── Content area ─────────────────────────────────────────────────────
-        Rect content = new Rect(20, tabY + 60, Screen.width - 40, Screen.height - tabY - 80);
-        GUI.Box(content, GUIContent.none);
+        // ESC hint bottom-right
+        GUI.Label(new Rect(sw - 200, sh - 24, 190, 20),
+                  "ESC / B — Main Menu",
+                  new GUIStyle(_bodyStyle) { fontSize = 11, alignment = TextAnchor.MiddleRight,
+                                             normal = { textColor = new Color(0.45f, 0.45f, 0.45f) } });
 
-        GUILayout.BeginArea(new Rect(content.x + 20, content.y + 20,
-                                     content.width - 40, content.height - 40));
+        // ── Content area ──────────────────────────────────────────────────────
+        float contentY = tabY + 58f;
+        Rect contentArea = new Rect(12, contentY, sw - 24, sh - contentY - 8);
+
         switch (_activeTab)
         {
-            case 0: DrawSkillsTab();    break;
-            case 1: DrawShipSkinsTab(); break;
+            case 0: DrawSkillsTab(contentArea);    break;
+            case 1: DrawShipSkinsTab(contentArea); break;
         }
-        GUILayout.EndArea();
     }
 
-    // ── Tab content (stubs — Phase 3 will populate) ───────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // Skills tab — example skill tree nodes
+    // ─────────────────────────────────────────────────────────────────────────
 
-    void DrawSkillsTab()
+    void DrawSkillsTab(Rect area)
     {
-        GUILayout.Label("SKILLS", _titleStyle);
-        GUILayout.Space(12);
-        GUILayout.Label("Skill tree coming in Phase 3.", _placeholderStyle);
-        GUILayout.Space(8);
-        GUILayout.Label("Planned upgrades:", _placeholderStyle);
-        GUILayout.Label("  • Auto-Shooter fire rate & accuracy", _placeholderStyle);
-        GUILayout.Label("  • Hammer AOE radius", _placeholderStyle);
-        GUILayout.Label("  • Ship speed & boost duration", _placeholderStyle);
-        GUILayout.Label("  • Stardust & Metal drop multipliers", _placeholderStyle);
-        GUILayout.Label("  • Special attacks (Metal required)", _placeholderStyle);
+        float colW   = (area.width - 24) / 3f;
+        float nodeH  = 52f;
+        float nodeW  = colW - 16f;
+        float gapY   = 18f;
+
+        // Column headers
+        DrawColHeader(area.x,                 area.y,  colW, "AUTO-SHOOTER");
+        DrawColHeader(area.x + colW,          area.y,  colW, "HAMMER");
+        DrawColHeader(area.x + colW * 2,      area.y,  colW, "SHIP");
+
+        float rowY = area.y + 28f;
+
+        // ── Auto-Shooter column ──────────────────────────────────────────────
+        float cx0 = area.x + 8;
+        DrawSkillNode(cx0, rowY,          nodeW, nodeH, "Fire Rate",      "Lv 1", "500 ★",  NodeState.Available);
+        DrawConnector(cx0 + nodeW / 2,    rowY + nodeH, gapY);
+        DrawSkillNode(cx0, rowY + nodeH + gapY,    nodeW, nodeH, "Fire Rate",      "Lv 2", "800 ★",  NodeState.Locked);
+        DrawConnector(cx0 + nodeW / 2,    rowY + (nodeH + gapY) * 2, gapY);
+        DrawSkillNode(cx0, rowY + (nodeH + gapY)*2,nodeW, nodeH, "Accuracy",       "Lv 1", "600 ★",  NodeState.Locked);
+        DrawConnector(cx0 + nodeW / 2,    rowY + (nodeH + gapY) * 3, gapY);
+        DrawSkillNode(cx0, rowY + (nodeH + gapY)*3,nodeW, nodeH, "Proj. Speed",    "Lv 1", "700 ★",  NodeState.Locked);
+
+        // ── Hammer column ────────────────────────────────────────────────────
+        float cx1 = area.x + colW + 8;
+        DrawSkillNode(cx1, rowY,          nodeW, nodeH, "AOE Radius",     "Lv 1", "500 ★",  NodeState.Available);
+        DrawConnector(cx1 + nodeW / 2,    rowY + nodeH, gapY);
+        DrawSkillNode(cx1, rowY + nodeH + gapY,    nodeW, nodeH, "AOE Radius",     "Lv 2", "800 ★",  NodeState.Locked);
+        DrawConnector(cx1 + nodeW / 2,    rowY + (nodeH + gapY) * 2, gapY);
+        DrawSkillNode(cx1, rowY + (nodeH + gapY)*2,nodeW, nodeH, "Score Mult",     "Lv 1", "1000 ★", NodeState.Locked);
+        DrawConnector(cx1 + nodeW / 2,    rowY + (nodeH + gapY) * 3, gapY);
+        DrawSkillNode(cx1, rowY + (nodeH + gapY)*3,nodeW, nodeH, "Slam Wave",      "Lv 1", "800 ⚙ + 500 ★", NodeState.LockedMetal);
+
+        // ── Ship column ──────────────────────────────────────────────────────
+        float cx2 = area.x + colW * 2 + 8;
+        DrawSkillNode(cx2, rowY,          nodeW, nodeH, "Move Speed",     "Lv 1", "400 ★",  NodeState.Available);
+        DrawConnector(cx2 + nodeW / 2,    rowY + nodeH, gapY);
+        DrawSkillNode(cx2, rowY + nodeH + gapY,    nodeW, nodeH, "Move Speed",     "Lv 2", "650 ★",  NodeState.Locked);
+        DrawConnector(cx2 + nodeW / 2,    rowY + (nodeH + gapY) * 2, gapY);
+        DrawSkillNode(cx2, rowY + (nodeH + gapY)*2,nodeW, nodeH, "Boost Duration", "Lv 1", "750 ★",  NodeState.Locked);
+        DrawConnector(cx2 + nodeW / 2,    rowY + (nodeH + gapY) * 3, gapY);
+        DrawSkillNode(cx2, rowY + (nodeH + gapY)*3,nodeW, nodeH, "Invincibility",  "Lv 1", "1200 ★ + 600 ⚙", NodeState.LockedMetal);
+
+        // Legend at bottom
+        float legY = area.y + area.height - 24f;
+        DrawLegend(area.x, legY, area.width);
     }
 
-    void DrawShipSkinsTab()
+    enum NodeState { Available, Locked, LockedMetal, Owned }
+
+    void DrawColHeader(float x, float y, float colW, string label)
     {
-        GUILayout.Label("SHIP SKINS", _titleStyle);
-        GUILayout.Space(12);
-        GUILayout.Label("Cosmetic ship variants coming in Phase 3.", _placeholderStyle);
-        GUILayout.Space(8);
-        GUILayout.Label("Navigate skins with Q/E or LB/RB once populated.", _placeholderStyle);
-        GUILayout.Label("Purchases require Stardust. Some locked skins require Metal.", _placeholderStyle);
+        GUI.Label(new Rect(x + 8, y + 2, colW - 16, 22), label,
+                  new GUIStyle(_subtitleStyle) { alignment = TextAnchor.MiddleCenter });
     }
 
-    // ── Style helpers ─────────────────────────────────────────────────────────
+    void DrawSkillNode(float x, float y, float w, float h,
+                       string name, string level, string cost, NodeState state)
+    {
+        GUIStyle boxStyle = state switch
+        {
+            NodeState.Available   => _nodeAvailableStyle,
+            NodeState.Owned       => _nodeMaxStyle,
+            NodeState.LockedMetal => _nodeLockedStyle,
+            _                     => _nodeLockedStyle,
+        };
+
+        GUI.Box(new Rect(x, y, w, h), GUIContent.none, boxStyle);
+
+        Color nameColor = state == NodeState.Available ? Color.white
+                        : state == NodeState.Owned     ? new Color(1f, 0.85f, 0.2f)
+                        : new Color(0.5f, 0.5f, 0.5f);
+
+        GUI.Label(new Rect(x + 8, y + 4,  w - 16, 18),
+                  $"{name}  {level}",
+                  new GUIStyle(_bodyStyle) { fontStyle = FontStyle.Bold, normal = { textColor = nameColor } });
+
+        Color costColor = state == NodeState.LockedMetal ? new Color(0.75f, 0.78f, 0.82f)
+                        : state == NodeState.Available   ? new Color(1f, 0.85f, 0.2f)
+                        : new Color(0.4f, 0.4f, 0.4f);
+
+        GUI.Label(new Rect(x + 8, y + 26, w - 16, 18), cost,
+                  new GUIStyle(_bodyStyle) { fontSize = 11, normal = { textColor = costColor } });
+    }
+
+    void DrawConnector(float cx, float y, float height)
+    {
+        Color prev = GUI.color;
+        GUI.color = new Color(0.35f, 0.35f, 0.45f, 0.8f);
+        GUI.DrawTexture(new Rect(cx - 1, y, 2, height), Texture2D.whiteTexture);
+        GUI.color = prev;
+    }
+
+    void DrawLegend(float x, float y, float w)
+    {
+        float lx = x + w / 2f - 240f;
+        DrawLegendDot(lx,        y, _nodeAvailableStyle, "Available (Stardust)");
+        DrawLegendDot(lx + 160f, y, _nodeLockedStyle,    "Locked / Metal required");
+        DrawLegendDot(lx + 320f, y, _nodeMaxStyle,       "Owned / Max");
+    }
+
+    void DrawLegendDot(float x, float y, GUIStyle boxStyle, string label)
+    {
+        GUI.Box(new Rect(x, y, 14, 14), GUIContent.none, boxStyle);
+        GUI.Label(new Rect(x + 18, y - 1, 140, 16), label,
+                  new GUIStyle(_bodyStyle) { fontSize = 11, normal = { textColor = new Color(0.6f, 0.6f, 0.6f) } });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Ship Skins tab
+    // ─────────────────────────────────────────────────────────────────────────
+
+    void DrawShipSkinsTab(Rect area)
+    {
+        float slotW = 140f, slotH = 160f, gap = 16f;
+        float startX = area.x + 12;
+        float startY = area.y + 12;
+        int   cols   = Mathf.FloorToInt((area.width - 12) / (slotW + gap));
+
+        string[] skins  = { "Viper (Default)", "Inferno", "Frost", "Shadow", "Golden Eagle" };
+        string[] costs  = { "Equipped",        "1200 ★",  "1200 ★","1000 ⚙", "2000 ★ + 500 ⚙" };
+        bool[]   owned  = { true,              false,     false,   false,    false };
+
+        for (int i = 0; i < skins.Length; i++)
+        {
+            int col = i % cols;
+            int row = i / cols;
+            float nx = startX + col * (slotW + gap);
+            float ny = startY + row * (slotH + gap);
+
+            GUIStyle boxSt = owned[i] ? _nodeMaxStyle : _nodeLockedStyle;
+            GUI.Box(new Rect(nx, ny, slotW, slotH), GUIContent.none, boxSt);
+
+            // Ship placeholder sprite area
+            Color prev = GUI.color;
+            GUI.color = owned[i] ? new Color(0.2f, 0.5f, 0.9f, 0.3f) : new Color(0.3f, 0.3f, 0.3f, 0.25f);
+            GUI.DrawTexture(new Rect(nx + 10, ny + 10, slotW - 20, 80), Texture2D.whiteTexture);
+            GUI.color = prev;
+
+            Color nameC = owned[i] ? new Color(1f, 0.85f, 0.2f) : Color.white;
+            GUI.Label(new Rect(nx + 6, ny + 96, slotW - 12, 20),
+                      skins[i],
+                      new GUIStyle(_bodyStyle) { fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter,
+                                                  normal = { textColor = nameC } });
+
+            Color costC = costs[i] == "Equipped" ? new Color(0.4f, 0.9f, 0.4f)
+                        : costs[i].Contains("⚙")  ? new Color(0.75f, 0.78f, 0.82f)
+                        : new Color(1f, 0.85f, 0.2f);
+            GUI.Label(new Rect(nx + 6, ny + 118, slotW - 12, 20),
+                      costs[i],
+                      new GUIStyle(_bodyStyle) { fontSize = 11, alignment = TextAnchor.MiddleCenter,
+                                                  normal = { textColor = costC } });
+
+            string btnLabel = owned[i] ? "Equipped" : "Purchase";
+            if (!owned[i] && GUI.Button(new Rect(nx + 10, ny + 140, slotW - 20, 16), btnLabel))
+            { /* Phase 3 purchase logic */ }
+        }
+
+        // Hint
+        GUI.Label(new Rect(area.x, area.y + area.height - 24, area.width, 20),
+                  "More skins added as you progress — some require Metal  ⚙",
+                  new GUIStyle(_bodyStyle) { alignment = TextAnchor.MiddleCenter,
+                                             normal = { textColor = new Color(0.5f, 0.5f, 0.5f) } });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Style setup
+    // ─────────────────────────────────────────────────────────────────────────
 
     void EnsureStyles()
     {
@@ -170,46 +344,53 @@ public class ShopController : MonoBehaviour
 
         _titleStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize  = 20,
-            fontStyle = FontStyle.Bold,
+            fontSize  = 22, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             normal    = { textColor = Color.white },
         };
+        _subtitleStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize  = 13, fontStyle = FontStyle.Bold,
+            normal    = { textColor = new Color(0.75f, 0.75f, 0.85f) },
+        };
+        _currencyStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize  = 14, fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.UpperLeft,
+        };
+        _bodyStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 13, normal = { textColor = Color.white },
+        };
 
-        Texture2D activeTex = MakeTex(new Color(0.2f, 0.45f, 0.8f));
+        Texture2D MakeTex(Color c)
+        {
+            var t = new Texture2D(1, 1); t.SetPixel(0, 0, c); t.Apply(); return t;
+        }
+
         _tabActiveStyle = new GUIStyle(GUI.skin.button)
         {
             fontStyle = FontStyle.Bold,
-            normal  = { background = activeTex, textColor = Color.white },
-            hover   = { background = activeTex, textColor = Color.white },
+            normal  = { background = MakeTex(new Color(0.18f, 0.42f, 0.75f)), textColor = Color.white },
+            hover   = { background = MakeTex(new Color(0.22f, 0.50f, 0.88f)), textColor = Color.white },
         };
-
         _tabInactiveStyle = new GUIStyle(GUI.skin.button)
-        {
-            normal = { textColor = new Color(0.75f, 0.75f, 0.75f) },
-        };
-
-        _currencyStyle = new GUIStyle(GUI.skin.label)
-        {
-            fontSize  = 14,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.UpperRight,
-            normal    = { textColor = new Color(1f, 0.85f, 0.2f) },
-        };
-
-        _placeholderStyle = new GUIStyle(GUI.skin.label)
         {
             normal = { textColor = new Color(0.7f, 0.7f, 0.7f) },
         };
+        _nodeAvailableStyle = new GUIStyle(GUI.skin.box)
+        {
+            normal = { background = MakeTex(new Color(0.12f, 0.32f, 0.55f)) },
+        };
+        _nodeLockedStyle = new GUIStyle(GUI.skin.box)
+        {
+            normal = { background = MakeTex(new Color(0.18f, 0.18f, 0.22f)) },
+        };
+        _nodeMaxStyle = new GUIStyle(GUI.skin.box)
+        {
+            normal = { background = MakeTex(new Color(0.35f, 0.28f, 0.08f)) },
+        };
 
         _stylesReady = true;
-    }
-
-    static Texture2D MakeTex(Color c)
-    {
-        var t = new Texture2D(1, 1);
-        t.SetPixel(0, 0, c);
-        t.Apply();
-        return t;
     }
 }

@@ -128,35 +128,20 @@ public class GameManager : MonoBehaviour
         {
             gameOverTimer += Time.unscaledDeltaTime;
 
+            // Keyboard shortcuts still work alongside the OnGUI buttons
             if (inputManager != null)
             {
-                if (inputManager.GetCancel() || inputManager.GetSubmit())
-                {
-                    Time.timeScale = 1f;
-                    SceneManager.LoadScene("MainMenu");
-                }
-                else if (inputManager.GetRestart())
-                {
-                    Time.timeScale = 1f;
-                    SceneManager.LoadScene("Game");
-                }
+                if (inputManager.GetRestart())
+                { Time.timeScale = 1f; SceneManager.LoadScene("Game"); }
             }
             else
             {
-                // Fallback to old input system
-                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Return))
-                {
-                    Time.timeScale = 1f;
-                    SceneManager.LoadScene("MainMenu");
-                }
-                else if (Input.GetKeyDown(KeyCode.R))
-                {
-                    Time.timeScale = 1f;
-                    SceneManager.LoadScene("Game");
-                }
+                if (Input.GetKeyDown(KeyCode.R))
+                { Time.timeScale = 1f; SceneManager.LoadScene("Game"); }
             }
 
-            if (gameOverTimer >= 3f)
+            // Auto-return after 10 seconds
+            if (gameOverTimer >= 10f)
             {
                 Time.timeScale = 1f;
                 SceneManager.LoadScene("MainMenu");
@@ -322,15 +307,30 @@ public class GameManager : MonoBehaviour
 
         if (isGameOver)
         {
-            GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height / 2 - 30, 300, 60), "GAME OVER", gameOverStyle);
-            
-            // Show appropriate controls based on input device
-            string controlsText = "R - Restart    Enter/Esc - Menu";
-            if (inputManager != null && inputManager.IsUsingGamepad())
-            {
-                controlsText = "Y - Restart    A/B - Menu";
-            }
-            GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height / 2 + 40, 300, 30), controlsText, centerStyle);
+            float cx = Screen.width  / 2f;
+            float cy = Screen.height / 2f;
+
+            // Title
+            GUI.Label(new Rect(cx - 150, cy - 70, 300, 60), "GAME OVER", gameOverStyle);
+
+            // Countdown
+            int secsLeft = Mathf.Max(0, Mathf.CeilToInt(10f - gameOverTimer));
+            GUI.Label(new Rect(cx - 150, cy - 16, 300, 24),
+                      $"Returning to menu in {secsLeft}...", centerStyle);
+
+            // Three action buttons
+            float btnW = 220f, btnH = 36f, btnGap = 10f;
+            float btnX = cx - btnW / 2f;
+            float btn0Y = cy + 16f;
+
+            if (GUI.Button(new Rect(btnX, btn0Y,              btnW, btnH), "Retry"))
+            { Time.timeScale = 1f; SceneManager.LoadScene("Game"); }
+
+            if (GUI.Button(new Rect(btnX, btn0Y + btnH + btnGap, btnW, btnH), "The Hyperdrive Shop"))
+            { Time.timeScale = 1f; SceneManager.LoadScene("HyperdriveShop"); }
+
+            if (GUI.Button(new Rect(btnX, btn0Y + (btnH + btnGap) * 2, btnW, btnH), "Main Menu"))
+            { Time.timeScale = 1f; SceneManager.LoadScene("MainMenu"); }
         }
     }
 
