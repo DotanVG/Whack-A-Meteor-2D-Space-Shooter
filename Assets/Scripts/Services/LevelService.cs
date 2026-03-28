@@ -67,8 +67,8 @@ public class LevelService : MonoBehaviour
     public int XPForLevel(int level)
     {
         if (level >= MaxLevel) return int.MaxValue;
-        float xpBase   = Get("progression.xp_base",   300f);
-        float xpGrowth = Get("progression.xp_growth",  1.35f);
+        float xpBase   = Get("progression.xp_base",   5000f);
+        float xpGrowth = Get("progression.xp_growth",   1.5f);
         return Mathf.RoundToInt(xpBase * Mathf.Pow(xpGrowth, level - 1));
     }
 

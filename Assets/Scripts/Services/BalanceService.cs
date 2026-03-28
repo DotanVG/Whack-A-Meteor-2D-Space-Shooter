@@ -125,8 +125,9 @@ public class BalanceService : MonoBehaviour
         Set("economy.metal_enemy", 2f);
 
         // Progression — XP curve (xp_base * xp_growth^(level-1))
-        Set("progression.xp_base",   300f);
-        Set("progression.xp_growth",   1.35f);
+        // Lv1→2: 5000 XP  |  Lv2→3: 7500  |  Lv3→4: 11250  |  Lv5→6: ~25k
+        Set("progression.xp_base",   5000f);
+        Set("progression.xp_growth",    1.5f);
 
         // Wave
         Set("wave.time_between_waves",    5f);

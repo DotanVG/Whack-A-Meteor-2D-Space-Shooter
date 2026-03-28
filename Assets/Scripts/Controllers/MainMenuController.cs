@@ -44,7 +44,7 @@ public class MainMenuController : MonoBehaviour
                 }
                 else if (navigate.y < -0.5f)
                 {
-                    selectedButtonIndex = Mathf.Min(confirmQuit ? 1 : 2, selectedButtonIndex + 1);
+                    selectedButtonIndex = Mathf.Min(confirmQuit ? 1 : 3, selectedButtonIndex + 1);
                 }
                 lastNavigateTime = Time.time;
             }
@@ -68,15 +68,12 @@ public class MainMenuController : MonoBehaviour
                 {
                     switch (selectedButtonIndex)
                     {
-                        case 0:
-                            StartGame();
-                            break;
-                        case 1:
-                            OpenSettings();
-                            break;
-                        case 2:
+                        case 0: StartGame();           break;
+                        case 1: OpenShop();            break;
+                        case 2: OpenSettings();        break;
+                        case 3:
                             confirmQuit = true;
-                            selectedButtonIndex = 0; // Reset to "Yes" in quit dialog
+                            selectedButtonIndex = 0;
                             break;
                     }
                 }
@@ -94,21 +91,13 @@ public class MainMenuController : MonoBehaviour
 
     void OnGUI()
     {
-        GUILayout.BeginArea(new Rect(Screen.width / 2 - 100, Screen.height / 2 - 70, 200, 140));
+        GUILayout.BeginArea(new Rect(Screen.width / 2 - 110, Screen.height / 2 - 90, 220, 180));
         if (!confirmQuit)
         {
-            if (GUILayout.Button("New Game"))
-            {
-                StartGame();
-            }
-            if (GUILayout.Button("Settings"))
-            {
-                OpenSettings();
-            }
-            if (GUILayout.Button("Quit"))
-            {
-                Application.Quit();
-            }
+            if (GUILayout.Button("New Game"))            StartGame();
+            if (GUILayout.Button("The Hyperdrive Shop")) OpenShop();
+            if (GUILayout.Button("Settings"))            OpenSettings();
+            if (GUILayout.Button("Quit"))                Application.Quit();
         }
         else
         {
@@ -130,6 +119,11 @@ public class MainMenuController : MonoBehaviour
     public void StartGame()
     {
         SceneManager.LoadScene("Game");
+    }
+
+    public void OpenShop()
+    {
+        SceneManager.LoadScene("HyperdriveShop");
     }
 
     public void OpenSettings()
