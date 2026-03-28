@@ -98,12 +98,13 @@ public class ShopController : MonoBehaviour
         float sw = Screen.width;
         float sh = Screen.height;
 
-        // ── Top bar (height 72) ────────────────────────────────────────────────
-        GUI.Box(new Rect(0, 0, sw, 72), GUIContent.none);
+        // ── Top bar (height 84) ────────────────────────────────────────────────
+        const float TOP_BAR = 84f;
+        GUI.Box(new Rect(0, 0, sw, TOP_BAR), GUIContent.none);
 
         // ── Background tint below the top bar only ────────────────────────────
         GUI.color = new Color(0f, 0f, 0f, 0.55f);
-        GUI.DrawTexture(new Rect(0, 72, sw, sh - 72), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(0, TOP_BAR, sw, sh - TOP_BAR), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
         // Currency — top LEFT (matches in-game HUD position)
@@ -114,7 +115,7 @@ public class ShopController : MonoBehaviour
         GUI.Label(new Rect(12, cy + 20, 180, 20), $"Metal:     {_metal}",    metStyle);
 
         // Level indicator
-        GUI.Label(new Rect(12, cy + 40, 180, 16),
+        GUI.Label(new Rect(12, cy + 42, 180, 18),
                   $"Level {_level}",
                   new GUIStyle(_bodyStyle) { fontSize = 12, normal = { textColor = new Color(0.6f, 0.6f, 0.6f) } });
 
@@ -123,17 +124,17 @@ public class ShopController : MonoBehaviour
 
         // Top-right buttons
         float btnW = 130f, btnH = 28f, btnX = sw - btnW - 8f;
-        if (GUI.Button(new Rect(btnX, 22,  btnW, btnH), "▶  Play Game"))
+        if (GUI.Button(new Rect(btnX, 28,  btnW, btnH), "▶  Play Game"))
         {
             SceneManager.LoadScene("Game");
         }
-        if (GUI.Button(new Rect(btnX - btnW - 6, 22, btnW, btnH), "← Main Menu"))
+        if (GUI.Button(new Rect(btnX - btnW - 6, 28, btnW, btnH), "← Main Menu"))
         {
             SceneManager.LoadScene("MainMenu");
         }
 
-        // ── Tab bar (y=78) ────────────────────────────────────────────────────
-        float tabY  = 78f;
+        // ── Tab bar (y=90) ────────────────────────────────────────────────────
+        float tabY  = TOP_BAR + 6f;
         float tabW  = 130f;
         float tabStartX = sw / 2f - (TabNames.Length * tabW) / 2f;
         for (int i = 0; i < TabNames.Length; i++)
