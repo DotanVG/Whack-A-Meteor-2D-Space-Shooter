@@ -14,7 +14,8 @@ public class MainMenuController : MonoBehaviour
 
     void Start()
     {
-        // Auto-create InputManager if it doesn't exist
+        Cursor.visible   = true;
+        Cursor.lockState = CursorLockMode.None;
         inputManager = InputManager.GetOrCreateInstance();
     }
 

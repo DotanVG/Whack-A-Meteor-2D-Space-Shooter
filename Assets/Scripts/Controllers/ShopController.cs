@@ -53,6 +53,8 @@ public class ShopController : MonoBehaviour
 
     void Start()
     {
+        Cursor.visible   = true;
+        Cursor.lockState = CursorLockMode.None;
         inputManager = InputManager.GetOrCreateInstance();
         LoadWallet();
     }
