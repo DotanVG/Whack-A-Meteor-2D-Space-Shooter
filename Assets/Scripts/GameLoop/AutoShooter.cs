@@ -1,97 +1,221 @@
-using System.Collections;
 using UnityEngine;
 
 /// <summary>
 /// AutoShooter — attaches to the player ship.
-/// Automatically finds the nearest enemy (tagged "Enemy") and fires a bullet toward it.
+/// Automatically targets the nearest enemy or meteor and fires a leading shot toward it,
+/// similar to Enter the Gungeon's auto-aim. Not perfectly accurate by design — shots are
+/// spread by a configurable angle so the player still feels agency and not all shots land.
 ///
-/// SETUP:
-///   1. Attach this component to the Player GameObject.
-///   2. Create a Bullet prefab (with Rigidbody + Bullet.cs + Collider set to Trigger).
-///   3. Create an empty child GameObject at the ship's nose — name it "FirePoint" — and assign to firePoint.
-///   4. Assign the Bullet prefab to bulletPrefab in the Inspector.
+/// DESIGN NOTES:
+///   - Never rotates the player ship — aim rotation is baked into the spawned projectile.
+///   - Reuses the same projectile prefab as the spacebar shot (ProjectileController handles velocity).
+///   - Lead-prediction is a one-shot quadratic solve per-fire, not per-frame.
+///   - Homing meteors (MeteorMover) re-aim every frame so prediction is approximate but feels good.
 ///
-/// KNOWN ISSUE: Both CameraLook and AutoShooter modify transform.forward.
-///   If rotation feels jittery, comment out the Lerp in Update() temporarily.
-///
-/// PLANNED UPGRADES:
-///   - Multiple fire points for spread / multi-shot weapons
-///   - Weapon types (laser, missile, hammer chain) via a WeaponBase ScriptableObject
-///   - fireRate driven by player upgrade level from a future UpgradeManager
+/// PLANNED UPGRADES (survivor.io / Chicken Invaders incremental skill system):
+///   - Unlock side shots (left/right 90°) as an acquired skill
+///   - Unlock rear shot (180°) as an acquired skill
+///   - fireRate driven by upgrade level from a future UpgradeManager
+///   - Spread shot, multi-point fire arrays
 /// </summary>
 public class AutoShooter : MonoBehaviour
 {
-    [Header("Shooting")]
-    public GameObject bulletPrefab;         // Assign a Bullet prefab in the Inspector
-    public Transform firePoint;             // Empty child GameObject at the ship's nose
-    public float fireRate = 1.0f;           // Shots per second (e.g. 2 = fires every 0.5s)
-    public float bulletSpeed = 20f;         // How fast each bullet travels
-    public float detectionRange = 50f;      // Only shoot enemies within this radius
+    [Header("References — auto-populated from PlayerController if left empty")]
+    public GameObject projectilePrefab;
+    public Transform firePoint;
 
-    private float _nextFireTime = 0f;       // Internal cooldown tracker (Time.time based)
+    [Header("Targeting")]
+    [Tooltip("Max range to consider a target. Set to 0 for unlimited.")]
+    public float detectionRange = 0f;
+
+    [Header("Accuracy")]
+    [Tooltip("Max random angular spread in degrees. 0 = pixel-perfect, 15 = noticeable imprecision.")]
+    public float accuracySpread = 12f;
+
+    [Header("Fire Rate")]
+    [Tooltip("Shots per second. 1 = one shot every second.")]
+    public float fireRate = 1.0f;
+
+    [Header("Lead Calculation")]
+    [Tooltip("Must match ProjectileController.speed on the projectile prefab for accurate lead aim.")]
+    public float projectileSpeed = 50f;
+
+    // All tags AutoShooter will treat as valid targets
+    private static readonly string[] TargetTags =
+    {
+        "Enemy",
+        "BigBrownMeteor",   "BigGreyMeteor",
+        "MediumBrownMeteor","MediumGreyMeteor",
+        "SmallBrownMeteor", "SmallGreyMeteor",
+        "TinyBrownMeteor",  "TinyGreyMeteor"
+    };
+
+    private float _nextFireTime = 0f;
+
+    void Start()
+    {
+        // Auto-wire from PlayerController on the same GameObject if not manually assigned
+        if (projectilePrefab == null || firePoint == null)
+        {
+            PlayerController pc = GetComponent<PlayerController>();
+            if (pc != null)
+            {
+                if (projectilePrefab == null) projectilePrefab = pc.projectilePrefab;
+                if (firePoint == null)        firePoint        = pc.projectileSpawnPoint;
+            }
+        }
+
+        if (projectilePrefab == null)
+            Debug.LogWarning("AutoShooter: projectilePrefab not assigned and not found on PlayerController.");
+        if (firePoint == null)
+            Debug.LogWarning("AutoShooter: firePoint not assigned and not found on PlayerController.");
+    }
 
     void Update()
     {
-        Transform target = FindNearestEnemy();
-        if (target == null) return; // No enemies in range — idle
+        if (projectilePrefab == null || firePoint == null) return;
+        if (Time.time < _nextFireTime) return;
 
-        // Smoothly rotate ship to face the target each frame.
-        // Lerp gives a responsive but non-instant feel — pure snap feels bad in shooters.
-        Vector3 dir = (target.position - transform.position).normalized;
-        transform.forward = Vector3.Lerp(transform.forward, dir, Time.deltaTime * 5f);
+        (Transform target, Vector2 targetVel) = FindNearestTarget();
+        if (target == null) return;
 
-        // Fire when cooldown has elapsed
-        if (Time.time >= _nextFireTime)
-        {
-            Shoot(target);
-            _nextFireTime = Time.time + 1f / fireRate;
-        }
+        Vector2 aimDir = ComputeLeadAim((Vector2)target.position, targetVel);
+        FireProjectile(aimDir);
+        _nextFireTime = Time.time + 1f / fireRate;
     }
 
-    /// <summary>
-    /// Scans all active GameObjects tagged "Enemy" and returns the closest one
-    /// within detectionRange. Returns null if none are found.
-    ///
-    /// PERF NOTE: FindGameObjectsWithTag is O(n) over the whole scene.
-    /// Fine for ~15 meteors (maxMeteors cap in MeteorSpawnerGL), but if enemy count
-    /// grows significantly, replace with a cached list updated by MeteorSpawnerGL.
-    /// </summary>
-    Transform FindNearestEnemy()
-    {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        Transform nearest = null;
-        float minDist = detectionRange;
+    // ─── Target search ───────────────────────────────────────────────────────
 
-        foreach (GameObject e in enemies)
+    (Transform nearest, Vector2 velocity) FindNearestTarget()
+    {
+        Transform nearest = null;
+        Vector2 nearestVel = Vector2.zero;
+        float maxDistSq = detectionRange > 0f ? detectionRange * detectionRange : float.MaxValue;
+        float minDistSq = maxDistSq;
+
+        foreach (string tag in TargetTags)
         {
-            float dist = Vector3.Distance(transform.position, e.transform.position);
-            if (dist < minDist)
+            foreach (GameObject obj in GameObject.FindGameObjectsWithTag(tag))
             {
-                minDist = dist;
-                nearest = e.transform;
+                float distSq = ((Vector2)(obj.transform.position - transform.position)).sqrMagnitude;
+                if (distSq < minDistSq)
+                {
+                    minDistSq  = distSq;
+                    nearest    = obj.transform;
+                    nearestVel = GetTargetVelocity(obj);
+                }
             }
         }
-        return nearest;
+        return (nearest, nearestVel);
     }
 
     /// <summary>
-    /// Instantiates a bullet at firePoint and sets its Rigidbody velocity toward the target.
-    /// Collision and damage are handled by Bullet.cs on the prefab.
-    /// TODO: add target-lead prediction once enemies move faster (currently trivial to dodge).
+    /// Reads the current velocity of a target from whichever movement component it has.
+    /// Supports the three mover types present in the project:
+    ///   MeteorMover     — homing; recomputes direction each frame toward player
+    ///   MeteorMovement  — linear; constant world-space direction + speed
+    ///   EnemyController — always moves straight down in local space
     /// </summary>
-    void Shoot(Transform target)
+    Vector2 GetTargetVelocity(GameObject obj)
     {
-        if (bulletPrefab == null || firePoint == null) return;
+        // GameLoop homing meteors: direction is recalculated every frame toward their target,
+        // so we sample the instantaneous direction for the lead solve.
+        MeteorMover mover = obj.GetComponent<MeteorMover>();
+        if (mover != null && mover.target != null)
+            return ((Vector2)(mover.target.position - obj.transform.position)).normalized * mover.speed;
 
-        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-        Rigidbody rb = bullet.GetComponent<Rigidbody>();
-        if (rb != null)
+        // Original 2D linear meteors: constant world-space velocity
+        MeteorMovement linear = obj.GetComponent<MeteorMovement>();
+        if (linear != null)
+            return (Vector2)(linear.CurrentDirection * linear.CurrentSpeed);
+
+        // Enemy ships: always drift straight down in world space
+        EnemyController enemy = obj.GetComponent<EnemyController>();
+        if (enemy != null)
+            return Vector2.down * enemy.speed;
+
+        return Vector2.zero;
+    }
+
+    // ─── Predictive aim ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Solves the projectile intercept quadratic to find where to aim so that
+    /// a bullet at <projectileSpeed> will meet the target at its future position.
+    ///
+    /// Math: |delta + targetVel*t|² = (projectileSpeed*t)²
+    ///   Expands to:  a·t² + b·t + c = 0
+    ///   where a = |targetVel|² - projectileSpeed²
+    ///         b = 2·dot(delta, targetVel)
+    ///         c = |delta|²
+    /// Pick the smallest positive root t; if none, aim directly at current position.
+    /// Finally, rotate the aim direction by a random spread angle for imperfect accuracy.
+    /// </summary>
+    Vector2 ComputeLeadAim(Vector2 targetPos, Vector2 targetVel)
+    {
+        Vector2 delta = targetPos - (Vector2)firePoint.position;
+
+        float a = targetVel.sqrMagnitude - projectileSpeed * projectileSpeed;
+        float b = 2f * Vector2.Dot(delta, targetVel);
+        float c = delta.sqrMagnitude;
+
+        float t = SolveSmallestPositiveRoot(a, b, c);
+
+        Vector2 aimDir = t > 0f
+            ? (delta + targetVel * t).normalized   // lead shot
+            : delta.normalized;                     // fallback: direct aim
+
+        // Add imperfect accuracy: rotate the aim vector by a random angle in [-spread, +spread]
+        if (accuracySpread > 0f)
+            aimDir = RotateVector(aimDir, Random.Range(-accuracySpread, accuracySpread));
+
+        return aimDir;
+    }
+
+    static float SolveSmallestPositiveRoot(float a, float b, float c)
+    {
+        if (Mathf.Abs(a) < 0.001f)
         {
-            Vector3 direction = (target.position - firePoint.position).normalized;
-            rb.linearVelocity = direction * bulletSpeed;
+            // Degenerate: target speed ≈ projectile speed → linear equation b·t + c = 0
+            return Mathf.Abs(b) > 0.001f ? -c / b : -1f;
         }
 
-        // Safety cleanup — destroys the bullet after 5s if it never hits anything
-        Destroy(bullet, 5f);
+        float discriminant = b * b - 4f * a * c;
+        if (discriminant < 0f) return -1f; // No real solution
+
+        float sqrtD = Mathf.Sqrt(discriminant);
+        float t1 = (-b - sqrtD) / (2f * a);
+        float t2 = (-b + sqrtD) / (2f * a);
+
+        if (t1 > 0f && t2 > 0f) return Mathf.Min(t1, t2);
+        if (t1 > 0f) return t1;
+        if (t2 > 0f) return t2;
+        return -1f;
+    }
+
+    // ─── Firing ───────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Instantiates the projectile with a rotation such that transform.up points in aimDir.
+    /// ProjectileController.Start() sets velocity = transform.up * speed, so this is all we need.
+    /// The ship's own rotation is NOT modified.
+    /// </summary>
+    void FireProjectile(Vector2 aimDir)
+    {
+        // Convert aimDir to a Z-rotation where transform.up == aimDir
+        // atan2(aimDir.x, aimDir.y) gives the angle from world-up, which maps to -Z rotation.
+        float angle = Mathf.Atan2(aimDir.x, aimDir.y) * Mathf.Rad2Deg;
+        Quaternion aimRotation = Quaternion.Euler(0f, 0f, -angle);
+        Instantiate(projectilePrefab, firePoint.position, aimRotation);
+    }
+
+    // ─── Utility ──────────────────────────────────────────────────────────────
+
+    static Vector2 RotateVector(Vector2 v, float degrees)
+    {
+        float rad = degrees * Mathf.Deg2Rad;
+        float cos = Mathf.Cos(rad);
+        float sin = Mathf.Sin(rad);
+        return new Vector2(cos * v.x - sin * v.y, sin * v.x + cos * v.y);
     }
 }
