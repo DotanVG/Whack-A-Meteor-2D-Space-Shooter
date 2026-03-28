@@ -82,12 +82,13 @@ public class PlayerController : MonoBehaviour
             rb.velocity *= 0.999f;
         }
 
-        // Shooting
-        if (inputManager.GetShoot() && Time.time - lastShootTime >= shootInterval)
-        {
-            Shoot();
-            lastShootTime = Time.time;
-        }
+        // Manual shooting disabled — AutoShooter handles firing automatically.
+        // Re-enable this block when spacebar shot is added back as an unlockable skill.
+        // if (inputManager.GetShoot() && Time.time - lastShootTime >= shootInterval)
+        // {
+        //     Shoot();
+        //     lastShootTime = Time.time;
+        // }
     }
 
     // Fallback method using old Input system
@@ -133,12 +134,13 @@ public class PlayerController : MonoBehaviour
             rb.velocity *= 0.999f;
         }
 
-        // Shooting with Space
-        if (Input.GetKey(KeyCode.Space) && Time.time - lastShootTime >= shootInterval)
-        {
-            Shoot();
-            lastShootTime = Time.time;
-        }
+        // Manual shooting disabled — AutoShooter handles firing automatically.
+        // Re-enable when spacebar shot is added back as an unlockable skill.
+        // if (Input.GetKey(KeyCode.Space) && Time.time - lastShootTime >= shootInterval)
+        // {
+        //     Shoot();
+        //     lastShootTime = Time.time;
+        // }
     }
 
     void Shoot()
