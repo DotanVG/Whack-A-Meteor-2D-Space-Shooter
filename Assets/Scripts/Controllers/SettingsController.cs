@@ -139,6 +139,9 @@ public class SettingsController : MonoBehaviour
         PlayerPrefs.DeleteKey("Economy.Metal");
         PlayerPrefs.DeleteKey("Progression.TotalXP");
         PlayerPrefs.DeleteKey("Progression.Level");
+        for (int i = 0; i < SkillService.SkillCount; i++)
+            PlayerPrefs.DeleteKey($"Skill.{i}");
+        SkillService.Instance?.ResetAll();
         PlayerPrefs.Save();
         _confirmReset = false;
         selectedButtonIndex = 0;

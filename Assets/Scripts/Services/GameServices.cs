@@ -25,6 +25,7 @@ public class GameServices : MonoBehaviour
     public BalanceService     balanceService;
     public EconomyService     economyService;
     public LevelService       levelService;
+    public SkillService       skillService;
     public RunStateService    runStateService;
     public ProgressionService progressionService;
     public EconomyHUD         economyHUD;
@@ -35,6 +36,7 @@ public class GameServices : MonoBehaviour
         EnsureService(ref balanceService,     "BalanceService");
         EnsureService(ref economyService,     "EconomyService");
         EnsureService(ref levelService,       "LevelService");
+        EnsureService(ref skillService,       "SkillService");
         EnsureService(ref runStateService,    "RunStateService");
         EnsureService(ref progressionService, "ProgressionService");
         EnsureService(ref economyHUD,         "EconomyHUD");
@@ -54,6 +56,7 @@ public class GameServices : MonoBehaviour
                   $"\n  BalanceService     : {(balanceService     != null ? "OK" : "MISSING")}" +
                   $"\n  EconomyService     : {(economyService     != null ? "OK" : "MISSING")}" +
                   $"\n  LevelService       : {(levelService       != null ? "OK" : "MISSING")}" +
+                  $"\n  SkillService       : {(skillService       != null ? "OK" : "MISSING")}" +
                   $"\n  RunStateService    : {(runStateService    != null ? "OK" : "MISSING")}" +
                   $"\n  ProgressionService : {(progressionService != null ? "OK" : "MISSING")}" +
                   $"\n  EconomyHUD         : {(economyHUD         != null ? "OK" : "MISSING")}" +

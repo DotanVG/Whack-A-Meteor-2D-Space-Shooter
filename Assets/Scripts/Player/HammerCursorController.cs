@@ -45,6 +45,9 @@ public class HammerCursorController : MonoBehaviour
         // Hide the default cursor
         Cursor.visible = false;
 
+        // Apply AOE-radius skill upgrade before the circle is created
+        aoeRadius *= SkillService.Instance?.GetHammerRadiusMultiplier() ?? 1f;
+
         // Create the AOE circle and radar dot
         CreateAOECircle();
         CreateRadarDot();

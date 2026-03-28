@@ -83,10 +83,16 @@ public class AutoShooter : MonoBehaviour
     public void ApplyBalanceValues(int upgradeLevel = 1)
     {
         if (BalanceService.Instance == null) return;
-        fireRate        = BalanceService.Instance.GetFloat("weapon.autoshooter_fire_rate",      upgradeLevel, fireRate);
+        fireRate        = BalanceService.Instance.GetFloat("weapon.autoshooter_fire_rate",       upgradeLevel, fireRate);
         accuracySpread  = BalanceService.Instance.GetFloat("weapon.autoshooter_accuracy_spread", upgradeLevel, accuracySpread);
         projectileSpeed = BalanceService.Instance.GetFloat("weapon.autoshooter_projectile_speed", projectileSpeed);
-        detectionRange  = BalanceService.Instance.GetFloat("weapon.autoshooter_range",           detectionRange);
+        detectionRange  = BalanceService.Instance.GetFloat("weapon.autoshooter_range",            detectionRange);
+
+        // Apply skill-tree multipliers (null-safe)
+        fireRate        *= SkillService.Instance?.GetFireRateMultiplier()  ?? 1f;
+        accuracySpread  *= SkillService.Instance?.GetSpreadMultiplier()    ?? 1f;
+        projectileSpeed *= SkillService.Instance?.GetProjSpeedMultiplier() ?? 1f;
+
         Debug.Log($"[AutoShooter] Balance applied (lv{upgradeLevel}) — " +
                   $"FireRate:{fireRate:F2}/s  Spread:±{accuracySpread:F1}°  " +
                   $"ProjSpeed:{projectileSpeed:F0}  Range:{(detectionRange <= 0 ? "∞" : detectionRange.ToString("F1"))}");

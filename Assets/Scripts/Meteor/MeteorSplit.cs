@@ -170,7 +170,7 @@ public class MeteorSplit : MonoBehaviour
     {
         string hitTag  = gameObject.tag;
         bool   splits  = !hitTag.StartsWith("Tiny");
-        int    points  = GameConstants.GetScoreByTag(hitTag) * 2;
+        int    points  = GameConstants.GetScoreByTag(hitTag) * (SkillService.Instance?.GetHammerScoreMult() ?? 2);
 
         MeteorMovement move = GetComponent<MeteorMovement>();
         if (move != null) SplitWithMomentum(move.CurrentDirection, move.CurrentSpeed);

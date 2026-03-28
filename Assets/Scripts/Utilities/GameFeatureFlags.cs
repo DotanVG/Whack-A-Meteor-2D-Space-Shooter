@@ -14,10 +14,10 @@ public static class GameFeatureFlags
     public const bool UseEconomy = true;
 
     // Phase 3: persistent store + meta-progression
-    public const bool UseStore = false;
+    public const bool UseStore = true;
 
-    // Phase 4: skill tree
-    public const bool UseSkillTree = false;
+    // Phase 3: skill tree (functional purchase + gameplay effects)
+    public const bool UseSkillTree = true;
 
     // Phase 5: enemy factions + SpawnDirector
     public const bool UseSpawnDirector = false;

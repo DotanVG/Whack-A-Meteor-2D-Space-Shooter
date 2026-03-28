@@ -68,7 +68,8 @@ public class PlayerHealth : MonoBehaviour
     {
         invincible = true;
         float elapsed = 0f;
-        while (elapsed < GameConstants.InvincibilityDuration)
+        float invincDuration = GameConstants.InvincibilityDuration * (SkillService.Instance?.GetInvincibilityMultiplier() ?? 1f);
+        while (elapsed < invincDuration)
         {
             sr.enabled = !sr.enabled;
             yield return new WaitForSeconds(0.2f);

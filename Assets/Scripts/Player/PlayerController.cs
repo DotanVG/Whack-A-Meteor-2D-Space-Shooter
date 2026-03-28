@@ -19,12 +19,12 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        // Rotation is driven by transform.Rotate() (input-controlled), so physics must
-        // never apply torque. Freeze rotation to prevent collision impulses from spinning
-        // the ship uncontrollably after meteor hits.
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-        // Auto-create InputManager if it doesn't exist
         inputManager = InputManager.GetOrCreateInstance();
+
+        // Apply skill-tree multipliers (null-safe)
+        movementSpeed *= SkillService.Instance?.GetMoveSpeedMultiplier()       ?? 1f;
+        boostDuration *= SkillService.Instance?.GetBoostDurationMultiplier()   ?? 1f;
     }
 
     private float shootInterval = 0.2f;
