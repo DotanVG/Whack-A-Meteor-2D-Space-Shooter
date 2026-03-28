@@ -14,30 +14,54 @@ public class PlayerHealth : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        HandleMeteorCollision(other.gameObject);
+        HandleDamageSource(other.gameObject);
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        HandleMeteorCollision(collision.gameObject);
+        HandleDamageSource(collision.gameObject);
     }
 
-    private void HandleMeteorCollision(GameObject obj)
+    private void HandleDamageSource(GameObject obj)
     {
-        if (invincible) return;
-        if (obj.CompareTag("BigBrownMeteor") || obj.CompareTag("BigGreyMeteor") ||
-            obj.CompareTag("MediumBrownMeteor") || obj.CompareTag("MediumGreyMeteor") ||
-            obj.CompareTag("SmallBrownMeteor") || obj.CompareTag("SmallGreyMeteor") ||
-            obj.CompareTag("TinyBrownMeteor") || obj.CompareTag("TinyGreyMeteor"))
+        if (invincible)
         {
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.LoseLife();
-            }
-            // destroy the meteor after losing a life and start invincibility
-            Destroy(obj);
-            StartCoroutine(Invincibility());
+            bool isThreat = obj.CompareTag("Enemy")              ||
+                            obj.CompareTag("BigBrownMeteor")     || obj.CompareTag("BigGreyMeteor")    ||
+                            obj.CompareTag("MediumBrownMeteor")  || obj.CompareTag("MediumGreyMeteor") ||
+                            obj.CompareTag("SmallBrownMeteor")   || obj.CompareTag("SmallGreyMeteor")  ||
+                            obj.CompareTag("TinyBrownMeteor")    || obj.CompareTag("TinyGreyMeteor");
+            if (isThreat) GameLogger.PlayerInvincibleHit(obj.tag);
+            return;
         }
+
+        if (obj.CompareTag("BigBrownMeteor") || obj.CompareTag("BigGreyMeteor")       ||
+            obj.CompareTag("MediumBrownMeteor") || obj.CompareTag("MediumGreyMeteor") ||
+            obj.CompareTag("SmallBrownMeteor")  || obj.CompareTag("SmallGreyMeteor")  ||
+            obj.CompareTag("TinyBrownMeteor")   || obj.CompareTag("TinyGreyMeteor"))
+        {
+            TakeDamage(obj.tag);
+            Destroy(obj);
+        }
+        else if (obj.CompareTag("Enemy"))
+        {
+            // Enemy ship rams the player — enemy dies, player loses a life
+            TakeDamage(obj.tag);
+            Destroy(obj);
+        }
+    }
+
+    private void TakeDamage(string sourceTag)
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.LoseLife();
+            GameLogger.PlayerDamage(sourceTag, transform.position,
+                                    GameManager.Instance.Lives, Time.timeSinceLevelLoad);
+            if (sourceTag == "Enemy")
+                GameLogger.EnemyRammedPlayer(transform.position, GameManager.Instance.Lives);
+        }
+        StartCoroutine(Invincibility());
     }
 
     IEnumerator Invincibility()

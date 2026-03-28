@@ -22,16 +22,16 @@ public class ProjectileController : MonoBehaviour
         if (other.gameObject.CompareTag("Enemy"))
         {
             if (enemyHitClip != null)
-            {
                 AudioSource.PlayClipAtPoint(enemyHitClip, transform.position);
-            }
             if (hitParticles != null)
-            {
                 Instantiate(hitParticles, other.transform.position, Quaternion.identity);
-            }
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.AddScore(GameConstants.ScoreEnemy);
+                GameLogger.EnemyKilledByProjectile(
+                    (Vector2)other.transform.position,
+                    GameConstants.ScoreEnemy,
+                    GameManager.Instance.Score);
             }
             Destroy(other.gameObject);
             Destroy(gameObject);
