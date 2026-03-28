@@ -1,0 +1,38 @@
+id,category,key,level,base_value,growth_type,growth_param_a,growth_param_b,cap,notes
+# ── Ship ─────────────────────────────────────────────────────────────────────
+ship_lives_max,ship,lives_max,1,3,flat,0,0,10,Starting lives count
+ship_invincibility,ship,invincibility_duration,1,3,flat,0,0,10,Seconds of post-hit invincibility
+# ── Scores ───────────────────────────────────────────────────────────────────
+score_big,score,big_meteor,1,5,flat,0,0,0,Points per big meteor (projectile)
+score_medium,score,medium_meteor,1,10,flat,0,0,0,Points per medium meteor
+score_small,score,small_meteor,1,15,flat,0,0,0,Points per small meteor
+score_tiny,score,tiny_meteor,1,20,flat,0,0,0,Points per tiny meteor (terminal)
+score_enemy,score,enemy,1,25,flat,0,0,0,Points per enemy ship kill
+# ── Auto-shooter (5 upgrade levels) ──────────────────────────────────────────
+autoshooter_rate_1,weapon,autoshooter_fire_rate,1,1.0,linear,0.2,0,5.0,Shots per second lv1
+autoshooter_rate_2,weapon,autoshooter_fire_rate,2,1.2,linear,0.2,0,5.0,Shots per second lv2
+autoshooter_rate_3,weapon,autoshooter_fire_rate,3,1.4,linear,0.2,0,5.0,Shots per second lv3
+autoshooter_rate_4,weapon,autoshooter_fire_rate,4,1.6,linear,0.2,0,5.0,Shots per second lv4
+autoshooter_rate_5,weapon,autoshooter_fire_rate,5,2.0,linear,0.2,0,5.0,Shots per second lv5
+autoshooter_spread_1,weapon,autoshooter_accuracy_spread,1,12,linear,-2,0,0,Degrees spread lv1
+autoshooter_spread_2,weapon,autoshooter_accuracy_spread,2,10,linear,-2,0,0,Degrees spread lv2
+autoshooter_spread_3,weapon,autoshooter_accuracy_spread,3,8,linear,-2,0,0,Degrees spread lv3
+autoshooter_spread_4,weapon,autoshooter_accuracy_spread,4,6,linear,-2,0,0,Degrees spread lv4
+autoshooter_spread_5,weapon,autoshooter_accuracy_spread,5,4,linear,-2,0,0,Degrees spread lv5
+autoshooter_proj_speed,weapon,autoshooter_projectile_speed,1,50,flat,0,0,0,Projectile speed world units/s
+autoshooter_range,weapon,autoshooter_range,1,0,flat,0,0,0,Detection range (0=unlimited)
+# ── Hammer (5 upgrade levels) ────────────────────────────────────────────────
+hammer_aoe_1,hammer,aoe_radius,1,1.5,linear,0.3,0,5,AOE hit radius lv1
+hammer_aoe_2,hammer,aoe_radius,2,1.8,linear,0.3,0,5,AOE hit radius lv2
+hammer_aoe_3,hammer,aoe_radius,3,2.1,linear,0.3,0,5,AOE hit radius lv3
+hammer_aoe_4,hammer,aoe_radius,4,2.4,linear,0.3,0,5,AOE hit radius lv4
+hammer_aoe_5,hammer,aoe_radius,5,3.0,linear,0.3,0,5,AOE hit radius lv5
+hammer_score_mult,hammer,score_multiplier,1,2,flat,0,0,0,Score multiplier on hammer kill
+# ── Economy (Phase 2 will use these) ─────────────────────────────────────────
+economy_stardust_mult,economy,stardust_drop_mult,1,1.0,flat,0,0,0,Stardust earn multiplier
+economy_scrap_mult,economy,scrap_drop_mult,1,1.0,flat,0,0,0,Scrap earn multiplier
+# ── Wave difficulty ───────────────────────────────────────────────────────────
+wave_time_between,wave,time_between_waves,1,5,flat,0,0,0,Seconds between waves
+wave_spawn_rate_dec,wave,spawn_rate_decrement,1,0.15,flat,0,0,0,Spawn rate reduction per wave
+wave_speed_inc,wave,speed_increment,1,0.5,flat,0,0,0,Meteor speed increase per wave
+wave_min_spawn,wave,min_spawn_rate,1,0.3,flat,0,0,0,Minimum spawn interval floor (seconds)
