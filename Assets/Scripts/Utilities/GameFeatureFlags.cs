@@ -11,7 +11,7 @@ public static class GameFeatureFlags
     public const bool UseCSVBalance = true;
 
     // Phase 2: dual-currency economy (Stardust / Scrap)
-    public const bool UseEconomy = false;
+    public const bool UseEconomy = true;
 
     // Phase 3: persistent store + meta-progression
     public const bool UseStore = false;

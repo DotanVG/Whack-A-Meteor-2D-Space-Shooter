@@ -111,9 +111,23 @@ public class BalanceService : MonoBehaviour
         // Meteor cap
         Set("meteor.max_active_count", 80f);
 
-        // Economy
+        // Economy — multipliers
         Set("economy.stardust_drop_mult", 1.0f);
         Set("economy.scrap_drop_mult",    1.0f);
+
+        // Economy — Stardust drops per meteor size (projectile kills)
+        Set("economy.stardust_big",    3f);
+        Set("economy.stardust_medium", 2f);
+        Set("economy.stardust_small",  1f);
+        Set("economy.stardust_tiny",   1f);
+        Set("economy.stardust_enemy",  5f);
+
+        // Economy — ScrapMetal drops per meteor size (hammer kills)
+        Set("economy.scrap_big",    3f);
+        Set("economy.scrap_medium", 2f);
+        Set("economy.scrap_small",  1f);
+        Set("economy.scrap_tiny",   1f);
+        Set("economy.scrap_enemy",  2f);
 
         // Wave
         Set("wave.time_between_waves",    5f);

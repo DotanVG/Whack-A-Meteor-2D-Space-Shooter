@@ -33,6 +33,7 @@ public class ProjectileController : MonoBehaviour
                     GameConstants.ScoreEnemy,
                     GameManager.Instance.Score);
             }
+            EconomyService.Instance?.EarnFromEnemyKill();
             Destroy(other.gameObject);
             Destroy(gameObject);
         }

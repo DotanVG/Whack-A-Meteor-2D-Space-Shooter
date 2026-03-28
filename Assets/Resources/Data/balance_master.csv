@@ -28,9 +28,21 @@ hammer_aoe_3,hammer,aoe_radius,3,2.1,linear,0.3,0,5,AOE hit radius lv3
 hammer_aoe_4,hammer,aoe_radius,4,2.4,linear,0.3,0,5,AOE hit radius lv4
 hammer_aoe_5,hammer,aoe_radius,5,3.0,linear,0.3,0,5,AOE hit radius lv5
 hammer_score_mult,hammer,score_multiplier,1,2,flat,0,0,0,Score multiplier on hammer kill
-# ── Economy (Phase 2 will use these) ─────────────────────────────────────────
+# ── Economy — drop amounts per kill source ────────────────────────────────────
 economy_stardust_mult,economy,stardust_drop_mult,1,1.0,flat,0,0,0,Stardust earn multiplier
 economy_scrap_mult,economy,scrap_drop_mult,1,1.0,flat,0,0,0,Scrap earn multiplier
+# Stardust (projectile kills)
+eco_sd_big,economy,stardust_big,1,3,flat,0,0,0,Stardust from big meteor kill
+eco_sd_medium,economy,stardust_medium,1,2,flat,0,0,0,Stardust from medium meteor kill
+eco_sd_small,economy,stardust_small,1,1,flat,0,0,0,Stardust from small meteor kill
+eco_sd_tiny,economy,stardust_tiny,1,1,flat,0,0,0,Stardust from tiny meteor kill
+eco_sd_enemy,economy,stardust_enemy,1,5,flat,0,0,0,Stardust from enemy ship kill
+# ScrapMetal (hammer kills + enemy bonus)
+eco_scr_big,economy,scrap_big,1,3,flat,0,0,0,ScrapMetal from big meteor (hammer)
+eco_scr_medium,economy,scrap_medium,1,2,flat,0,0,0,ScrapMetal from medium meteor (hammer)
+eco_scr_small,economy,scrap_small,1,1,flat,0,0,0,ScrapMetal from small meteor (hammer)
+eco_scr_tiny,economy,scrap_tiny,1,1,flat,0,0,0,ScrapMetal from tiny meteor (hammer)
+eco_scr_enemy,economy,scrap_enemy,1,2,flat,0,0,0,ScrapMetal bonus from enemy ship kill
 # ── Meteor safety cap ────────────────────────────────────────────────────────
 meteor_max_active,meteor,max_active_count,1,80,flat,0,0,0,Hard cap on simultaneous active meteors (prevents cascade crash)
 # ── Wave difficulty ───────────────────────────────────────────────────────────

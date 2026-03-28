@@ -26,6 +26,7 @@ public class GameServices : MonoBehaviour
     public EconomyService     economyService;
     public RunStateService    runStateService;
     public ProgressionService progressionService;
+    public EconomyHUD         economyHUD;
 
     void Awake()
     {
@@ -33,6 +34,7 @@ public class GameServices : MonoBehaviour
         EnsureService(ref economyService,     "EconomyService");
         EnsureService(ref runStateService,    "RunStateService");
         EnsureService(ref progressionService, "ProgressionService");
+        EnsureService(ref economyHUD,         "EconomyHUD");
     }
 
     void Start()
@@ -49,6 +51,7 @@ public class GameServices : MonoBehaviour
                   $"\n  EconomyService     : {(economyService     != null ? "OK" : "MISSING")}" +
                   $"\n  RunStateService    : {(runStateService    != null ? "OK" : "MISSING")}" +
                   $"\n  ProgressionService : {(progressionService != null ? "OK" : "MISSING")}" +
+                  $"\n  EconomyHUD         : {(economyHUD         != null ? "OK" : "MISSING")}" +
                   $"\n  Flags — Economy:{GameFeatureFlags.UseEconomy}" +
                   $" CSV:{GameFeatureFlags.UseCSVBalance}" +
                   $" Store:{GameFeatureFlags.UseStore}" +
