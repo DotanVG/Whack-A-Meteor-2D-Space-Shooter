@@ -24,15 +24,23 @@ public class GameServices : MonoBehaviour
     [Header("Auto-wired on Awake — leave blank to let this script create them")]
     public BalanceService     balanceService;
     public EconomyService     economyService;
+    public LevelService       levelService;
+    public SkillService       skillService;
     public RunStateService    runStateService;
     public ProgressionService progressionService;
+    public EconomyHUD         economyHUD;
+    public LevelUpPopup       levelUpPopup;
 
     void Awake()
     {
         EnsureService(ref balanceService,     "BalanceService");
         EnsureService(ref economyService,     "EconomyService");
+        EnsureService(ref levelService,       "LevelService");
+        EnsureService(ref skillService,       "SkillService");
         EnsureService(ref runStateService,    "RunStateService");
         EnsureService(ref progressionService, "ProgressionService");
+        EnsureService(ref economyHUD,         "EconomyHUD");
+        EnsureService(ref levelUpPopup,       "LevelUpPopup");
     }
 
     void Start()
@@ -47,8 +55,12 @@ public class GameServices : MonoBehaviour
         Debug.Log("========== [GameServices] All services online ==========" +
                   $"\n  BalanceService     : {(balanceService     != null ? "OK" : "MISSING")}" +
                   $"\n  EconomyService     : {(economyService     != null ? "OK" : "MISSING")}" +
+                  $"\n  LevelService       : {(levelService       != null ? "OK" : "MISSING")}" +
+                  $"\n  SkillService       : {(skillService       != null ? "OK" : "MISSING")}" +
                   $"\n  RunStateService    : {(runStateService    != null ? "OK" : "MISSING")}" +
                   $"\n  ProgressionService : {(progressionService != null ? "OK" : "MISSING")}" +
+                  $"\n  EconomyHUD         : {(economyHUD         != null ? "OK" : "MISSING")}" +
+                  $"\n  LevelUpPopup       : {(levelUpPopup       != null ? "OK" : "MISSING")}" +
                   $"\n  Flags — Economy:{GameFeatureFlags.UseEconomy}" +
                   $" CSV:{GameFeatureFlags.UseCSVBalance}" +
                   $" Store:{GameFeatureFlags.UseStore}" +

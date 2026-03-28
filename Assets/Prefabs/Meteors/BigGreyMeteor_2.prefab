@@ -91,3 +91,8 @@ MonoBehaviour:
   mediumGreyMeteors: []
   smallGreyMeteors: []
   tinyGreyMeteors: []
+  projectileHitClip: {fileID: 0}
+  hammerHitClip: {fileID: 0}
+  hitParticles: {fileID: 0}
+  collisionSplitSpeedThreshold: 0.5
+  collisionSplitEnableDelay: 0.5

@@ -22,6 +22,12 @@ public class EnemyHealth : MonoBehaviour
 
     private void Start()
     {
+        EnemyFaction ef = GetComponent<EnemyFaction>();
+        if (ef != null)
+        {
+            string key = $"enemy.hp_{ef.faction.ToString().ToLower()}";
+            maxHealth = BalanceService.Instance?.GetInt(key, maxHealth) ?? maxHealth;
+        }
         _currentHealth = maxHealth;
     }
 
@@ -42,37 +48,48 @@ public class EnemyHealth : MonoBehaviour
         }
     }
 
+    public GameObject explosionPrefab; // Assign Explosion.prefab in Inspector (Phase 7)
+
     /// <summary>
-    /// Called when health hits zero.
-    /// Notifies ScoreManager, then destroys this GameObject.
-    /// TODO: instantiate an explosion VFX prefab here before Destroy.
-    /// TODO: spawn a collectible/powerup at transform.position.
+    /// Called when health hits zero. Awards score, grants Metal, triggers VFX/drops, destroys self.
     /// </summary>
     void Die()
     {
-        ScoreManager scoreManager = FindFirstObjectByType<ScoreManager>();
-        if (scoreManager != null)
-        {
-            scoreManager.AddScore(10);
-        }
+        int points = BalanceService.Instance?.GetInt("score.enemy", GameConstants.ScoreEnemy) ?? GameConstants.ScoreEnemy;
+        GameManager.Instance?.AddScore(points);
 
-        // TODO: Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+        EnemyFaction ef = GetComponent<EnemyFaction>();
+
+        // Boss handles its own Metal award and logging
+        BossController boss = GetComponent<BossController>();
+        if (boss != null) boss.OnBossDeath();
+        else EconomyService.Instance?.EarnMetalFromEnemy(ef?.faction);
+
+        // Phase 6: drop powerup
+        PowerupSpawner.Instance?.TryDrop(transform.position);
+
+        // Phase 7: explosion VFX
+        if (explosionPrefab != null)
+            Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+
+        ScorePopup.Spawn(transform.position, points);
+
+        GameLogger.EnemyKilledByFaction(
+            ef != null ? ef.faction.ToString() : "Unknown",
+            transform.position, points,
+            GameManager.Instance?.Score ?? 0);
+
         Destroy(gameObject);
     }
 
-    /// <summary>
-    /// Briefly tints the mesh renderer red to signal a hit.
-    /// NOTE: uses material.color which creates a material instance per mesh.
-    /// Fine for prototyping — switch to MaterialPropertyBlock before shipping.
-    /// </summary>
     private System.Collections.IEnumerator FlashRed()
     {
-        Renderer rend = GetComponent<Renderer>();
-        if (rend == null) yield break;
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr == null) yield break;
 
-        Color original = rend.material.color;
-        rend.material.color = Color.red;
+        Color original = sr.color;
+        sr.color = Color.red;
         yield return new WaitForSeconds(0.1f);
-        rend.material.color = original;
+        sr.color = original;
     }
 }

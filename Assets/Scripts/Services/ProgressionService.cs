@@ -39,11 +39,37 @@ public class ProgressionService : MonoBehaviour
         RunStateService.OnGameOverStarted -= HandleRunEnded;
     }
 
+    private const string SaveKey = "Progression.SaveSlot";
+
+    [System.Serializable]
+    private struct SaveData
+    {
+        public int totalRunCount;
+        public int lastRunScore;
+    }
+
     void Start()
     {
-        // TODO Phase 3: LoadFromSave()
-        TotalRunCount = 0;
-        Debug.Log($"[ProgressionService] Initialized — Store:{GameFeatureFlags.UseStore} SkillTree:{GameFeatureFlags.UseSkillTree}");
+        LoadFromSave();
+        Debug.Log($"[ProgressionService] Initialized — Store:{GameFeatureFlags.UseStore} SkillTree:{GameFeatureFlags.UseSkillTree} | Runs:{TotalRunCount}");
+    }
+
+    // ── Persistence ───────────────────────────────────────────────────────────
+
+    void SaveToSlot()
+    {
+        SaveData data = new SaveData { totalRunCount = TotalRunCount, lastRunScore = LastRunScore };
+        PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(data));
+        PlayerPrefs.Save();
+    }
+
+    void LoadFromSave()
+    {
+        string json = PlayerPrefs.GetString(SaveKey, "");
+        if (string.IsNullOrEmpty(json)) { TotalRunCount = 0; return; }
+        SaveData data = JsonUtility.FromJson<SaveData>(json);
+        TotalRunCount = data.totalRunCount;
+        LastRunScore  = data.lastRunScore;
     }
 
     // ── Internal handlers ────────────────────────────────────────────────────
@@ -54,7 +80,7 @@ public class ProgressionService : MonoBehaviour
         LastRunScore = RunStateService.Instance != null ? RunStateService.Instance.Score : 0;
         Debug.Log($"[ProgressionService] Run #{TotalRunCount} ended — Score: {LastRunScore}");
         OnRunEnded?.Invoke(LastRunScore);
-        // TODO Phase 3: SaveToSlot()
+        SaveToSlot();
     }
 
     // ── Upgrade stubs (Phase 3/4 will implement these) ───────────────────────

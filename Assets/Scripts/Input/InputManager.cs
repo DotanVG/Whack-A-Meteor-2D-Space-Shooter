@@ -603,6 +603,32 @@ public class InputManager : MonoBehaviour
         return false;
     }
 
+    /// <summary>Tab left in shop/menu screens — keyboard Q or gamepad LB.</summary>
+    public bool GetTabLeft()
+    {
+        if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
+            return true;
+        if (currentGamepad != null)
+        {
+            try { return currentGamepad.leftShoulder.wasPressedThisFrame; }
+            catch { FindActiveGamepad(); }
+        }
+        return false;
+    }
+
+    /// <summary>Tab right in shop/menu screens — keyboard E or gamepad RB.</summary>
+    public bool GetTabRight()
+    {
+        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+            return true;
+        if (currentGamepad != null)
+        {
+            try { return currentGamepad.rightShoulder.wasPressedThisFrame; }
+            catch { FindActiveGamepad(); }
+        }
+        return false;
+    }
+
     public bool GetPause()
     {
         // Check keyboard

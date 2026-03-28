@@ -111,12 +111,41 @@ public static class GameLogger
         Debug.Log($"[AutoShooter] Fired → {targetTag} | Dist: {distance:F1}u | Spread: ±{spreadDeg:F1}°");
     }
 
+    // ── Enemy (faction) ───────────────────────────────────────────────────────
+
+    public static void EnemyKilledByFaction(string faction, Vector2 position, int scoreAwarded, int totalScore)
+    {
+        Debug.Log($"[Enemy/Faction] {faction} ship destroyed at {position} | " +
+                  $"+{scoreAwarded} pts (total: {totalScore})");
+    }
+
+    public static void SpawnDirectorWave(int wave, int black, int blue, int green, int red)
+    {
+        if (black == 0 && blue == 0 && green == 0 && red == 0)
+            Debug.Log($"[SpawnDirector] Wave {wave} — boss wave (no regular enemies)");
+        else
+            Debug.Log($"[SpawnDirector] Wave {wave} factions — Black:{(black>0?"✓":"✗")} Blue:{(blue>0?"✓":"✗")} " +
+                      $"Green:{(green>0?"✓":"✗")} Red:{(red>0?"✓":"✗")}");
+    }
+
+    public static void BossKilled(int wave, float sessionTime)
+    {
+        Debug.Log($"[Boss] Boss defeated on wave {wave} | T+{sessionTime:F1}s");
+    }
+
+    // ── Power-ups ─────────────────────────────────────────────────────────────
+
+    public static void PowerupCollected(PowerupType type, Vector2 position)
+    {
+        Debug.Log($"[Powerup] {type} collected at {position}");
+    }
+
     // ── Wave ──────────────────────────────────────────────────────────────────
 
     public static void WaveStarted(int wave, float spawnRate, float meteorSpeed, int maxMeteors)
     {
         Debug.Log($"[Wave] ── Wave {wave} started ── " +
-                  $"SpawnRate: {spawnRate:F2}s | Speed: {meteorSpeed:F1} | MaxMeteors: {maxMeteors}");
+                  $"SpawnInterval: {spawnRate:F2}s");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

@@ -15,6 +15,8 @@ TagManager:
   - TinyGreyMeteor
   - Hammer
   - Enemy
+  - EnemyProjectile
+  - Powerup
   layers:
   - Default
   - TransparentFX

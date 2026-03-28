@@ -11,17 +11,17 @@ public static class GameFeatureFlags
     public const bool UseCSVBalance = true;
 
     // Phase 2: dual-currency economy (Stardust / Scrap)
-    public const bool UseEconomy = false;
+    public const bool UseEconomy = true;
 
     // Phase 3: persistent store + meta-progression
-    public const bool UseStore = false;
+    public const bool UseStore = true;
 
-    // Phase 4: skill tree
-    public const bool UseSkillTree = false;
+    // Phase 3: skill tree (functional purchase + gameplay effects)
+    public const bool UseSkillTree = true;
 
     // Phase 5: enemy factions + SpawnDirector
-    public const bool UseSpawnDirector = false;
+    public const bool UseSpawnDirector = true;
 
     // Phase 6: power-up collectible system
-    public const bool UsePowerups = false;
+    public const bool UsePowerups = true;
 }

@@ -40,14 +40,25 @@ public class AutoShooter : MonoBehaviour
     [Tooltip("Must match ProjectileController.speed on the projectile prefab for accurate lead aim.")]
     public float projectileSpeed = 50f;
 
-    // All tags AutoShooter will treat as valid targets
-    private static readonly string[] TargetTags =
+    private static readonly string[] EnemyTags =
+    {
+        "Enemy",
+    };
+    private static readonly string[] MeteorTags =
+    {
+        "BigBrownMeteor",   "BigGreyMeteor",
+        "MediumBrownMeteor","MediumGreyMeteor",
+        "SmallBrownMeteor", "SmallGreyMeteor",
+        "TinyBrownMeteor",  "TinyGreyMeteor",
+    };
+    // Combined fallback (no priority upgrade)
+    private static readonly string[] AllTargetTags =
     {
         "Enemy",
         "BigBrownMeteor",   "BigGreyMeteor",
         "MediumBrownMeteor","MediumGreyMeteor",
         "SmallBrownMeteor", "SmallGreyMeteor",
-        "TinyBrownMeteor",  "TinyGreyMeteor"
+        "TinyBrownMeteor",  "TinyGreyMeteor",
     };
 
     private float _nextFireTime = 0f;
@@ -83,10 +94,16 @@ public class AutoShooter : MonoBehaviour
     public void ApplyBalanceValues(int upgradeLevel = 1)
     {
         if (BalanceService.Instance == null) return;
-        fireRate        = BalanceService.Instance.GetFloat("weapon.autoshooter_fire_rate",      upgradeLevel, fireRate);
+        fireRate        = BalanceService.Instance.GetFloat("weapon.autoshooter_fire_rate",       upgradeLevel, fireRate);
         accuracySpread  = BalanceService.Instance.GetFloat("weapon.autoshooter_accuracy_spread", upgradeLevel, accuracySpread);
         projectileSpeed = BalanceService.Instance.GetFloat("weapon.autoshooter_projectile_speed", projectileSpeed);
-        detectionRange  = BalanceService.Instance.GetFloat("weapon.autoshooter_range",           detectionRange);
+        detectionRange  = BalanceService.Instance.GetFloat("weapon.autoshooter_range",            detectionRange);
+
+        // Apply skill-tree multipliers (null-safe)
+        fireRate        *= SkillService.Instance?.GetFireRateMultiplier()  ?? 1f;
+        accuracySpread  *= SkillService.Instance?.GetSpreadMultiplier()    ?? 1f;
+        projectileSpeed *= SkillService.Instance?.GetProjSpeedMultiplier() ?? 1f;
+
         Debug.Log($"[AutoShooter] Balance applied (lv{upgradeLevel}) — " +
                   $"FireRate:{fireRate:F2}/s  Spread:±{accuracySpread:F1}°  " +
                   $"ProjSpeed:{projectileSpeed:F0}  Range:{(detectionRange <= 0 ? "∞" : detectionRange.ToString("F1"))}");
@@ -100,23 +117,41 @@ public class AutoShooter : MonoBehaviour
         (Transform target, Vector2 targetVel) = FindNearestTarget();
         if (target == null) return;
 
+        // Apply DoubleFire powerup multiplier
+        float effectiveRate = fireRate;
+        PlayerPowerupHandler ph = GetComponent<PlayerPowerupHandler>();
+        if (ph != null && ph.IsDoubleFire)
+            effectiveRate *= BalanceService.Instance?.GetFloat("powerup.double_fire_mult", 2f) ?? 2f;
+
         float dist = Vector2.Distance(firePoint.position, target.position);
         Vector2 aimDir = ComputeLeadAim((Vector2)target.position, targetVel);
         FireProjectile(aimDir);
         GameLogger.AutoShooterFired(target.tag, dist, accuracySpread);
-        _nextFireTime = Time.time + 1f / fireRate;
+        _nextFireTime = Time.time + 1f / effectiveRate;
     }
 
     // ─── Target search ───────────────────────────────────────────────────────
 
     (Transform nearest, Vector2 velocity) FindNearestTarget()
     {
+        // Target Priority upgrade: prefer enemy ships, fall back to meteors
+        if (SkillService.Instance?.GetTargetPriorityEnabled() == true)
+        {
+            var (enemy, eVel) = FindNearestInTags(EnemyTags);
+            if (enemy != null) return (enemy, eVel);
+            return FindNearestInTags(MeteorTags);
+        }
+        return FindNearestInTags(AllTargetTags);
+    }
+
+    (Transform nearest, Vector2 velocity) FindNearestInTags(string[] tags)
+    {
         Transform nearest = null;
         Vector2 nearestVel = Vector2.zero;
         float maxDistSq = detectionRange > 0f ? detectionRange * detectionRange : float.MaxValue;
         float minDistSq = maxDistSq;
 
-        foreach (string tag in TargetTags)
+        foreach (string tag in tags)
         {
             foreach (GameObject obj in GameObject.FindGameObjectsWithTag(tag))
             {
