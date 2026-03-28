@@ -103,8 +103,8 @@ public class ShopController : MonoBehaviour
         GUI.DrawTexture(new Rect(0, 0, sw, sh), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        // ── Top bar (height 56) ────────────────────────────────────────────────
-        GUI.Box(new Rect(0, 0, sw, 56), GUIContent.none);
+        // ── Top bar (height 72) ────────────────────────────────────────────────
+        GUI.Box(new Rect(0, 0, sw, 72), GUIContent.none);
 
         // Currency — top LEFT (matches in-game HUD position)
         float cy = 10f;
@@ -123,17 +123,17 @@ public class ShopController : MonoBehaviour
 
         // Top-right buttons
         float btnW = 130f, btnH = 28f, btnX = sw - btnW - 8f;
-        if (GUI.Button(new Rect(btnX, 8,  btnW, btnH), "▶  Play Game"))
+        if (GUI.Button(new Rect(btnX, 22,  btnW, btnH), "▶  Play Game"))
         {
             SceneManager.LoadScene("Game");
         }
-        if (GUI.Button(new Rect(btnX - btnW - 6, 8, btnW, btnH), "← Main Menu"))
+        if (GUI.Button(new Rect(btnX - btnW - 6, 22, btnW, btnH), "← Main Menu"))
         {
             SceneManager.LoadScene("MainMenu");
         }
 
-        // ── Tab bar (y=62) ────────────────────────────────────────────────────
-        float tabY  = 62f;
+        // ── Tab bar (y=78) ────────────────────────────────────────────────────
+        float tabY  = 78f;
         float tabW  = 130f;
         float tabStartX = sw / 2f - (TabNames.Length * tabW) / 2f;
         for (int i = 0; i < TabNames.Length; i++)
