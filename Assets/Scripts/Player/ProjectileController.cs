@@ -33,7 +33,8 @@ public class ProjectileController : MonoBehaviour
                     GameConstants.ScoreEnemy,
                     GameManager.Instance.Score);
             }
-            EconomyService.Instance?.EarnFromEnemyKill();
+            // Metal from enemy kills — wired when new enemy ship types are added (Phase 2+)
+            // EconomyService.Instance?.EarnMetalFromEnemy();
             Destroy(other.gameObject);
             Destroy(gameObject);
         }

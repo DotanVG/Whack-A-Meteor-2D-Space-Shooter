@@ -1,26 +1,31 @@
 using UnityEngine;
 
 /// <summary>
-/// EconomyService — dual-currency in-run wallet (Stardust / ScrapMetal).
+/// EconomyService — dual-currency persistent wallet (Stardust / Metal).
 ///
-/// Stardust  : earned from projectile meteor kills + enemy kills.
-/// ScrapMetal: earned from hammer meteor kills + enemy kills.
+/// Stardust : earned from meteor kills (any weapon). Basic currency for
+///            skills, upgrades, and most purchases.
+/// Metal    : earned from enemy ship kills (future enemy types). Used for
+///            special attacks, ship unlocks, and high-tier upgrades.
 ///
-/// Both reset to 0 at the start of each run.
-/// Drop amounts are tunable via balance_master.csv (economy.stardust_*/scrap_*).
+/// Wallet persists across runs via PlayerPrefs — players carry their
+/// earnings into the store after death. Phase 3 will migrate to a
+/// proper save slot (JSON).
 ///
-/// Phase 3 will persist totals to a save slot so meta-currency survives
-/// across runs. For now everything resets on run start.
+/// Drop amounts are tunable via balance_master.csv (economy.stardust_*).
 /// </summary>
 public class EconomyService : MonoBehaviour
 {
     public static EconomyService Instance { get; private set; }
 
-    public int Stardust   { get; private set; }
-    public int ScrapMetal { get; private set; }
+    public int Stardust { get; private set; }
+    public int Metal    { get; private set; }
 
     public static event System.Action<int> OnStardustChanged;
-    public static event System.Action<int> OnScrapChanged;
+    public static event System.Action<int> OnMetalChanged;
+
+    private const string PrefKeyStardust = "Economy.Stardust";
+    private const string PrefKeyMetal    = "Economy.Metal";
 
     void Awake()
     {
@@ -28,50 +33,38 @@ public class EconomyService : MonoBehaviour
         Instance = this;
     }
 
-    void OnEnable()  { RunStateService.OnRunStarted += ResetWallet; }
-    void OnDisable() { RunStateService.OnRunStarted -= ResetWallet; }
-
     void Start()
     {
-        // ResetWallet fires from OnRunStarted, but call it here too so the wallet
-        // starts clean even if OnRunStarted already fired before we subscribed.
-        ResetWallet();
-        Debug.Log($"[EconomyService] Initialized — Economy:{GameFeatureFlags.UseEconomy}");
+        LoadWallet();
+        Debug.Log($"[EconomyService] Initialized — Economy:{GameFeatureFlags.UseEconomy} " +
+                  $"| Stardust:{Stardust}  Metal:{Metal}");
     }
 
     // ── Public earn methods — called by kill handlers ─────────────────────────
 
     /// <summary>
-    /// Award Stardust from a projectile meteor kill.
-    /// Amount depends on meteor size (read from BalanceService).
+    /// Award Stardust from any meteor kill (projectile or hammer).
+    /// Amount depends on meteor size (tuned via BalanceService).
     /// </summary>
-    public void EarnFromMeteorProjectile(string meteorTag)
+    public void EarnFromMeteor(string meteorTag)
     {
         if (!GameFeatureFlags.UseEconomy) return;
-        AddStardust(DropAmount("stardust", meteorTag), meteorTag);
+        AddStardust(StardustDropAmount(meteorTag), meteorTag);
     }
 
     /// <summary>
-    /// Award ScrapMetal from a hammer meteor kill.
-    /// Amount depends on meteor size (read from BalanceService).
+    /// Award Metal from an enemy ship kill.
+    /// Called by enemy kill handlers; amount from BalanceService.
     /// </summary>
-    public void EarnFromMeteorHammer(string meteorTag)
+    public void EarnMetalFromEnemy()
     {
         if (!GameFeatureFlags.UseEconomy) return;
-        AddScrap(DropAmount("scrap", meteorTag), meteorTag);
-    }
-
-    /// <summary>Award Stardust + ScrapMetal from an enemy ship kill.</summary>
-    public void EarnFromEnemyKill()
-    {
-        if (!GameFeatureFlags.UseEconomy) return;
-        AddStardust(GetInt("economy.stardust_enemy", 5), "Enemy");
-        AddScrap   (GetInt("economy.scrap_enemy",    2), "Enemy");
+        AddMetal(GetInt("economy.metal_enemy", 2), "Enemy");
     }
 
     // ── Spend (Phase 3 Store will use this) ───────────────────────────────────
 
-    public enum CurrencyType { Stardust, ScrapMetal }
+    public enum CurrencyType { Stardust, Metal }
 
     /// <summary>Deduct currency. Returns false if insufficient funds.</summary>
     public bool Spend(CurrencyType type, int amount)
@@ -84,56 +77,65 @@ public class EconomyService : MonoBehaviour
             if (Stardust < amount) return false;
             Stardust -= amount;
             OnStardustChanged?.Invoke(Stardust);
+            SaveWallet();
             Debug.Log($"[Economy] -{amount} Stardust (total: {Stardust})");
             return true;
         }
         else
         {
-            if (ScrapMetal < amount) return false;
-            ScrapMetal -= amount;
-            OnScrapChanged?.Invoke(ScrapMetal);
-            Debug.Log($"[Economy] -{amount} ScrapMetal (total: {ScrapMetal})");
+            if (Metal < amount) return false;
+            Metal -= amount;
+            OnMetalChanged?.Invoke(Metal);
+            SaveWallet();
+            Debug.Log($"[Economy] -{amount} Metal (total: {Metal})");
             return true;
         }
     }
 
-    // ── Private helpers ────────────────────────────────────────────────────────
+    // ── Persistence ───────────────────────────────────────────────────────────
 
-    void ResetWallet()
+    void LoadWallet()
     {
-        Stardust   = 0;
-        ScrapMetal = 0;
+        Stardust = PlayerPrefs.GetInt(PrefKeyStardust, 0);
+        Metal    = PlayerPrefs.GetInt(PrefKeyMetal,    0);
         OnStardustChanged?.Invoke(Stardust);
-        OnScrapChanged?.Invoke(ScrapMetal);
+        OnMetalChanged?.Invoke(Metal);
     }
+
+    void SaveWallet()
+    {
+        PlayerPrefs.SetInt(PrefKeyStardust, Stardust);
+        PlayerPrefs.SetInt(PrefKeyMetal,    Metal);
+        PlayerPrefs.Save();
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
 
     void AddStardust(int amount, string source)
     {
         if (amount <= 0) return;
         Stardust += amount;
         OnStardustChanged?.Invoke(Stardust);
+        SaveWallet();
         Debug.Log($"[Economy] +{amount} Stardust from {source}  (total: {Stardust})");
     }
 
-    void AddScrap(int amount, string source)
+    void AddMetal(int amount, string source)
     {
         if (amount <= 0) return;
-        ScrapMetal += amount;
-        OnScrapChanged?.Invoke(ScrapMetal);
-        Debug.Log($"[Economy] +{amount} ScrapMetal from {source}  (total: {ScrapMetal})");
+        Metal += amount;
+        OnMetalChanged?.Invoke(Metal);
+        SaveWallet();
+        Debug.Log($"[Economy] +{amount} Metal from {source}  (total: {Metal})");
     }
 
-    /// <summary>
-    /// Returns the base drop amount for a given currency and meteor tag.
-    /// Key format: "economy.{currency}_{size}" e.g. "economy.stardust_big"
-    /// </summary>
-    int DropAmount(string currency, string meteorTag)
+    int StardustDropAmount(string meteorTag)
     {
         string size = meteorTag.StartsWith("Big")    ? "big"
                     : meteorTag.StartsWith("Medium")  ? "medium"
                     : meteorTag.StartsWith("Small")   ? "small"
                     : "tiny";
-        return GetInt($"economy.{currency}_{size}", 1);
+        return GetInt($"economy.stardust_{size}", 1);
     }
 
     static int GetInt(string key, int defaultVal)

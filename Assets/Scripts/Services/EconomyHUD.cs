@@ -1,34 +1,35 @@
 using UnityEngine;
 
 /// <summary>
-/// EconomyHUD — draws the dual-currency wallet (Stardust / ScrapMetal)
-/// using legacy OnGUI, consistent with the rest of the game's HUD style.
+/// EconomyHUD — draws the dual-currency wallet (Stardust / Metal)
+/// at the top-left corner using legacy OnGUI.
 ///
-/// Automatically spawned as a child of GameServices at startup.
+/// Stardust : gold text  — earned from meteor kills
+/// Metal    : silver text — earned from enemy ship kills (future)
+///
+/// Auto-spawned as a child of GameServices at startup.
 /// Invisible when GameFeatureFlags.UseEconomy is false.
-///
-/// Position: top-right corner, below any existing score readout.
 /// </summary>
 public class EconomyHUD : MonoBehaviour
 {
     private int _stardust;
-    private int _scrap;
+    private int _metal;
     private GUIStyle _labelStyle;
 
     void OnEnable()
     {
         EconomyService.OnStardustChanged += HandleStardustChanged;
-        EconomyService.OnScrapChanged    += HandleScrapChanged;
+        EconomyService.OnMetalChanged    += HandleMetalChanged;
     }
 
     void OnDisable()
     {
         EconomyService.OnStardustChanged -= HandleStardustChanged;
-        EconomyService.OnScrapChanged    -= HandleScrapChanged;
+        EconomyService.OnMetalChanged    -= HandleMetalChanged;
     }
 
     void HandleStardustChanged(int val) => _stardust = val;
-    void HandleScrapChanged(int val)    => _scrap    = val;
+    void HandleMetalChanged(int val)    => _metal    = val;
 
     void OnGUI()
     {
@@ -38,22 +39,18 @@ public class EconomyHUD : MonoBehaviour
         {
             _labelStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize  = 22,
+                fontSize  = 18,
                 fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.UpperRight,
-                normal    = { textColor = new Color(1f, 0.92f, 0.3f) } // gold tint for Stardust
+                alignment = TextAnchor.UpperLeft,
             };
         }
 
-        float w = 240f;
-        float x = Screen.width - w - 12f;
-
-        // Stardust row (gold)
+        // Stardust — gold
         _labelStyle.normal.textColor = new Color(1f, 0.85f, 0.2f);
-        GUI.Label(new Rect(x, 10f, w, 30f), $"Stardust:  {_stardust}", _labelStyle);
+        GUI.Label(new Rect(12f, 10f, 200f, 28f), $"Stardust: {_stardust}", _labelStyle);
 
-        // ScrapMetal row (silver-grey)
+        // Metal — silver
         _labelStyle.normal.textColor = new Color(0.75f, 0.78f, 0.82f);
-        GUI.Label(new Rect(x, 38f, w, 30f), $"Scrap:     {_scrap}",    _labelStyle);
+        GUI.Label(new Rect(12f, 36f, 200f, 28f), $"Metal:    {_metal}", _labelStyle);
     }
 }

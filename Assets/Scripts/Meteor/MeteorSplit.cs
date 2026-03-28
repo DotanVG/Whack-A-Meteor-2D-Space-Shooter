@@ -158,7 +158,7 @@ public class MeteorSplit : MonoBehaviour
             GameLogger.MeteorKilledByProjectile(hitTag, points, GameManager.Instance.Score, splits);
         }
 
-        EconomyService.Instance?.EarnFromMeteorProjectile(hitTag);
+        EconomyService.Instance?.EarnFromMeteor(hitTag);
 
         if (projectileHitClip != null)
             AudioSource.PlayClipAtPoint(projectileHitClip, transform.position);
@@ -182,7 +182,7 @@ public class MeteorSplit : MonoBehaviour
             GameLogger.MeteorKilledByHammer(hitTag, points, GameManager.Instance.Score, splits);
         }
 
-        EconomyService.Instance?.EarnFromMeteorHammer(hitTag);
+        EconomyService.Instance?.EarnFromMeteor(hitTag);
 
         if (hammerHitClip != null)
             AudioSource.PlayClipAtPoint(hammerHitClip, transform.position);

@@ -113,21 +113,16 @@ public class BalanceService : MonoBehaviour
 
         // Economy — multipliers
         Set("economy.stardust_drop_mult", 1.0f);
-        Set("economy.scrap_drop_mult",    1.0f);
+        Set("economy.metal_drop_mult",    1.0f);
 
-        // Economy — Stardust drops per meteor size (projectile kills)
+        // Economy — Stardust drops per meteor size (projectile or hammer kill)
         Set("economy.stardust_big",    3f);
         Set("economy.stardust_medium", 2f);
         Set("economy.stardust_small",  1f);
         Set("economy.stardust_tiny",   1f);
-        Set("economy.stardust_enemy",  5f);
 
-        // Economy — ScrapMetal drops per meteor size (hammer kills)
-        Set("economy.scrap_big",    3f);
-        Set("economy.scrap_medium", 2f);
-        Set("economy.scrap_small",  1f);
-        Set("economy.scrap_tiny",   1f);
-        Set("economy.scrap_enemy",  2f);
+        // Economy — Metal drops from enemy kills
+        Set("economy.metal_enemy", 2f);
 
         // Wave
         Set("wave.time_between_waves",    5f);

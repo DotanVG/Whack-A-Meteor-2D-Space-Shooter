@@ -250,8 +250,15 @@ public class GameManager : MonoBehaviour
 
     void OnGUI()
     {
-        GUI.Label(new Rect(25, 25, 70, 30), "SCORE:", hudStyle);
-        DrawNumber(new Vector2(90, 20), Score);
+        // XP at top-center — label width + digit width centered on screen
+        string scoreStr = Mathf.Max(0, Score).ToString();
+        float numW      = scoreStr.Length * digitSize.x;
+        const float labelW = 38f;
+        const float gap    = 4f;
+        float totalW    = labelW + gap + numW;
+        float startX    = Screen.width / 2f - totalW / 2f;
+        GUI.Label(new Rect(startX, 25, labelW, 30), "XP:", hudStyle);
+        DrawNumber(new Vector2(startX + labelW + gap, 20), Score);
 
         float lifeWidth = lifeIconSize.x;
         float lifeHeight = lifeIconSize.y;
