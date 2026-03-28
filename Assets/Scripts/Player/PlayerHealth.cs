@@ -6,10 +6,12 @@ public class PlayerHealth : MonoBehaviour
 {
     private bool invincible = false;
     private SpriteRenderer sr;
+    private ShieldController shield;
 
     void Start()
     {
-        sr = GetComponent<SpriteRenderer>();
+        sr     = GetComponent<SpriteRenderer>();
+        shield = GetComponent<ShieldController>() ?? gameObject.AddComponent<ShieldController>();
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -40,12 +42,13 @@ public class PlayerHealth : MonoBehaviour
             obj.CompareTag("SmallBrownMeteor")  || obj.CompareTag("SmallGreyMeteor")  ||
             obj.CompareTag("TinyBrownMeteor")   || obj.CompareTag("TinyGreyMeteor"))
         {
+            if (shield != null && shield.TryAbsorbHit()) { Destroy(obj); return; }
             TakeDamage(obj.tag);
             Destroy(obj);
         }
         else if (obj.CompareTag("Enemy"))
         {
-            // Enemy ship rams the player — enemy dies, player loses a life
+            if (shield != null && shield.TryAbsorbHit()) { Destroy(obj); return; }
             TakeDamage(obj.tag);
             Destroy(obj);
         }

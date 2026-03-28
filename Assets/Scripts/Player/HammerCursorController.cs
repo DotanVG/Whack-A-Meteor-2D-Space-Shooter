@@ -298,20 +298,34 @@ public class HammerCursorController : MonoBehaviour
 
     /// <summary>
     /// Checks for meteor hits within the AOE radius.
+    /// If Slam Wave (skill id=7) is owned, also emits a secondary radial burst
+    /// at 2× radius hitting targets outside the primary zone.
     /// </summary>
     private void CheckMeteorHits()
     {
-        // Use the AOE circle's position for hit detection
         Vector3 hitboxCenter = aoeCircle.transform.position;
 
-        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(hitboxCenter, aoeRadius);
-        foreach (Collider2D hitCollider in hitColliders)
+        // ── Primary hit (normal aoeRadius) ───────────────────────────────────
+        Collider2D[] primary = Physics2D.OverlapCircleAll(hitboxCenter, aoeRadius);
+        foreach (Collider2D col in primary)
         {
-            MeteorSplit meteorSplit = hitCollider.GetComponent<MeteorSplit>();
-            if (meteorSplit != null)
+            MeteorSplit ms = col.GetComponent<MeteorSplit>();
+            if (ms != null) ms.OnHammerHit();
+        }
+
+        // ── Slam Wave — secondary burst at 2× radius (outer ring only) ───────
+        if (SkillService.Instance?.GetSlamWaveEnabled() == true)
+        {
+            float waveRadius = aoeRadius * 2f;
+            Collider2D[] wave = Physics2D.OverlapCircleAll(hitboxCenter, waveRadius);
+            foreach (Collider2D col in wave)
             {
-                meteorSplit.OnHammerHit();
+                // Skip targets already in primary radius (distance ≤ aoeRadius)
+                if (Vector3.Distance(hitboxCenter, col.transform.position) <= aoeRadius) continue;
+                MeteorSplit ms = col.GetComponent<MeteorSplit>();
+                if (ms != null) ms.OnHammerHit();
             }
+            CameraShake.Instance?.Shake(0.15f, 0.08f); // extra shake for the wave
         }
     }
 

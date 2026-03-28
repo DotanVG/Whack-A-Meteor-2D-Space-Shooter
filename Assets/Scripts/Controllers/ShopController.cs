@@ -210,6 +210,11 @@ public class ShopController : MonoBehaviour
 
         float rowY = area.y + 28f;
 
+        // Pre-count nodes per column so connectors stop at the last node
+        int[] colCounts = new int[3];
+        foreach (var def in SkillService.All)
+            colCounts[def.column]++;
+
         for (int col = 0; col < 3; col++)
         {
             float cx  = area.x + col * colW + 8;
@@ -221,7 +226,7 @@ public class ShopController : MonoBehaviour
                 var   state = GetNodeState(def.id);
                 if (DrawSkillNode(cx, ny, nodeW, nodeH, def, state))
                     TryPurchase(def.id);
-                if (row < 3)
+                if (row < colCounts[col] - 1)
                     DrawConnector(cx + nodeW / 2f, ny + nodeH, gapY);
                 row++;
             }
