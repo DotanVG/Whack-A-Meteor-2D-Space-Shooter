@@ -85,6 +85,13 @@ public class MeteorSplit : MonoBehaviour
         Destroy(gameObject);
     }
 
+    private static int GetMeteorCap()
+    {
+        return BalanceService.Instance != null
+            ? BalanceService.Instance.GetInt("meteor.max_active_count", 80)
+            : 80;
+    }
+
     private void SpawnMeteors(GameObject[] meteorArray, string tag, int minCount, int maxCount, GameObject[] nextMeteorArray, Vector3 baseDirection, float baseSpeed)
     {
         if (meteorArray.Length == 0)
@@ -93,22 +100,34 @@ public class MeteorSplit : MonoBehaviour
             return;
         }
 
+        // Hard cap: if we're already at or near the limit, destroy without spawning children.
+        // This stops cascade explosions (e.g. mass Small→Tiny collisions) from crashing the game.
+        int cap = GetMeteorCap();
+        if (MeteorMovement.ActiveCount >= cap)
+        {
+            Debug.LogWarning($"[Meteor/Cap] Split suppressed for {gameObject.tag} — " +
+                             $"active:{MeteorMovement.ActiveCount} >= cap:{cap}");
+            return; // parent is destroyed by SplitWithMomentum's Destroy(gameObject) call
+        }
+
         int count = Random.Range(minCount, maxCount + 1);
+        // Clamp so we don't overshoot the cap mid-loop
+        count = Mathf.Min(count, cap - MeteorMovement.ActiveCount);
+        if (count <= 0) return;
+
+        GameLogger.MeteorSplitSpawned(gameObject.tag, tag, count);
+
         for (int i = 0; i < count; i++)
         {
             int randomIndex = Random.Range(0, meteorArray.Length);
             GameObject newMeteor = Instantiate(meteorArray[randomIndex], transform.position, Quaternion.identity);
             newMeteor.tag = tag;
             MeteorMovement move = newMeteor.GetComponent<MeteorMovement>();
-            if (move != null)
+            if (move != null && baseSpeed > 0f)
             {
-                if (baseSpeed > 0f)
-                {
-                    Vector3 offsetDir = Quaternion.Euler(0f, 0f, Random.Range(-30f, 30f)) * baseDirection;
-                    move.InitializeMovement(offsetDir, baseSpeed);
-                }
+                Vector3 offsetDir = Quaternion.Euler(0f, 0f, Random.Range(-30f, 30f)) * baseDirection;
+                move.InitializeMovement(offsetDir, baseSpeed);
             }
-            GameLogger.MeteorSplitSpawned(gameObject.tag, tag, count);
 
             if (nextMeteorArray != null)
             {

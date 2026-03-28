@@ -69,6 +69,27 @@ public class AutoShooter : MonoBehaviour
             Debug.LogWarning("AutoShooter: projectilePrefab not assigned and not found on PlayerController.");
         if (firePoint == null)
             Debug.LogWarning("AutoShooter: firePoint not assigned and not found on PlayerController.");
+
+        // Override Inspector values with BalanceService if CSV balance is active.
+        // Inspector values are used as fallback if BalanceService isn't in the scene.
+        ApplyBalanceValues();
+    }
+
+    /// <summary>
+    /// Reads fire rate, spread, projectile speed, and range from BalanceService (level 1).
+    /// Inspector fields remain visible for manual override when BalanceService is absent.
+    /// Call again after purchasing an upgrade to apply the new level's values.
+    /// </summary>
+    public void ApplyBalanceValues(int upgradeLevel = 1)
+    {
+        if (BalanceService.Instance == null) return;
+        fireRate        = BalanceService.Instance.GetFloat("weapon.autoshooter_fire_rate",      upgradeLevel, fireRate);
+        accuracySpread  = BalanceService.Instance.GetFloat("weapon.autoshooter_accuracy_spread", upgradeLevel, accuracySpread);
+        projectileSpeed = BalanceService.Instance.GetFloat("weapon.autoshooter_projectile_speed", projectileSpeed);
+        detectionRange  = BalanceService.Instance.GetFloat("weapon.autoshooter_range",           detectionRange);
+        Debug.Log($"[AutoShooter] Balance applied (lv{upgradeLevel}) — " +
+                  $"FireRate:{fireRate:F2}/s  Spread:±{accuracySpread:F1}°  " +
+                  $"ProjSpeed:{projectileSpeed:F0}  Range:{(detectionRange <= 0 ? "∞" : detectionRange.ToString("F1"))}");
     }
 
     void Update()

@@ -233,7 +233,8 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
         OnGameOver?.Invoke();
         // Log is deferred to let RunStateService/ProgressionService receive the event first
-        GameLogger.PlayerGameOver(Score, wave: 0, SessionTime);
+        int currentWave = FindObjectOfType<WaveManager>()?.currentWave ?? 0;
+        GameLogger.PlayerGameOver(Score, currentWave, SessionTime);
     }
 
     void TogglePause()

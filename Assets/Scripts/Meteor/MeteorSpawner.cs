@@ -57,6 +57,17 @@ public class MeteorSpawner : MonoBehaviour
 
     private void SpawnMeteor()
     {
+        // Respect the global meteor cap so the spawner doesn't add more meteors
+        // while a split-cascade is already filling the scene.
+        int cap = BalanceService.Instance != null
+            ? BalanceService.Instance.GetInt("meteor.max_active_count", 80)
+            : 80;
+        if (MeteorMovement.ActiveCount >= cap)
+        {
+            // Silent skip — no log spam since this can occur every spawn interval
+            return;
+        }
+
         Vector3 spawnPosition = GetSpawnPosition();
         GameObject meteor = SelectMeteor();
 
@@ -72,8 +83,6 @@ public class MeteorSpawner : MonoBehaviour
             {
                 movement.SetInitialDirection(direction);
             }
-
-            Debug.Log($"Spawned {meteor.name} at {spawnPosition} moving towards {direction}");
         }
         else
         {

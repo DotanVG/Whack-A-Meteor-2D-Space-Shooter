@@ -8,7 +8,7 @@
 public static class GameFeatureFlags
 {
     // Phase 1: balance table drives gameplay numbers from CSV
-    public const bool UseCSVBalance = false;
+    public const bool UseCSVBalance = true;
 
     // Phase 2: dual-currency economy (Stardust / Scrap)
     public const bool UseEconomy = false;

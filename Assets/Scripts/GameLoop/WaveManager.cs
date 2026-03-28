@@ -39,13 +39,27 @@ public class WaveManager : MonoBehaviour
 
     private void Start()
     {
+        // Override Inspector tuning values from BalanceService if CSV balance is active
+        if (BalanceService.Instance != null)
+        {
+            timeBetweenWaves   = BalanceService.Instance.GetFloat("wave.time_between_waves",   timeBetweenWaves);
+            spawnRateDecrement = BalanceService.Instance.GetFloat("wave.spawn_rate_decrement",  spawnRateDecrement);
+            speedIncrement     = BalanceService.Instance.GetFloat("wave.speed_increment",       speedIncrement);
+            minSpawnRate       = BalanceService.Instance.GetFloat("wave.min_spawn_rate",        minSpawnRate);
+            Debug.Log($"[WaveManager] Balance applied — " +
+                      $"TimeBetween:{timeBetweenWaves:F1}s  SpawnRateDec:{spawnRateDecrement:F2}  " +
+                      $"SpeedInc:{speedIncrement:F2}  MinSpawn:{minSpawnRate:F2}s");
+        }
         StartCoroutine(RunWave(currentWave));
     }
 
     IEnumerator RunWave(int wave)
     {
         _waveActive = true;
-        Debug.Log($"[WaveManager] Wave {wave} started");
+        GameLogger.WaveStarted(wave,
+            meteorSpawner != null ? meteorSpawner.spawnRate : 0f,
+            meteorSpawner != null ? meteorSpawner.meteorSpeed : 0f,
+            meteorSpawner != null ? meteorSpawner.maxMeteors : 0);
 
         UIManager.Instance?.UpdateWave(wave);
 

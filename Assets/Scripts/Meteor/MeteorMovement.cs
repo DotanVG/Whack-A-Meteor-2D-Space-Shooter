@@ -2,6 +2,17 @@ using UnityEngine;
 
 public class MeteorMovement : MonoBehaviour
 {
+    /// <summary>
+    /// Global count of all active meteors (all sizes/variants).
+    /// Tracks via OnEnable/OnDisable — covers spawner meteors, split children,
+    /// and off-screen destruction automatically. Read by MeteorSplit and
+    /// MeteorSpawner to enforce the hard cap from BalanceService.
+    /// </summary>
+    public static int ActiveCount { get; private set; } = 0;
+
+    void OnEnable()  { ActiveCount++; }
+    void OnDisable() { ActiveCount--; }
+
     public float minSpeed = 3f; // Minimum speed at which the meteor moves
     public float maxSpeed = 7f; // Maximum speed at which the meteor moves
     private Vector3 direction; // Direction in which the meteor moves
