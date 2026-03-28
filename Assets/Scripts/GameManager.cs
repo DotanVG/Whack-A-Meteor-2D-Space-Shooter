@@ -5,6 +5,12 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
+    // ── Service-layer events (RunStateService subscribes to these) ────────────
+    public static event System.Action<int> OnScoreChanged;
+    public static event System.Action<int> OnLivesChanged;
+    public static event System.Action      OnGameOver;
+    public static event System.Action      OnRunStarted;
+
     public MeteorSpawner spawner;
     public PlayerHealth player;
 
@@ -71,6 +77,7 @@ public class GameManager : MonoBehaviour
         isGameOver = false;
         showingCountdown = true;
         countdown = 3f;
+        OnRunStarted?.Invoke();
         if (spawner == null)
         {
             spawner = FindObjectOfType<MeteorSpawner>();
@@ -187,6 +194,7 @@ public class GameManager : MonoBehaviour
     public void AddScore(int amount)
     {
         Score += amount;
+        OnScoreChanged?.Invoke(Score);
     }
 
     public void LoseLife()
@@ -196,6 +204,7 @@ public class GameManager : MonoBehaviour
         lostLifeIndex = Lives; // animate the leftmost remaining heart
         livesHitTimer = 0f;
         livesRecentlyHit = true;
+        OnLivesChanged?.Invoke(Lives);
         if (Lives <= 0)
         {
             StartGameOver();
@@ -207,6 +216,7 @@ public class GameManager : MonoBehaviour
         isGameOver = true;
         gameOverTimer = 0f;
         Time.timeScale = 0f;
+        OnGameOver?.Invoke();
     }
 
     void TogglePause()
