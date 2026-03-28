@@ -250,15 +250,8 @@ public class GameManager : MonoBehaviour
 
     void OnGUI()
     {
-        // XP at top-center — label width + digit width centered on screen
-        string scoreStr = Mathf.Max(0, Score).ToString();
-        float numW      = scoreStr.Length * digitSize.x;
-        const float labelW = 38f;
-        const float gap    = 4f;
-        float totalW    = labelW + gap + numW;
-        float startX    = Screen.width / 2f - totalW / 2f;
-        GUI.Label(new Rect(startX, 25, labelW, 30), "XP:", hudStyle);
-        DrawNumber(new Vector2(startX + labelW + gap, 20), Score);
+        // XP/Score intentionally not shown — players see level-up popups instead.
+        // LevelService accumulates XP from score events and fires OnLevelUp.
 
         float lifeWidth = lifeIconSize.x;
         float lifeHeight = lifeIconSize.y;

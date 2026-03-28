@@ -38,6 +38,11 @@ eco_sd_small,economy,stardust_small,1,1,flat,0,0,0,Stardust from small meteor ki
 eco_sd_tiny,economy,stardust_tiny,1,1,flat,0,0,0,Stardust from tiny meteor kill
 # Metal (enemy ship kills — wired when new enemy types are added)
 eco_met_enemy,economy,metal_enemy,1,2,flat,0,0,0,Metal from enemy ship kill
+# ── Progression / Level XP curve ─────────────────────────────────────────────
+# XP needed for level N→N+1 = xp_base * xp_growth^(N-1)
+# Default: Lv1→2=300, Lv2→3=405, Lv3→4=547 ... Lv10→11=3315
+progression_xp_base,progression,xp_base,1,300,flat,0,0,0,Base XP for first level-up
+progression_xp_growth,progression,xp_growth,1,1.35,flat,0,0,0,Exponential growth factor per level
 # ── Meteor safety cap ────────────────────────────────────────────────────────
 meteor_max_active,meteor,max_active_count,1,80,flat,0,0,0,Hard cap on simultaneous active meteors (prevents cascade crash)
 # ── Wave difficulty ───────────────────────────────────────────────────────────

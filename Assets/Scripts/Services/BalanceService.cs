@@ -124,6 +124,10 @@ public class BalanceService : MonoBehaviour
         // Economy — Metal drops from enemy kills
         Set("economy.metal_enemy", 2f);
 
+        // Progression — XP curve (xp_base * xp_growth^(level-1))
+        Set("progression.xp_base",   300f);
+        Set("progression.xp_growth",   1.35f);
+
         // Wave
         Set("wave.time_between_waves",    5f);
         Set("wave.spawn_rate_decrement",  0.15f);
