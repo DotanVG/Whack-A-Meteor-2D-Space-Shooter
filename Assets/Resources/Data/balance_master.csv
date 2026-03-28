@@ -31,6 +31,8 @@ hammer_score_mult,hammer,score_multiplier,1,2,flat,0,0,0,Score multiplier on ham
 # ── Economy (Phase 2 will use these) ─────────────────────────────────────────
 economy_stardust_mult,economy,stardust_drop_mult,1,1.0,flat,0,0,0,Stardust earn multiplier
 economy_scrap_mult,economy,scrap_drop_mult,1,1.0,flat,0,0,0,Scrap earn multiplier
+# ── Meteor safety cap ────────────────────────────────────────────────────────
+meteor_max_active,meteor,max_active_count,1,80,flat,0,0,0,Hard cap on simultaneous active meteors (prevents cascade crash)
 # ── Wave difficulty ───────────────────────────────────────────────────────────
 wave_time_between,wave,time_between_waves,1,5,flat,0,0,0,Seconds between waves
 wave_spawn_rate_dec,wave,spawn_rate_decrement,1,0.15,flat,0,0,0,Spawn rate reduction per wave

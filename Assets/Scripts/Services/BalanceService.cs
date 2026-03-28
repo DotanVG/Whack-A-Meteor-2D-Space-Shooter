@@ -108,6 +108,9 @@ public class BalanceService : MonoBehaviour
         Set("hammer.aoe_radius.1",     1.5f);
         Set("hammer.score_multiplier", 2f);
 
+        // Meteor cap
+        Set("meteor.max_active_count", 80f);
+
         // Economy
         Set("economy.stardust_drop_mult", 1.0f);
         Set("economy.scrap_drop_mult",    1.0f);
