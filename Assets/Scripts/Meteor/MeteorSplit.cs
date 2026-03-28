@@ -85,6 +85,13 @@ public class MeteorSplit : MonoBehaviour
         Destroy(gameObject);
     }
 
+    private static int GetMeteorCap()
+    {
+        return BalanceService.Instance != null
+            ? BalanceService.Instance.GetInt("meteor.max_active_count", 80)
+            : 80;
+    }
+
     private void SpawnMeteors(GameObject[] meteorArray, string tag, int minCount, int maxCount, GameObject[] nextMeteorArray, Vector3 baseDirection, float baseSpeed)
     {
         if (meteorArray.Length == 0)
@@ -93,22 +100,34 @@ public class MeteorSplit : MonoBehaviour
             return;
         }
 
+        // Hard cap: if we're already at or near the limit, destroy without spawning children.
+        // This stops cascade explosions (e.g. mass Small→Tiny collisions) from crashing the game.
+        int cap = GetMeteorCap();
+        if (MeteorMovement.ActiveCount >= cap)
+        {
+            Debug.LogWarning($"[Meteor/Cap] Split suppressed for {gameObject.tag} — " +
+                             $"active:{MeteorMovement.ActiveCount} >= cap:{cap}");
+            return; // parent is destroyed by SplitWithMomentum's Destroy(gameObject) call
+        }
+
         int count = Random.Range(minCount, maxCount + 1);
+        // Clamp so we don't overshoot the cap mid-loop
+        count = Mathf.Min(count, cap - MeteorMovement.ActiveCount);
+        if (count <= 0) return;
+
+        GameLogger.MeteorSplitSpawned(gameObject.tag, tag, count);
+
         for (int i = 0; i < count; i++)
         {
             int randomIndex = Random.Range(0, meteorArray.Length);
             GameObject newMeteor = Instantiate(meteorArray[randomIndex], transform.position, Quaternion.identity);
             newMeteor.tag = tag;
             MeteorMovement move = newMeteor.GetComponent<MeteorMovement>();
-            if (move != null)
+            if (move != null && baseSpeed > 0f)
             {
-                if (baseSpeed > 0f)
-                {
-                    Vector3 offsetDir = Quaternion.Euler(0f, 0f, Random.Range(-30f, 30f)) * baseDirection;
-                    move.InitializeMovement(offsetDir, baseSpeed);
-                }
+                Vector3 offsetDir = Quaternion.Euler(0f, 0f, Random.Range(-30f, 30f)) * baseDirection;
+                move.InitializeMovement(offsetDir, baseSpeed);
             }
-            Debug.Log("Spawned " + tag + ": " + meteorArray[randomIndex].name);
 
             if (nextMeteorArray != null)
             {
@@ -125,60 +144,48 @@ public class MeteorSplit : MonoBehaviour
 
     public void OnProjectileHit()
     {
+        string hitTag  = gameObject.tag;
+        bool   splits  = !hitTag.StartsWith("Tiny");
+        int    points  = GameConstants.GetScoreByTag(hitTag);
+
         MeteorMovement move = GetComponent<MeteorMovement>();
-        if (move != null)
-        {
-            SplitWithMomentum(move.CurrentDirection, move.CurrentSpeed);
-        }
-        else
-        {
-            Split();
-        }
+        if (move != null) SplitWithMomentum(move.CurrentDirection, move.CurrentSpeed);
+        else              Split();
+
         if (GameManager.Instance != null)
         {
-            int points = GameConstants.GetScoreByTag(gameObject.tag);
             GameManager.Instance.AddScore(points);
+            GameLogger.MeteorKilledByProjectile(hitTag, points, GameManager.Instance.Score, splits);
         }
 
         if (projectileHitClip != null)
-        {
             AudioSource.PlayClipAtPoint(projectileHitClip, transform.position);
-        }
         if (hitParticles != null)
-        {
             Instantiate(hitParticles, transform.position, Quaternion.identity);
-        }
     }
 
     public void OnHammerHit()
     {
+        string hitTag  = gameObject.tag;
+        bool   splits  = !hitTag.StartsWith("Tiny");
+        int    points  = GameConstants.GetScoreByTag(hitTag) * 2;
+
         MeteorMovement move = GetComponent<MeteorMovement>();
-        if (move != null)
-        {
-            SplitWithMomentum(move.CurrentDirection, move.CurrentSpeed);
-        }
-        else
-        {
-            Split();
-        }
+        if (move != null) SplitWithMomentum(move.CurrentDirection, move.CurrentSpeed);
+        else              Split();
+
         if (GameManager.Instance != null)
         {
-            int points = GameConstants.GetScoreByTag(gameObject.tag) * 2;
             GameManager.Instance.AddScore(points);
+            GameLogger.MeteorKilledByHammer(hitTag, points, GameManager.Instance.Score, splits);
         }
 
         if (hammerHitClip != null)
-        {
             AudioSource.PlayClipAtPoint(hammerHitClip, transform.position);
-        }
         if (hitParticles != null)
-        {
             Instantiate(hitParticles, transform.position, Quaternion.identity);
-        }
         if (CameraShake.Instance != null)
-        {
             CameraShake.Instance.Shake();
-        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -209,6 +216,8 @@ public class MeteorSplit : MonoBehaviour
         {
             return;
         }
+
+        GameLogger.MeteorCollisionSplit(gameObject.tag, collision.gameObject.tag, relativeSpeed);
 
         Vector3 collisionNormal = collision.GetContact(0).normal;
         Vector3 dir = Vector3.Reflect(movement.CurrentDirection, collisionNormal);

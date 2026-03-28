@@ -1,9 +1,18 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// Guarantee GameManager.Start() runs before any service script.
+// Services read Lives/Score in their own Start(), so GameManager must go first.
+[DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+
+    // ── Service-layer events (RunStateService subscribes to these) ────────────
+    public static event System.Action<int> OnScoreChanged;
+    public static event System.Action<int> OnLivesChanged;
+    public static event System.Action      OnGameOver;
+    public static event System.Action      OnRunStarted;
 
     public MeteorSpawner spawner;
     public PlayerHealth player;
@@ -20,6 +29,10 @@ public class GameManager : MonoBehaviour
     private float livesHitTimer = 0f;
     private bool livesRecentlyHit = false;
     private int lostLifeIndex = -1;
+
+    // Session timer — starts when countdown ends, used by logging
+    public float SessionTime { get; private set; } = 0f;
+    private bool sessionRunning = false;
 
     public Texture2D lifeIcon;
     public Texture2D[] digitSprites;
@@ -71,6 +84,10 @@ public class GameManager : MonoBehaviour
         isGameOver = false;
         showingCountdown = true;
         countdown = 3f;
+        // Fire initial state so RunStateService mirrors correct values on first frame
+        OnLivesChanged?.Invoke(Lives);
+        OnScoreChanged?.Invoke(Score);
+        OnRunStarted?.Invoke();
         if (spawner == null)
         {
             spawner = FindObjectOfType<MeteorSpawner>();
@@ -86,12 +103,16 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
+        if (sessionRunning && !isPaused && !isGameOver)
+            SessionTime += Time.deltaTime;
+
         if (showingCountdown)
         {
             countdown -= Time.deltaTime;
             if (countdown <= 0f)
             {
                 showingCountdown = false;
+                sessionRunning = true;
                 if (spawner != null)
                 {
                     spawner.StartSpawning();
@@ -187,6 +208,7 @@ public class GameManager : MonoBehaviour
     public void AddScore(int amount)
     {
         Score += amount;
+        OnScoreChanged?.Invoke(Score);
     }
 
     public void LoseLife()
@@ -196,6 +218,7 @@ public class GameManager : MonoBehaviour
         lostLifeIndex = Lives; // animate the leftmost remaining heart
         livesHitTimer = 0f;
         livesRecentlyHit = true;
+        OnLivesChanged?.Invoke(Lives);
         if (Lives <= 0)
         {
             StartGameOver();
@@ -204,9 +227,14 @@ public class GameManager : MonoBehaviour
 
     void StartGameOver()
     {
+        sessionRunning = false;
         isGameOver = true;
         gameOverTimer = 0f;
         Time.timeScale = 0f;
+        OnGameOver?.Invoke();
+        // Log is deferred to let RunStateService/ProgressionService receive the event first
+        int currentWave = FindObjectOfType<WaveManager>()?.currentWave ?? 0;
+        GameLogger.PlayerGameOver(Score, currentWave, SessionTime);
     }
 
     void TogglePause()

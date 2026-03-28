@@ -1,0 +1,8 @@
+id,category,key,level,base_value,growth_type,growth_param_a,growth_param_b,cap,notes
+# Phase 1 will populate this file with real tuning rows.
+# See BalanceService.cs for the key naming convention.
+# Example rows (commented out until Phase 1):
+# ship_lives,ship,lives_max,1,3,flat,0,0,10,Starting lives count
+# autoshooter_fire_rate,weapon,autoshooter_fire_rate,1,1.0,linear,0.2,0,5.0,Shots per second
+# autoshooter_fire_rate,weapon,autoshooter_fire_rate,2,1.2,linear,0.2,0,5.0,Level 2
+# hammer_aoe,hammer,aoe_radius,1,1.5,linear,0.5,0,5.0,AOE radius in world units
