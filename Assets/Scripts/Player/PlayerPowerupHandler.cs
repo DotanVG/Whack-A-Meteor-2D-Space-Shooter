@@ -11,8 +11,9 @@ public class PlayerPowerupHandler : MonoBehaviour
     public bool IsSpeedBoosted    { get; private set; }
     public bool IsDoubleFire      { get; private set; }
     public bool IsScoreMultiplied { get; private set; }
+    public bool IsLaserBoosted    { get; private set; }
 
-    private float _speedEndTime, _fireEndTime, _scoreEndTime;
+    private float _speedEndTime, _fireEndTime, _scoreEndTime, _laserBoostEndTime;
     private GUIStyle _hudStyle;
 
     // ── Apply ─────────────────────────────────────────────────────────────────────
@@ -46,6 +47,28 @@ public class PlayerPowerupHandler : MonoBehaviour
             case PowerupType.ExtraLife:
                 GameManager.Instance?.AddLife();
                 break;
+
+            case PowerupType.BoltTier:
+                PowerupLevelService.Instance?.IncrementBolt();
+                break;
+
+            case PowerupType.ShieldTier:
+                PowerupLevelService.Instance?.IncrementShield();
+                break;
+
+            case PowerupType.StarTier:
+                PowerupLevelService.Instance?.IncrementStar();
+                break;
+
+            case PowerupType.PillHealth:
+                GameManager.Instance?.AddLife();
+                break;
+
+            case PowerupType.PillLaserBoost:
+                float lDur = BalanceService.Instance?.GetFloat("powerup.laser_boost_duration", 5f) ?? 5f;
+                _laserBoostEndTime = Time.time + lDur;
+                IsLaserBoosted     = true;
+                break;
         }
 
         Debug.Log($"[Powerup] {type} activated on {gameObject.name}");
@@ -55,9 +78,10 @@ public class PlayerPowerupHandler : MonoBehaviour
 
     void Update()
     {
-        if (IsSpeedBoosted    && Time.time > _speedEndTime)  IsSpeedBoosted    = false;
-        if (IsDoubleFire      && Time.time > _fireEndTime)   IsDoubleFire      = false;
-        if (IsScoreMultiplied && Time.time > _scoreEndTime)  IsScoreMultiplied = false;
+        if (IsSpeedBoosted    && Time.time > _speedEndTime)     IsSpeedBoosted    = false;
+        if (IsDoubleFire      && Time.time > _fireEndTime)     IsDoubleFire      = false;
+        if (IsScoreMultiplied && Time.time > _scoreEndTime)    IsScoreMultiplied = false;
+        if (IsLaserBoosted    && Time.time > _laserBoostEndTime) IsLaserBoosted  = false;
     }
 
     // ── HUD ───────────────────────────────────────────────────────────────────────
@@ -99,6 +123,32 @@ public class PlayerPowerupHandler : MonoBehaviour
             float rem = _scoreEndTime - Time.time;
             _hudStyle.normal.textColor = new Color(1f, 0.5f, 1f);
             GUI.Label(new Rect(x, y, 180f, 24f), $"2x SCORE  {rem:F1}s", _hudStyle);
+            y -= 26f;
+        }
+        if (IsLaserBoosted)
+        {
+            float rem = _laserBoostEndTime - Time.time;
+            _hudStyle.normal.textColor = new Color(0.3f, 0.8f, 1f);
+            GUI.Label(new Rect(x, y, 180f, 24f), $"LASER+  {rem:F1}s", _hudStyle);
+            y -= 26f;
+        }
+
+        // ── Tier level badges ────────────────────────────────────────────────
+        if (PowerupLevelService.Instance != null)
+        {
+            float bx = Screen.width - 130f;
+            float by = Screen.height - 30f;
+            _hudStyle.normal.textColor = new Color(1f, 0.9f, 0.3f);
+
+            int bolt   = PowerupLevelService.Instance.BoltLevel;
+            int shield = PowerupLevelService.Instance.ShieldLevel;
+            int star   = PowerupLevelService.Instance.StarLevel;
+
+            string TierLabel(int lv) => lv switch { 1 => "◆", 2 => "◆◆", 3 => "◆◆◆", _ => "—" };
+
+            GUI.Label(new Rect(bx, by,        120f, 22f), $"⚡ {TierLabel(bolt)}",   _hudStyle);
+            GUI.Label(new Rect(bx, by - 24f,  120f, 22f), $"🛡 {TierLabel(shield)}", _hudStyle);
+            GUI.Label(new Rect(bx, by - 48f,  120f, 22f), $"★ {TierLabel(star)}",   _hudStyle);
         }
     }
 }

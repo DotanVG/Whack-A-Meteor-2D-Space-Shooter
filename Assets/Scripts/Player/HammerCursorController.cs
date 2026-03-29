@@ -297,9 +297,10 @@ public class HammerCursorController : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks for meteor hits within the AOE radius.
+    /// Checks for meteor and enemy hits within the AOE radius.
     /// If Slam Wave (skill id=7) is owned, also emits a secondary radial burst
     /// at 2× radius hitting targets outside the primary zone.
+    /// If Lightning (ids 15-17) is owned, chains arc damage to nearby targets.
     /// </summary>
     private void CheckMeteorHits()
     {
@@ -310,7 +311,15 @@ public class HammerCursorController : MonoBehaviour
         foreach (Collider2D col in primary)
         {
             MeteorSplit ms = col.GetComponent<MeteorSplit>();
-            if (ms != null) ms.OnHammerHit();
+            if (ms != null) { ms.OnHammerHit(); continue; }
+
+            // Hammer also damages enemy ships
+            EnemyHealth eh = col.GetComponent<EnemyHealth>();
+            if (eh != null)
+            {
+                int dmg = BalanceService.Instance?.GetInt("hammer.enemy_damage", 2) ?? 2;
+                eh.TakeDamage(dmg);
+            }
         }
 
         // ── Slam Wave — secondary burst at 2× radius (outer ring only) ───────
@@ -320,12 +329,26 @@ public class HammerCursorController : MonoBehaviour
             Collider2D[] wave = Physics2D.OverlapCircleAll(hitboxCenter, waveRadius);
             foreach (Collider2D col in wave)
             {
-                // Skip targets already in primary radius (distance ≤ aoeRadius)
                 if (Vector3.Distance(hitboxCenter, col.transform.position) <= aoeRadius) continue;
                 MeteorSplit ms = col.GetComponent<MeteorSplit>();
-                if (ms != null) ms.OnHammerHit();
+                if (ms != null) { ms.OnHammerHit(); continue; }
+
+                EnemyHealth eh = col.GetComponent<EnemyHealth>();
+                if (eh != null)
+                {
+                    int dmg = BalanceService.Instance?.GetInt("hammer.enemy_damage", 2) ?? 2;
+                    eh.TakeDamage(dmg);
+                }
             }
-            CameraShake.Instance?.Shake(0.15f, 0.08f); // extra shake for the wave
+            CameraShake.Instance?.Shake(0.15f, 0.08f);
+        }
+
+        // ── Lightning Chain ───────────────────────────────────────────────────
+        int bounces = SkillService.Instance?.GetLightningBounces() ?? 0;
+        if (bounces > 0 && LightningChain.Instance != null)
+        {
+            int bonus = SkillService.Instance?.GetLightningBonusDamage() ?? 0;
+            LightningChain.Instance.Trigger(hitboxCenter, bounces, bonus);
         }
     }
 

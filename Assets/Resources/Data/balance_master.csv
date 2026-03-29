@@ -85,3 +85,27 @@ powerup_double_fire_dur,powerup,double_fire_duration,1,10.0,flat,0,0,0,Double fi
 powerup_double_fire_mult,powerup,double_fire_mult,1,2.0,flat,0,0,0,Fire rate multiplier for DoubleFire
 powerup_score_mult_dur,powerup,score_mult_duration,1,10.0,flat,0,0,0,Score multiplier duration (seconds)
 powerup_score_mult,powerup,score_mult,1,2.0,flat,0,0,0,Score multiplier value
+powerup_laser_boost_dur,powerup,laser_boost_duration,1,5.0,flat,0,0,0,Pill blue laser boost duration (seconds)
+# ── Meteor drops (pills + tier collectibles) ─────────────────────────────────
+meteor_pill_health,meteor,pill_health_chance,1,0.03,flat,0,0,1,Chance to drop PillHealth per meteor kill
+meteor_pill_laser,meteor,pill_laser_chance,1,0.05,flat,0,0,1,Chance to drop PillLaserBoost per meteor kill
+meteor_bolt_tier,meteor,bolt_tier_chance,1,0.08,flat,0,0,1,Chance to drop BoltTier collectible per meteor kill
+meteor_shield_tier,meteor,shield_tier_chance,1,0.06,flat,0,0,1,Chance to drop ShieldTier collectible per meteor kill
+meteor_star_tier,meteor,star_tier_chance,1,0.07,flat,0,0,1,Chance to drop StarTier collectible per meteor kill
+meteor_big_drop_mult,meteor,big_drop_mult,1,2.0,flat,0,0,0,Drop chance multiplier for Big meteor variants
+# ── Hammer extended ───────────────────────────────────────────────────────────
+hammer_enemy_damage,hammer,enemy_damage,1,2,flat,0,0,0,Damage dealt to enemy ships per hammer AOE hit
+# ── Lightning chain ───────────────────────────────────────────────────────────
+lightning_bounces_lv1,lightning,bounces_lv1,1,2,flat,0,0,0,Lightning Lv1 bounce count
+lightning_bounces_lv2,lightning,bounces_lv2,1,4,flat,0,0,0,Lightning Lv2 bounce count
+lightning_bounces_lv3,lightning,bounces_lv3,1,6,flat,0,0,0,Lightning Lv3 bounce count (also +1 bonus dmg)
+# ── Enemy cross-faction combat ────────────────────────────────────────────────
+enemy_crossfire_chance,enemy,crossfire_chance,1,0.25,flat,0,0,1,Fraction of enemy shots that target other factions
+enemy_crossfire_rate,enemy,crossfire_rate,1,4.0,flat,0,0,0,Seconds between cross-faction shots
+# ── New skill tree nodes (Lightning Lv1/2/3 ids 15/16/17) ────────────────────
+skill_lightning_lv1_cost_sd,skill,lightning_lv1_cost_stardust,1,700,flat,0,0,0,Lightning Lv1 stardust cost
+skill_lightning_lv1_cost_m,skill,lightning_lv1_cost_metal,1,200,flat,0,0,0,Lightning Lv1 metal cost
+skill_lightning_lv2_cost_sd,skill,lightning_lv2_cost_stardust,1,1000,flat,0,0,0,Lightning Lv2 stardust cost
+skill_lightning_lv2_cost_m,skill,lightning_lv2_cost_metal,1,400,flat,0,0,0,Lightning Lv2 metal cost
+skill_lightning_lv3_cost_sd,skill,lightning_lv3_cost_stardust,1,1400,flat,0,0,0,Lightning Lv3 stardust cost
+skill_lightning_lv3_cost_m,skill,lightning_lv3_cost_metal,1,700,flat,0,0,0,Lightning Lv3 metal cost

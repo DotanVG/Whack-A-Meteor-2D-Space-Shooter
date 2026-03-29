@@ -45,6 +45,9 @@ public class SkillService : MonoBehaviour
         new SkillDef { id=5,  name="AOE Radius",      levelLabel="Lv 2", costStardust=800,  costMetal=0,   prereqId=4,  column=1 },
         new SkillDef { id=6,  name="Score Mult",      levelLabel="Lv 1", costStardust=1000, costMetal=0,   prereqId=5,  column=1 },
         new SkillDef { id=7,  name="Slam Wave",       levelLabel="Lv 1", costStardust=500,  costMetal=800, prereqId=6,  column=1 },
+        new SkillDef { id=15, name="Lightning",       levelLabel="Lv 1", costStardust=700,  costMetal=200, prereqId=7,  column=1 },
+        new SkillDef { id=16, name="Lightning",       levelLabel="Lv 2", costStardust=1000, costMetal=400, prereqId=15, column=1 },
+        new SkillDef { id=17, name="Lightning",       levelLabel="Lv 3", costStardust=1400, costMetal=700, prereqId=16, column=1 },
 
         // ── Ship (column 2) ───────────────────────────────────────────────────
         new SkillDef { id=8,  name="Move Speed",      levelLabel="Lv 1", costStardust=400,  costMetal=0,   prereqId=-1, column=2 },
@@ -55,7 +58,7 @@ public class SkillService : MonoBehaviour
         new SkillDef { id=11, name="Invincibility",   levelLabel="Lv 1", costStardust=1200, costMetal=600, prereqId=14, column=2 },
     };
 
-    public const int SkillCount = 15;
+    public const int SkillCount = 18; // ids 0-17 (added Lightning Lv1/2/3 as ids 15/16/17)
 
     private bool[] _owned = new bool[SkillCount];
 
@@ -134,6 +137,18 @@ public class SkillService : MonoBehaviour
 
     /// <summary>Ship: post-hit invincibility duration multiplier.</summary>
     public float GetInvincibilityMultiplier() => IsOwned(11) ? 1.5f : 1.0f;
+
+    /// <summary>Hammer: number of lightning bounces on hammer hit (0 = disabled).</summary>
+    public int GetLightningBounces()
+    {
+        if (IsOwned(17)) return 6;
+        if (IsOwned(16)) return 4;
+        if (IsOwned(15)) return 2;
+        return 0;
+    }
+
+    /// <summary>Hammer: bonus damage per lightning bounce (Lv3 only).</summary>
+    public int GetLightningBonusDamage() => IsOwned(17) ? 1 : 0;
 
     // ── Reset (called by SettingsController) ──────────────────────────────────
 

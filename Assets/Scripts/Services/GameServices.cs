@@ -22,25 +22,27 @@ public class GameServices : MonoBehaviour
     // Inspector refs — auto-populated in Awake if children already exist,
     // or created dynamically if this script is dropped in fresh.
     [Header("Auto-wired on Awake — leave blank to let this script create them")]
-    public BalanceService     balanceService;
-    public EconomyService     economyService;
-    public LevelService       levelService;
-    public SkillService       skillService;
-    public RunStateService    runStateService;
-    public ProgressionService progressionService;
-    public EconomyHUD         economyHUD;
-    public LevelUpPopup       levelUpPopup;
+    public BalanceService       balanceService;
+    public EconomyService       economyService;
+    public LevelService         levelService;
+    public SkillService         skillService;
+    public RunStateService      runStateService;
+    public ProgressionService   progressionService;
+    public EconomyHUD           economyHUD;
+    public LevelUpPopup         levelUpPopup;
+    public PowerupLevelService  powerupLevelService;
 
     void Awake()
     {
-        EnsureService(ref balanceService,     "BalanceService");
-        EnsureService(ref economyService,     "EconomyService");
-        EnsureService(ref levelService,       "LevelService");
-        EnsureService(ref skillService,       "SkillService");
-        EnsureService(ref runStateService,    "RunStateService");
-        EnsureService(ref progressionService, "ProgressionService");
-        EnsureService(ref economyHUD,         "EconomyHUD");
-        EnsureService(ref levelUpPopup,       "LevelUpPopup");
+        EnsureService(ref balanceService,      "BalanceService");
+        EnsureService(ref economyService,      "EconomyService");
+        EnsureService(ref levelService,        "LevelService");
+        EnsureService(ref skillService,        "SkillService");
+        EnsureService(ref runStateService,     "RunStateService");
+        EnsureService(ref progressionService,  "ProgressionService");
+        EnsureService(ref economyHUD,          "EconomyHUD");
+        EnsureService(ref levelUpPopup,        "LevelUpPopup");
+        EnsureService(ref powerupLevelService, "PowerupLevelService");
     }
 
     void Start()

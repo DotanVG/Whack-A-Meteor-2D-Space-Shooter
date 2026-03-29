@@ -160,6 +160,7 @@ public class MeteorSplit : MonoBehaviour
         ScorePopup.Spawn(transform.position, points);
 
         EconomyService.Instance?.EarnFromMeteor(hitTag);
+        MeteorDropSpawner.Instance?.TryDrop(transform.position, hitTag);
 
         if (projectileHitClip != null)
             AudioSource.PlayClipAtPoint(projectileHitClip, transform.position);
@@ -185,6 +186,7 @@ public class MeteorSplit : MonoBehaviour
         ScorePopup.Spawn(transform.position, points);
 
         EconomyService.Instance?.EarnFromMeteor(hitTag);
+        MeteorDropSpawner.Instance?.TryDrop(transform.position, hitTag);
 
         if (hammerHitClip != null)
             AudioSource.PlayClipAtPoint(hammerHitClip, transform.position);

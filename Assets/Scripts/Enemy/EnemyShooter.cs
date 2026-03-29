@@ -7,14 +7,18 @@ using UnityEngine;
 /// </summary>
 public class EnemyShooter : MonoBehaviour
 {
-    public GameObject enemyProjectilePrefab; // Assign EnemyProjectile.prefab in Inspector
+    public GameObject enemyProjectilePrefab; // Assign EnemyProjectile_Green.prefab for standard enemies
+    [Tooltip("If set, used instead when this enemy is a Boss (Red laser).")]
+    public GameObject bossProjectilePrefab;
 
     private float _nextShot;
     private Transform _player;
+    private bool _isBoss;
 
     void Start()
     {
         _player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        _isBoss = GetComponent<BossController>() != null;
         float rate = BalanceService.Instance?.GetFloat("enemy.red_fire_rate", 2f) ?? 2f;
         _nextShot = Time.time + rate * Random.Range(0.3f, 0.8f); // stagger first shot
     }
@@ -32,10 +36,11 @@ public class EnemyShooter : MonoBehaviour
 
     void Shoot()
     {
-        // Aim toward player: rotate so transform.up points at the player
+        GameObject prefab = (_isBoss && bossProjectilePrefab != null) ? bossProjectilePrefab : enemyProjectilePrefab;
+        if (prefab == null) return;
         Vector2 dir = ((Vector2)_player.position - (Vector2)transform.position).normalized;
         float angle = Mathf.Atan2(dir.x, dir.y) * Mathf.Rad2Deg;
         Quaternion aimRot = Quaternion.Euler(0f, 0f, -angle);
-        Instantiate(enemyProjectilePrefab, transform.position, aimRot);
+        Instantiate(prefab, transform.position, aimRot);
     }
 }

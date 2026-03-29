@@ -1,6 +1,21 @@
 using UnityEngine;
 
-public enum PowerupType { ShieldRecharge, SpeedBoost, DoubleFire, ScoreMultiplier, ExtraLife }
+public enum PowerupType
+{
+    // ── Skill-gated drops (from enemies) ──
+    ShieldRecharge  = 0,
+    SpeedBoost      = 1,
+    DoubleFire      = 2,
+    ScoreMultiplier = 3,
+    ExtraLife       = 4,
+    // ── Tiered collectibles (from meteors) ──
+    BoltTier        = 5,  // increments DoubleFire tier (bolt_bronze/silver/gold HUD)
+    ShieldTier      = 6,  // increments Shield tier
+    StarTier        = 7,  // increments ScoreMultiplier tier
+    // ── Pills ──
+    PillHealth      = 8,  // pill_red  — restore 1 life
+    PillLaserBoost  = 9,  // pill_blue — brief laser speed + fire-rate boost
+}
 
 /// <summary>
 /// PowerupBase — attach to every powerup prefab alongside SpriteRenderer and CircleCollider2D (IsTrigger).

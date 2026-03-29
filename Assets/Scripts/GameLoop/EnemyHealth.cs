@@ -48,7 +48,8 @@ public class EnemyHealth : MonoBehaviour
         }
     }
 
-    public GameObject explosionPrefab; // Assign Explosion.prefab in Inspector (Phase 7)
+    public GameObject explosionPrefab;     // Regular enemy explosion (laserBlue08-11 anim)
+    public GameObject bossExplosionPrefab; // Boss explosion (laserRed08-11 anim); falls back to explosionPrefab if null
 
     /// <summary>
     /// Called when health hits zero. Awards score, grants Metal, triggers VFX/drops, destroys self.
@@ -68,9 +69,10 @@ public class EnemyHealth : MonoBehaviour
         // Phase 6: drop powerup
         PowerupSpawner.Instance?.TryDrop(transform.position);
 
-        // Phase 7: explosion VFX
-        if (explosionPrefab != null)
-            Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+        // Explosion VFX — boss uses red laser anim, regular enemies use blue laser anim
+        GameObject vfxPrefab = (boss != null && bossExplosionPrefab != null) ? bossExplosionPrefab : explosionPrefab;
+        if (vfxPrefab != null)
+            Instantiate(vfxPrefab, transform.position, Quaternion.identity);
 
         ScorePopup.Spawn(transform.position, points);
 

@@ -5,14 +5,24 @@ using UnityEngine;
 public class PlayerHealth : MonoBehaviour
 {
     private bool invincible = false;
-    private SpriteRenderer sr;
-    private ShieldController shield;
+    private SpriteRenderer    sr;
+    private ShieldController  shield;
+    private PlayerDamageVisual damageVisual;
 
     void Start()
     {
-        sr     = GetComponent<SpriteRenderer>();
-        shield = GetComponent<ShieldController>() ?? gameObject.AddComponent<ShieldController>();
+        sr          = GetComponent<SpriteRenderer>();
+        shield      = GetComponent<ShieldController>() ?? gameObject.AddComponent<ShieldController>();
+        damageVisual = GetComponent<PlayerDamageVisual>();
         if (GetComponent<PlayerPowerupHandler>() == null) gameObject.AddComponent<PlayerPowerupHandler>();
+        RefreshDamageVisual();
+    }
+
+    void RefreshDamageVisual()
+    {
+        if (damageVisual == null) return;
+        int lives = GameManager.Instance?.Lives ?? GameConstants.StartingLives;
+        damageVisual.Refresh(lives);
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -71,6 +81,7 @@ public class PlayerHealth : MonoBehaviour
             if (sourceTag == "Enemy")
                 GameLogger.EnemyRammedPlayer(transform.position, GameManager.Instance.Lives);
         }
+        RefreshDamageVisual();
         StartCoroutine(Invincibility());
         StartCoroutine(HitPulse());
     }

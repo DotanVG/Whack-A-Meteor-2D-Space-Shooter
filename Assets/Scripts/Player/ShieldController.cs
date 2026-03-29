@@ -13,16 +13,27 @@ using UnityEngine;
 /// </summary>
 public class ShieldController : MonoBehaviour
 {
+    [Header("Visual — assign shield1/2/3 sprites (optional)")]
+    public Sprite[] shieldFrames; // shield1, shield2, shield3 from Sprites/Effects
+
     private SpriteRenderer _sr;
-    private int  _charges;
-    private bool _absorbing;
+    private int            _charges;
+    private bool           _absorbing;
+    private ShieldVisual   _visual;
 
     void Awake()
     {
         _sr      = GetComponent<SpriteRenderer>();
         _charges = SkillService.Instance?.GetShieldCharges() ?? 0;
+
+        if (shieldFrames != null && shieldFrames.Length > 0)
+            _visual = ShieldVisual.AttachTo(gameObject, shieldFrames);
+
         if (_charges > 0)
+        {
+            _visual?.Activate();
             Debug.Log($"[Shield] {_charges} charge(s) ready.");
+        }
     }
 
     /// <summary>
@@ -34,6 +45,7 @@ public class ShieldController : MonoBehaviour
         if (_absorbing || _charges <= 0) return false;
         _charges--;
         Debug.Log($"[Shield] Hit absorbed! Charges remaining: {_charges}");
+        if (_charges <= 0) _visual?.Deactivate();
         StartCoroutine(AbsorbFeedback());
         return true;
     }
@@ -60,6 +72,7 @@ public class ShieldController : MonoBehaviour
     {
         int cap = SkillService.Instance?.GetShieldCharges() ?? 0;
         _charges = Mathf.Min(_charges + n, Mathf.Max(cap, 1)); // always allow at least 1 if shield is active
+        if (_charges > 0) _visual?.Activate();
         Debug.Log($"[Shield] +{n} charge from powerup. Charges: {_charges}");
     }
 }
