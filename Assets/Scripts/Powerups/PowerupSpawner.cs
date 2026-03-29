@@ -26,7 +26,7 @@ public class PowerupSpawner : MonoBehaviour
     {
         if (!GameFeatureFlags.UsePowerups) return;
 
-        float dropChance = BalanceService.Instance?.GetFloat("powerup.drop_chance", 0.15f) ?? 0.15f;
+        float dropChance = BalanceService.Instance?.GetFloat("powerup.drop_chance", 0.07f) ?? 0.07f;
         if (Random.value > dropChance) return;
 
         PowerupType chosenType = PickType();

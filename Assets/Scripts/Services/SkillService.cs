@@ -81,7 +81,7 @@ public class SkillService : MonoBehaviour
 
     // ── Ownership queries ─────────────────────────────────────────────────────
 
-    public bool IsOwned(int id) => id >= 0 && id < SkillCount && _owned[id];
+    public bool IsOwned(int id) => id >= 0 && id < SkillCount && (DevMode.AllSkillsOwned || _owned[id]);
 
     // ── Multiplier / flag getters (null-safe via Instance?.) ──────────────────
 

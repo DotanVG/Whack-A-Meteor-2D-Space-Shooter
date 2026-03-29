@@ -39,11 +39,11 @@ public class MeteorDropSpawner : MonoBehaviour
     {
         if (!GameFeatureFlags.UsePowerups) return;
 
-        float pillHealthChance  = Get("meteor.pill_health_chance",  0.03f);
-        float pillLaserChance   = Get("meteor.pill_laser_chance",   0.05f);
-        float boltChance        = Get("meteor.bolt_tier_chance",    0.08f);
-        float shieldChance      = Get("meteor.shield_tier_chance",  0.06f);
-        float starChance        = Get("meteor.star_tier_chance",    0.07f);
+        float pillHealthChance  = Get("meteor.pill_health_chance",  0.03f);  // keep — user says this rate is good
+        float pillLaserChance   = Get("meteor.pill_laser_chance",   0.02f);
+        float boltChance        = Get("meteor.bolt_tier_chance",    0.04f);
+        float shieldChance      = Get("meteor.shield_tier_chance",  0.03f);
+        float starChance        = Get("meteor.star_tier_chance",    0.04f);
 
         // Big meteors have doubled drop chances (more rewarding to kill)
         if (meteorTag.StartsWith("Big"))

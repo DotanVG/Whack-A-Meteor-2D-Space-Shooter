@@ -73,6 +73,7 @@ public class PlayerHealth : MonoBehaviour
 
     private void TakeDamage(string sourceTag)
     {
+        if (DevMode.GodMode) return;
         if (GameManager.Instance != null)
         {
             GameManager.Instance.LoseLife();
