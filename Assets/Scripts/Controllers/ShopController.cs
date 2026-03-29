@@ -242,8 +242,10 @@ public class ShopController : MonoBehaviour
     NodeState GetNodeState(int id)
     {
         if (_skillOwned[id]) return NodeState.Owned;
-        var def = SkillService.All[id];
-        if (def.prereqId >= 0 && !_skillOwned[def.prereqId]) return NodeState.Locked;
+        int prereqId = -1;
+        foreach (var d in SkillService.All)
+            if (d.id == id) { prereqId = d.prereqId; break; }
+        if (prereqId >= 0 && !_skillOwned[prereqId]) return NodeState.Locked;
         return NodeState.Available;
     }
 

@@ -79,3 +79,6 @@ crashlytics-build.properties
 
 # Claude Code local config (not project-specific)
 .claude/
+
+# Local-only QA checklist (not committed to repo)
+QA_CHECKLIST.md
