@@ -1191,6 +1191,7 @@ GameObject:
   - component: {fileID: 2000000002}
   - component: {fileID: 2000000001}
   - component: {fileID: 2000000003}
+  - component: {fileID: 2000000004}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1259,6 +1260,71 @@ MonoBehaviour:
   - {fileID: 149186794844977707, guid: 17d813c73260f6447b1ac257f78404e7, type: 3}
   - {fileID: 4477426613902191119, guid: 588fe3d9189287a46833a4a889588b7c, type: 3}
   - {fileID: 7402233666359524220, guid: 8f84f1c255d15f64b8a6d9a967c38b5e, type: 3}
+--- !u!114 &2000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2000000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17c1ff7c3e61bdc428765966f9f6ff2f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  pillHealthPrefab: {fileID: 1234000000000071, guid: ee50e1e98f92462ab2a7f3858f0e9656, type: 3}
+  pillLaserBoostPrefab: {fileID: 1234000000000081, guid: 0918b8d32b704e3aa061e192d09cf8d2, type: 3}
+  boltTierPrefab: {fileID: 1234000000000041, guid: 09d075f1abcb4676b294415067f2e9d6, type: 3}
+  shieldTierPrefab: {fileID: 1234000000000051, guid: 3c463e1f1ac04e6da5e18d39d43f7118, type: 3}
+  starTierPrefab: {fileID: 1234000000000061, guid: 648ea07c376f450393a6428e27d263ae, type: 3}
+--- !u!1 &3000000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3000000002}
+  - component: {fileID: 3000000003}
+  m_Layer: 0
+  m_Name: LightningChain
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3000000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3000000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 002b32ec8f6cf2648ae03ebef7e9f172, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  lightningColor: {r: 0.6, g: 0.8, b: 1, a: 1}
+  arcWidth: 0.06
+  arcDuration: 0.12
+  searchRadius: 6
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1272,3 +1338,4 @@ SceneRoots:
   - {fileID: 1091657863}
   - {fileID: 1144557514}
   - {fileID: 130753218}
+  - {fileID: 3000000002}
