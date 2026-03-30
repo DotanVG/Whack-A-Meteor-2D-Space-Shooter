@@ -30,7 +30,7 @@ public class GameOverController : MonoBehaviour
 
     void OnGUI()
     {
-        GUILayout.BeginArea(new Rect(Screen.width/2 - 100, Screen.height/2 - 40, 200, 80));
+        GUILayout.BeginArea(new Rect(Screen.width / 2 - 100, Screen.height / 2 - 40, 200, 80));
         GUILayout.Label($"Final Score: {GameManager.Instance?.Score ?? 0}", centerStyle);
         if (GUILayout.Button("Main Menu"))
         {

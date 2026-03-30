@@ -125,15 +125,6 @@ public class EconomyService : MonoBehaviour
 
     // ── Private helpers ───────────────────────────────────────────────────────
 
-    void AddStardust(int amount, string source)
-    {
-        if (amount <= 0) return;
-        Stardust += amount;
-        OnStardustChanged?.Invoke(Stardust);
-        SaveWallet();
-        Debug.Log($"[Economy] +{amount} Stardust from {source}  (total: {Stardust})");
-    }
-
     public void AddStardust(int amount, string source = "Direct")
     {
         if (amount <= 0) return;
