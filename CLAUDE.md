@@ -2,6 +2,13 @@
 
 Unity 2022.3.29f1 (C#) 2D space shooter. Player pilots ship + swings hammer cursor to destroy meteors. Assets: Kenney Space Shooter Redux (CC0).
 
+## Technology Stack
+
+- **Engine**: Unity 2022.3.29f1
+- **Language**: C#
+- **Rendering**: Unity 2D (URP not used — built-in RP)
+- **Physics**: Physics2D
+
 ## Build & Run
 
 - Open: Unity Hub → Add repo dir → Unity 2022.3.29f1
@@ -50,3 +57,33 @@ GameOver/Credits scenes exist but are NOT in build order; game-over handled by `
 - Input: always check `inputManager != null`, provide `else Input.*` fallback
 - Meteor prefabs: assigned in Inspector on `MeteorSpawner`; `MeteorSplit.Awake()` copies from spawner if own arrays are empty
 - New destructibles: add tag in `TagManager.asset`, `GameConstants.GetScoreByTag()`, and relevant `OnTriggerEnter2D`/`OnCollisionEnter2D` handlers
+
+## Project Structure
+
+@.claude/docs/directory-structure.md
+
+## Technical Preferences
+
+@.claude/docs/technical-preferences.md
+
+## Coordination Rules
+
+@.claude/docs/coordination-rules.md
+
+## Collaboration Protocol
+
+**User-driven collaboration, not autonomous execution.**
+Every task follows: **Question -> Options -> Decision -> Draft -> Approval**
+
+- Agents MUST ask "May I write this to [filepath]?" before using Write/Edit tools
+- Agents MUST show drafts or summaries before requesting approval
+- Multi-file changes require explicit approval for the full changeset
+- No commits without user instruction
+
+## Coding Standards
+
+@.claude/docs/coding-standards.md
+
+## Context Management
+
+@.claude/docs/context-management.md
