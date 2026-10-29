@@ -17,6 +17,8 @@ public class MeteorSplit : MonoBehaviour
     public float collisionSplitEnableDelay = 0.5f;
 
     private bool collisionSplitEnabled = false;
+    private bool _hit;
+    private bool _split;
 
     private void Awake()
     {
@@ -40,6 +42,8 @@ public class MeteorSplit : MonoBehaviour
 
     private void OnEnable()
     {
+        _hit = false;
+        _split = false;
         collisionSplitEnabled = false;
         StartCoroutine(EnableCollisionSplit());
     }
@@ -57,6 +61,9 @@ public class MeteorSplit : MonoBehaviour
 
     public void SplitWithMomentum(Vector3 baseDirection, float baseSpeed)
     {
+        if (_split) return;
+        _split = true;
+
         if (gameObject.CompareTag("BigBrownMeteor"))
         {
             SpawnMeteors(mediumBrownMeteors, "MediumBrownMeteor", 2, 3, smallBrownMeteors, baseDirection, baseSpeed);
@@ -131,7 +138,10 @@ public class MeteorSplit : MonoBehaviour
 
             if (nextMeteorArray != null)
             {
-                MeteorSplit splitScript = newMeteor.AddComponent<MeteorSplit>();
+                // Prefabs already carry MeteorSplit. A second copy splits and scores twice.
+                MeteorSplit splitScript = newMeteor.GetComponent<MeteorSplit>();
+                if (splitScript == null)
+                    splitScript = newMeteor.AddComponent<MeteorSplit>();
                 splitScript.mediumBrownMeteors = mediumBrownMeteors;
                 splitScript.smallBrownMeteors = smallBrownMeteors;
                 splitScript.tinyBrownMeteors = tinyBrownMeteors;
@@ -144,6 +154,9 @@ public class MeteorSplit : MonoBehaviour
 
     public void OnProjectileHit()
     {
+        if (_hit) return;
+        _hit = true;
+
         string hitTag  = gameObject.tag;
         bool   splits  = !hitTag.StartsWith("Tiny");
         int    points  = GameConstants.GetScoreByTag(hitTag);
@@ -169,6 +182,9 @@ public class MeteorSplit : MonoBehaviour
 
     public void OnHammerHit()
     {
+        if (_hit) return;
+        _hit = true;
+
         string hitTag  = gameObject.tag;
         bool   splits  = !hitTag.StartsWith("Tiny");
         int    points  = GameConstants.GetScoreByTag(hitTag) * (SkillService.Instance?.GetHammerScoreMult() ?? 2);
@@ -196,6 +212,8 @@ public class MeteorSplit : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        if (_split) return;
+
         if (!collisionSplitEnabled)
         {
             return;

@@ -75,7 +75,5 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]cripts/Utilities/GameConstants.cs.meta
 /[Aa]ssets/[Ss]cripts/Utilities/GameConstants.cs
 
-/Assets/Scripts/Utilities/CameraShake.cs.meta
-
 # Claude Code local config (not project-specific)
 .claude/
