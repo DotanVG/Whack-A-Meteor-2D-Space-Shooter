@@ -71,9 +71,6 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
-# Temporary auto-generated .cs files (the existing tracked source remains tracked)
-/[Aa]ssets/[Ss]cripts/Utilities/GameConstants.cs
-
 # Claude Code — track studio config but ignore ephemeral session state
 !.claude/
 .claude/agent-memory/

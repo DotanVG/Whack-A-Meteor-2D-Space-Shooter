@@ -27,7 +27,14 @@ if (process.ExitCode != 0)
 // Ordinal comparison catches casing mistakes even on Windows.
 var tracked = output.Split('\0', StringSplitOptions.RemoveEmptyEntries)
     .ToHashSet(StringComparer.Ordinal);
+// Unity ignores these names, including every descendant of an ignored folder.
+bool IsUnityIgnored(string path) => path.Split('/').Any(name =>
+    name.StartsWith(".", StringComparison.Ordinal) ||
+    name.EndsWith("~", StringComparison.Ordinal) ||
+    name.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase) ||
+    name.Equals("cvs", StringComparison.OrdinalIgnoreCase));
 var assets = tracked.Where(path => path.StartsWith("Assets/", StringComparison.Ordinal))
+    .Where(path => !IsUnityIgnored(path))
     .OrderBy(path => path, StringComparer.Ordinal).ToArray();
 var errors = 0;
 void Fail(string message)
@@ -66,6 +73,7 @@ foreach (var meta in assets.Where(path => path.EndsWith(".meta", StringCompariso
 var guids = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 var guidPattern = new Regex(@"^guid: ([0-9a-fA-F]{32})\s*$", RegexOptions.Multiline);
 var metas = tracked.Where(path => path.EndsWith(".meta", StringComparison.Ordinal))
+    .Where(path => !IsUnityIgnored(path))
     .OrderBy(path => path, StringComparer.Ordinal).ToArray();
 foreach (var meta in metas)
 {
@@ -88,9 +96,10 @@ foreach (var meta in metas)
         guids.Add(guid, meta);
 }
 
-// Unity 2022.3 uses C# 9. This is parsing only, with no Unity/type resolution.
+// Unity 2022.3 uses C# 9. No Unity assemblies are needed for this gate.
 var options = new CSharpParseOptions(LanguageVersion.CSharp9);
 var scripts = assets.Where(path => path.EndsWith(".cs", StringComparison.Ordinal)).ToArray();
+var trees = new List<SyntaxTree>();
 if (scripts.Length == 0)
     Fail("No tracked C# scripts under Assets.");
 foreach (var script in scripts)
@@ -99,9 +108,15 @@ foreach (var script in scripts)
     if (!File.Exists(fullPath))
         continue;
     var tree = CSharpSyntaxTree.ParseText(File.ReadAllText(fullPath), options, path: script);
+    trees.Add(tree);
     foreach (var diagnostic in tree.GetDiagnostics().Where(item => item.Severity == DiagnosticSeverity.Error))
         Fail(diagnostic.ToString());
 }
+
+// Feature-version errors are compilation diagnostics, not syntax-tree diagnostics.
+var compilation = CSharpCompilation.Create("LanguageVersionCheck", trees);
+foreach (var diagnostic in compilation.GetDiagnostics().Where(item => item.Id == "CS8773"))
+    Fail(diagnostic.ToString());
 
 Console.WriteLine($"Checked {scripts.Length} C# scripts, {metas.Length} .meta files, " +
     $"{folders.Count} asset folders: {errors} error(s).");

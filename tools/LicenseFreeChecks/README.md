@@ -12,8 +12,12 @@ of the tracked Assets in an ignored nested Git repository, with deliberate failu
 Stage new/deleted assets before checking locally: Git's index defines tracked files;
 the checker reads their working-tree contents. Untracked assets are not checked.
 
-- Roslyn parses every tracked `Assets/**/*.cs` as C# 9 (Unity 2022.3) and fails on
-  syntax errors, with file/line diagnostics. No Unity assemblies or license needed.
+- Roslyn parses every imported, tracked `Assets/**/*.cs` as C# 9 (Unity 2022.3)
+  and fails on syntax errors and compilation diagnostic `CS8773` (features newer
+  than C# 9), with file/line diagnostics. Other compilation diagnostics are ignored;
+  no Unity assemblies or license are needed.
+- Unity-ignored path components (dotfiles such as `.gitkeep` and `.DS_Store`,
+  names ending in `~` or `.tmp`, and `cvs`) and their descendants are excluded.
 - Every tracked non-meta asset and inferred parent folder below `Assets` must have
   a tracked `.meta`. The root `Assets` directory itself does not need `Assets.meta`.
 - A `.meta` under Assets must have a tracked asset or inferred folder counterpart.
@@ -25,6 +29,9 @@ the checker reads their working-tree contents. Untracked assets are not checked.
 The workflow runs on PRs targeting `dev` or `main`, with read-only contents
 permission, SHA-pinned official actions, no persisted checkout credentials, and a
 three-minute job timeout. CI also runs the disposable-copy regression tests.
+Runs on the same workflow/ref cancel stale runs; the SDK is pinned to `8.0.427`.
+The harness removes stale `.test-repo` copies and cleans up on success or failure,
+including failures while creating the fixture. Linked fixture paths are rejected.
 NuGet dependencies are pinned by `packages.lock.json`
 and restored in locked mode. No repository secrets or Unity installation are used.
 
