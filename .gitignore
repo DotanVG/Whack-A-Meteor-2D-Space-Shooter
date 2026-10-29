@@ -71,8 +71,7 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
-# Temporary auto-generated .cs.meta files
-/[Aa]ssets/[Ss]cripts/Utilities/GameConstants.cs.meta
+# Temporary auto-generated .cs files (the existing tracked source remains tracked)
 /[Aa]ssets/[Ss]cripts/Utilities/GameConstants.cs
 
 # Claude Code — track studio config but ignore ephemeral session state
@@ -83,3 +82,9 @@ crashlytics-build.properties
 
 # Local-only QA checklist (not committed to repo)
 QA_CHECKLIST.md
+
+# Standalone license-free CI tool (Unity ignores generated project files above)
+!/tools/LicenseFreeChecks/LicenseFreeChecks.csproj
+/tools/LicenseFreeChecks/bin/
+/tools/LicenseFreeChecks/obj/
+/tools/LicenseFreeChecks/.test-repo/
