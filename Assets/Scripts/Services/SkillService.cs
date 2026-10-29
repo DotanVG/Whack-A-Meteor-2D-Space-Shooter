@@ -22,7 +22,7 @@ public class SkillService : MonoBehaviour
                 progress.OnSkillsChanged += () =>
                 {
                     // Standalone shopping uses the same persisted wallet. Refresh a live cache too.
-                    EconomyService.Instance?.ReloadWallet();
+                    if (EconomyService.Instance) EconomyService.Instance.ReloadWallet();
                     OnSkillsChanged?.Invoke();
                 };
             }
@@ -41,9 +41,19 @@ public class SkillService : MonoBehaviour
         }
     }
 
-    /// <summary>Definitions retain the original shop's visual order.</summary>
-    public static IReadOnlyList<SkillDefinition> Definitions => Tree.definitions;
+    /// <summary>Shop order follows tier, retaining list order within equal tiers.</summary>
+    public static IReadOnlyList<SkillDefinition> Definitions => Tree.OrderedDefinitions();
     public static event Action OnSkillsChanged;
+
+#if UNITY_EDITOR
+    /// <summary>Explicit isolated-progress hook for Editor tests; returns the previous instance.</summary>
+    public static SkillProgress SetProgressForTests(SkillProgress replacement)
+    {
+        var previous = progress;
+        progress = replacement;
+        return previous;
+    }
+#endif
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()

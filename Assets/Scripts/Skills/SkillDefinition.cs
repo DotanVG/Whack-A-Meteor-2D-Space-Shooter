@@ -32,7 +32,7 @@ public class SkillModifier
 [Serializable]
 public class SkillLevel
 {
-    public int legacyId;
+    public int legacyId = -1;
     public string label;
     public int costStardust;
     public int costMetal;

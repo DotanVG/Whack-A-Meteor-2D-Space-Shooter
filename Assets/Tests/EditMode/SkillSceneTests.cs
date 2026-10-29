@@ -13,10 +13,18 @@ public class SkillSceneTests
     [TestCase("Assets/Scenes/HyperdriveShop.unity")]
     public void Scene_loads_without_missing_scripts_or_serialized_references(string path)
     {
-        var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
-        foreach (var root in scene.GetRootGameObjects()) CheckHierarchy(root, path);
-        Debug.Log("[Phase1 QA] Scene checked: " + path);
-        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        var existing = SceneManager.GetSceneByPath(path);
+        bool opened = !existing.IsValid() || !existing.isLoaded;
+        var scene = opened ? EditorSceneManager.OpenScene(path, OpenSceneMode.Additive) : existing;
+        try
+        {
+            foreach (var root in scene.GetRootGameObjects()) CheckHierarchy(root, path);
+            Debug.Log("[Phase1 QA] Scene checked: " + path);
+        }
+        finally
+        {
+            if (opened) EditorSceneManager.CloseScene(scene, true);
+        }
     }
 
     [Test]
@@ -41,8 +49,9 @@ public class SkillSceneTests
         var assembly = AppDomain.CurrentDomain.GetAssemblies().Single(item => item.GetName().Name == "Assembly-CSharp");
         var serviceType = assembly.GetType("SkillService", true);
         var shopType = assembly.GetType("ShopController", true);
-        var field = serviceType.GetField("progress", BindingFlags.NonPublic | BindingFlags.Static);
-        object previous = field.GetValue(null);
+        var setProgress = serviceType.GetMethod("SetProgressForTests", BindingFlags.Public | BindingFlags.Static);
+        Assert.That(setProgress, Is.Not.Null);
+        object previous = null;
         var memory = new System.Collections.Generic.Dictionary<string, int>();
         var save = new ShopSave(memory);
         save.SetInt("Economy.Stardust", 100000);
@@ -52,7 +61,7 @@ public class SkillSceneTests
         gameObject.SetActive(false);
         try
         {
-            field.SetValue(null, progress);
+            previous = setProgress.Invoke(null, new object[] { progress });
             var shop = gameObject.AddComponent(shopType);
             var stateMethod = shopType.GetMethod("GetNodeState", BindingFlags.NonPublic | BindingFlags.Instance);
             var purchaseMethod = shopType.GetMethod("TryPurchase", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -78,7 +87,38 @@ public class SkillSceneTests
         }
         finally
         {
-            field.SetValue(null, previous);
+            setProgress.Invoke(null, new[] { previous });
+            UnityEngine.Object.DestroyImmediate(gameObject);
+        }
+    }
+
+    [Test]
+    public void ReloadWallet_reads_persistent_balances_and_emits_both_events_without_writing()
+    {
+        var assembly = AppDomain.CurrentDomain.GetAssemblies().Single(item => item.GetName().Name == "Assembly-CSharp");
+        var economyType = assembly.GetType("EconomyService", true);
+        var gameObject = new GameObject("Isolated ReloadWallet Test");
+        gameObject.SetActive(false);
+        var economy = gameObject.AddComponent(economyType);
+        int dustEvents = 0, metalEvents = 0;
+        Action<int> onDust = _ => dustEvents++;
+        Action<int> onMetal = _ => metalEvents++;
+        var dustEvent = economyType.GetEvent("OnStardustChanged");
+        var metalEvent = economyType.GetEvent("OnMetalChanged");
+        try
+        {
+            dustEvent.AddEventHandler(null, onDust);
+            metalEvent.AddEventHandler(null, onMetal);
+            economyType.GetMethod("ReloadWallet").Invoke(economy, null);
+            Assert.That(economyType.GetProperty("Stardust").GetValue(economy), Is.EqualTo(PlayerPrefs.GetInt("Economy.Stardust", 0)));
+            Assert.That(economyType.GetProperty("Metal").GetValue(economy), Is.EqualTo(PlayerPrefs.GetInt("Economy.Metal", 0)));
+            Assert.That(dustEvents, Is.EqualTo(1));
+            Assert.That(metalEvents, Is.EqualTo(1));
+        }
+        finally
+        {
+            dustEvent.RemoveEventHandler(null, onDust);
+            metalEvent.RemoveEventHandler(null, onMetal);
             UnityEngine.Object.DestroyImmediate(gameObject);
         }
     }

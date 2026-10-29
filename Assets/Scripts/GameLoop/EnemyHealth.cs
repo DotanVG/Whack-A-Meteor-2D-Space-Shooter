@@ -6,7 +6,7 @@ using UnityEngine;
 ///
 /// SETUP:
 ///   - Attach to your meteor prefab alongside MeteorMover.
-///   - The GameObject must be tagged "Enemy" so AutoShooter and Bullet can find it.
+///   - The GameObject must be tagged "Enemy" so AutoShooter and ProjectileController can find it.
 ///
 /// PLANNED UPGRADES:
 ///   - Spawn explosion VFX on Die() (particle system prefab via Inspector field)
@@ -32,7 +32,7 @@ public class EnemyHealth : MonoBehaviour
     }
 
     /// <summary>
-    /// Called by Bullet.cs on collision. Reduces health and triggers die if <= 0.
+    /// Called by ProjectileController.cs on collision. Reduces health and triggers die if <= 0.
     /// Public so other damage sources (e.g. player ramming, area-of-effect) can call it directly.
     /// </summary>
     public void TakeDamage(int amount)
@@ -64,7 +64,7 @@ public class EnemyHealth : MonoBehaviour
         // Boss handles its own Metal award and logging
         BossController boss = GetComponent<BossController>();
         if (boss != null) boss.OnBossDeath();
-        else EconomyService.Instance?.EarnMetalFromEnemy(ef?.faction);
+        else if (EconomyService.Instance) EconomyService.Instance.EarnMetalFromEnemy(ef?.faction);
 
         // Phase 6: drop powerup
         PowerupSpawner.Instance?.TryDrop(transform.position);

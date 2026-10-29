@@ -3,11 +3,11 @@ using UnityEngine;
 
 /// <summary>
 /// WaveManager — orchestrates the game's difficulty progression.
-/// Controls MeteorSpawnerGL's spawnRate and meteorSpeed as waves advance.
+/// Controls MeteorSpawner's spawnRate and meteorSpeed as waves advance.
 ///
 /// SETUP:
-///   1. Attach to the same "GameManager" GameObject as MeteorSpawnerGL.
-///   2. Assign the MeteorSpawnerGL reference in the Inspector.
+///   1. Attach to the same "GameManager" GameObject as MeteorSpawner.
+///   2. Assign the MeteorSpawner reference in the Inspector.
 ///   3. Wave advances automatically after a time limit (enemy-count-based clear is a future task).
 ///
 /// WAVE LOGIC:

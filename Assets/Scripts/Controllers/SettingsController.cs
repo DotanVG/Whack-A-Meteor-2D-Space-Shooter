@@ -144,7 +144,7 @@ public class SettingsController : MonoBehaviour
         PlayerPrefs.Save();
         _confirmReset = false;
         selectedButtonIndex = 0;
-        Debug.Log("[Settings] Progression reset — all persistent data cleared.");
+        Debug.Log("[Settings] Progression reset — wallet, XP/level, run data, current skills and legacy skill keys cleared.");
     }
 
     void EnsureStyles()

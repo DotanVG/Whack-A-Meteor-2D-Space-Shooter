@@ -172,7 +172,7 @@ public class MeteorSplit : MonoBehaviour
         }
         ScorePopup.Spawn(transform.position, points);
 
-        EconomyService.Instance?.EarnFromMeteor(hitTag);
+        if (EconomyService.Instance) EconomyService.Instance.EarnFromMeteor(hitTag);
         MeteorDropSpawner.Instance?.TryDrop(transform.position, hitTag);
 
         if (projectileHitClip != null)
@@ -201,7 +201,7 @@ public class MeteorSplit : MonoBehaviour
         }
         ScorePopup.Spawn(transform.position, points);
 
-        EconomyService.Instance?.EarnFromMeteor(hitTag);
+        if (EconomyService.Instance) EconomyService.Instance.EarnFromMeteor(hitTag);
         MeteorDropSpawner.Instance?.TryDrop(transform.position, hitTag);
 
         if (hammerHitClip != null)

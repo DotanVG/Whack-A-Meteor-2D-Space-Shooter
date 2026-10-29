@@ -38,6 +38,6 @@ public class ScoreManager : MonoBehaviour
         // TODO: trigger floating +score text at enemy position
     }
 
-    /// <summary>Returns current score — used by PlayerHealthGL.Die() to pass to Game Over screen.</summary>
+    /// <summary>Returns current score — used by PlayerHealth.Die() to pass to Game Over screen.</summary>
     public int GetScore() => _score;
 }

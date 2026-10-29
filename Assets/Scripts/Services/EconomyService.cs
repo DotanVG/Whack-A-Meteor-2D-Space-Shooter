@@ -40,6 +40,11 @@ public class EconomyService : MonoBehaviour
                   $"| Stardust:{Stardust}  Metal:{Metal}");
     }
 
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
     // -- Public earn methods - called by kill handlers ---
 
     /// <summary>

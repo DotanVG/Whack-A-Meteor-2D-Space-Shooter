@@ -29,7 +29,7 @@ public class BossController : MonoBehaviour
     public void OnBossDeath()
     {
         int metalDrop = BalanceService.Instance?.GetInt("boss.metal_drop", 20) ?? 20;
-        EconomyService.Instance?.AddMetal(metalDrop);
+        if (EconomyService.Instance) EconomyService.Instance.AddMetal(metalDrop);
         GameLogger.BossKilled(
             FindObjectOfType<WaveManager>()?.currentWave ?? 0,
             Time.timeSinceLevelLoad);

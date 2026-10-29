@@ -40,6 +40,7 @@ public class SkillProgressTests
 
     private SkillTree tree;
     private LegacyRow[] golden;
+    private IEnumerable<SkillDefinition> LegacyDefinitions => tree.definitions.Where(item => item.levels.Any(level => level.legacyId >= 0));
     private MemorySave save;
     private SkillProgress progress;
 
@@ -63,9 +64,9 @@ public class SkillProgressTests
     public void Tree_matches_every_legacy_shop_row_cost_label_order_and_prerequisite()
     {
         Assert.That(tree.Validate(), Is.Empty);
-        Assert.That(tree.definitions.Count, Is.EqualTo(12));
+        Assert.That(LegacyDefinitions.Count(), Is.EqualTo(12));
         int row = 0;
-        foreach (var definition in tree.definitions)
+        foreach (var definition in LegacyDefinitions)
         {
             for (int index = 0; index < definition.MaxLevel; index++)
             {
@@ -107,7 +108,7 @@ public class SkillProgressTests
             Assert.That(save.GetInt("Economy.Metal"), Is.EqualTo(metal - row.costMetal));
         }
         Assert.That(events, Is.EqualTo(18));
-        foreach (var definition in tree.definitions)
+        foreach (var definition in LegacyDefinitions)
         {
             int before = save.GetInt("Economy.Stardust");
             Assert.That(progress.TryPurchase(definition.id, out string reason), Is.False);
@@ -116,7 +117,7 @@ public class SkillProgressTests
         }
         Assert.That(events, Is.EqualTo(18));
         var reloaded = NewProgress();
-        foreach (var definition in tree.definitions)
+        foreach (var definition in LegacyDefinitions)
             Assert.That(reloaded.GetLevel(definition.id), Is.EqualTo(definition.MaxLevel));
     }
 
@@ -215,6 +216,9 @@ public class SkillProgressTests
         migrated.OnSkillsChanged += () => events++;
         migrated.ResetAll();
         Assert.That(events, Is.EqualTo(1));
+        for (int legacyId = 0; legacyId < 18; legacyId++)
+            Assert.That(save.values.ContainsKey("Skill." + legacyId), Is.False);
+        save.DeleteKey(SkillProgress.SaveVersionKey);
         var reloaded = NewProgress();
         foreach (var definition in tree.definitions) Assert.That(reloaded.GetLevel(definition.id), Is.Zero);
     }
@@ -233,21 +237,36 @@ public class SkillProgressTests
     }
 
     [Test]
-    public void All_262144_owned_combinations_match_legacy_modifier_bits()
+    public void All_262144_owned_combinations_match_legacy_modifier_bits() => CheckAllLegacyMasks(false);
+
+    [Test]
+    public void All_262144_legacy_masks_migrate_from_fresh_saves_and_match_modifier_bits() => CheckAllLegacyMasks(true);
+
+    private void CheckAllLegacyMasks(bool migrate)
     {
         // Exhaustive comparison, including impossible/corrupt combinations, against the old getter formulas.
-        var stats = (SkillStat[])Enum.GetValues(typeof(SkillStat));
+        var stats = ((SkillStat[])Enum.GetValues(typeof(SkillStat))).Where(stat => (int)stat <= (int)SkillStat.SlamWave).ToArray();
         var expected = new float[stats.Length];
         for (int mask = 0; mask < (1 << 18); mask++)
         {
-            foreach (var definition in tree.definitions)
+            if (migrate)
+            {
+                save = new MemorySave();
+                for (int legacyId = 0; legacyId < 18; legacyId++)
+                    if (Has(mask, legacyId)) save.SetInt("Skill." + legacyId, 1);
+                progress = NewProgress();
+                if (save.GetInt(SkillProgress.SaveVersionKey) != 1 || save.legacyReads == 0)
+                    Assert.Fail("Migration did not run at mask " + mask);
+            }
+            else
+            foreach (var definition in LegacyDefinitions)
             {
                 int highest = 0;
                 for (int level = 0; level < definition.MaxLevel; level++)
                     if (Has(mask, definition.levels[level].legacyId)) highest = level + 1;
                 save.SetInt(SkillProgress.Key(definition.id), highest);
             }
-            progress.Load();
+            if (!migrate) progress.Load();
             expected[0] = Has(mask, 1) ? 2f : Has(mask, 0) ? 1.5f : 1f;
             expected[1] = Has(mask, 2) ? .5f : 1f;
             expected[2] = Has(mask, 3) ? 1.3f : 1f;
@@ -268,6 +287,83 @@ public class SkillProgressTests
     }
 
     private static bool Has(int mask, int id) => (mask & (1 << id)) != 0;
+
+    [TestCase(-1)]
+    [TestCase(int.MinValue)]
+    public void Negative_migration_marker_runs_migration(int marker)
+    {
+        save.SetInt(SkillProgress.SaveVersionKey, marker);
+        save.SetInt("Skill.1", 1);
+        Assert.That(NewProgress().GetLevel("autoshooter.fire_rate"), Is.EqualTo(2));
+        Assert.That(save.GetInt(SkillProgress.SaveVersionKey), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void Partial_migration_max_merges_new_and_legacy_levels_without_a_marker()
+    {
+        save.DeleteKey(SkillProgress.SaveVersionKey);
+        save.SetInt(SkillProgress.Key("autoshooter.fire_rate"), 1);
+        save.SetInt(SkillProgress.Key("hammer.lightning"), 3);
+        save.SetInt("Skill.1", 1);
+        save.SetInt("Skill.15", 1);
+        var migrated = NewProgress();
+        Assert.That(migrated.GetLevel("autoshooter.fire_rate"), Is.EqualTo(2));
+        Assert.That(migrated.GetLevel("hammer.lightning"), Is.EqualTo(3));
+    }
+
+    [Test]
+    public void Garbage_string_marker_uses_missing_int_fallback_and_migrates()
+    {
+        string prefix = "Wam.Phase2.Tests." + Guid.NewGuid().ToString("N") + ".";
+        var isolated = new PlayerPrefsSkillSave(prefix);
+        try
+        {
+            PlayerPrefs.SetString(prefix + SkillProgress.SaveVersionKey, "garbage");
+            isolated.SetInt("Skill.1", 1);
+            var migrated = new SkillProgress(tree, isolated, new SkillWallet(isolated));
+            Assert.That(migrated.GetLevel("autoshooter.fire_rate"), Is.EqualTo(2));
+            Assert.That(isolated.GetInt(SkillProgress.SaveVersionKey), Is.EqualTo(1));
+        }
+        finally
+        {
+            foreach (var definition in tree.definitions) isolated.DeleteKey(SkillProgress.Key(definition.id));
+            isolated.DeleteKey("Skill.1");
+            isolated.DeleteKey(SkillProgress.SaveVersionKey);
+            isolated.Save();
+        }
+    }
+
+    [TestCase("a.b", true)] [TestCase("a0.b_1.c2", true)]
+    [TestCase("a.b\n", true)] [TestCase("a_b.c", false)]
+    [TestCase("A.b", false)] [TestCase("a.B", false)]
+    [TestCase("a.1b", false)] [TestCase("a._b", false)]
+    [TestCase("a..b", false)] [TestCase("a.b.", false)]
+    [TestCase("ab", false)] [TestCase("a.b-c", false)]
+    [TestCase("a.b\r\n", false)] [TestCase("a.b\nc", false)]
+    [TestCase("", false)] [TestCase(null, false)]
+    public void Id_char_validation_preserves_the_original_expression(string id, bool accepted)
+    {
+        Assert.That(SkillTree.IsValidId(id), Is.EqualTo(accepted));
+    }
+
+    [Test]
+    public void Tier_sort_preserves_current_visible_order_and_is_stable()
+    {
+        var ordered = tree.OrderedDefinitions();
+        foreach (SkillBranch branch in Enum.GetValues(typeof(SkillBranch)))
+            Assert.That(ordered.Where(item => item.branch == branch).Select(item => item.id),
+                Is.EqualTo(tree.definitions.Where(item => item.branch == branch).Select(item => item.id)));
+        var temporary = ScriptableObject.CreateInstance<SkillTree>();
+        try
+        {
+            temporary.definitions.AddRange(tree.definitions.AsEnumerable().Reverse());
+            var sorted = temporary.OrderedDefinitions();
+            Assert.That(sorted.Select(item => item.tier), Is.Ordered);
+            foreach (var group in sorted.GroupBy(item => item.tier))
+                Assert.That(group, Is.EqualTo(temporary.definitions.Where(item => item.tier == group.Key)));
+        }
+        finally { UnityEngine.Object.DestroyImmediate(temporary); }
+    }
 
     [Test]
     public void Validation_rejects_duplicate_ids_missing_prerequisites_cycles_and_negative_costs()

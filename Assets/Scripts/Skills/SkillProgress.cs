@@ -58,7 +58,7 @@ public sealed class SkillProgress
             if (migrate)
             {
                 for (int index = 0; index < definition.MaxLevel; index++)
-                    if (save.GetInt("Skill." + definition.levels[index].legacyId) == 1)
+                    if (definition.levels[index].legacyId >= 0 && save.GetInt("Skill." + definition.levels[index].legacyId) == 1)
                         level = Math.Max(level, index + 1);
                 save.SetInt(Key(definition.id), level);
             }
@@ -126,7 +126,7 @@ public sealed class SkillProgress
         return true;
     }
 
-    /// <summary>Clears new progress without allowing retained old keys to resurrect purchases.</summary>
+    /// <summary>Clears current and legacy progress, even if the migration marker is later lost.</summary>
     public void ResetAll()
     {
         foreach (var definition in tree.definitions)
@@ -134,6 +134,7 @@ public sealed class SkillProgress
             owned[definition.id] = 0;
             save.DeleteKey(Key(definition.id));
         }
+        for (int legacyId = 0; legacyId < 18; legacyId++) save.DeleteKey("Skill." + legacyId);
         save.SetInt(SaveVersionKey, 1);
         save.Save();
         OnSkillsChanged?.Invoke();
