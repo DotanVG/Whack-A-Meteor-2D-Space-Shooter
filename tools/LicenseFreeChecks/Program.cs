@@ -33,7 +33,8 @@ bool IsUnityIgnored(string path) => path.Split('/').Any(name =>
     name.EndsWith("~", StringComparison.Ordinal) ||
     name.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase) ||
     name.Equals("cvs", StringComparison.OrdinalIgnoreCase));
-var assets = tracked.Where(path => path.StartsWith("Assets/", StringComparison.Ordinal))
+var trackedAssets = tracked.Where(path => path.StartsWith("Assets/", StringComparison.Ordinal)).ToArray();
+var assets = trackedAssets
     .Where(path => !IsUnityIgnored(path))
     .OrderBy(path => path, StringComparer.Ordinal).ToArray();
 var errors = 0;
@@ -46,9 +47,10 @@ void Fail(string message)
 if (assets.Length == 0)
     Fail("No tracked files under Assets; run against the Unity repository root.");
 
-// Git tracks files, so derive folders from the tracked paths, not local directories.
+// Include ignored contents: .gitkeep-only and Samples~-only parents are real folders.
+// Git tracks files, so derive folders from all tracked Assets paths, not local directories.
 var folders = new HashSet<string>(StringComparer.Ordinal);
-foreach (var path in assets)
+foreach (var path in trackedAssets)
 {
     var parent = path;
     while ((parent = parent[..parent.LastIndexOf('/')]) != "Assets")
@@ -57,7 +59,8 @@ foreach (var path in assets)
         Fail($"Tracked file is missing from the working tree: {path}");
 }
 
-foreach (var path in assets.Where(path => !path.EndsWith(".meta", StringComparison.Ordinal)).Concat(folders))
+foreach (var path in assets.Where(path => !path.EndsWith(".meta", StringComparison.Ordinal))
+    .Concat(folders.Where(path => !IsUnityIgnored(path))))
 {
     if (!tracked.Contains(path + ".meta"))
         Fail($"Missing tracked .meta: {path}.meta");
@@ -113,9 +116,23 @@ foreach (var script in scripts)
         Fail(diagnostic.ToString());
 }
 
-// Feature-version errors are compilation diagnostics, not syntax-tree diagnostics.
-var compilation = CSharpCompilation.Create("LanguageVersionCheck", trees);
-foreach (var diagnostic in compilation.GetDiagnostics().Where(item => item.Id == "CS8773"))
+// Binding needs BCL types to produce feature-version errors such as >>> and span patterns.
+// Use the checker's .NET 8 runtime on Windows and Linux; no Unity assemblies are loaded.
+var runtimeDirectory = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
+var references = new[]
+{
+    MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+    MetadataReference.CreateFromFile(Path.Combine(runtimeDirectory, "System.Runtime.dll"))
+};
+var compilation = CSharpCompilation.Create("LanguageVersionCheck", trees, references);
+// Keep this a language-version gate: unresolved Unity types and other semantic errors
+// (including CS0246, CS0103 and CS0518) must remain outside this allowlist.
+var languageVersionErrors = new HashSet<string>(StringComparer.Ordinal)
+{
+    "CS8773", "CS8703", "CS8652", "CS8967"
+};
+foreach (var diagnostic in compilation.GetDiagnostics().Where(item =>
+    item.Severity == DiagnosticSeverity.Error && languageVersionErrors.Contains(item.Id)))
     Fail(diagnostic.ToString());
 
 Console.WriteLine($"Checked {scripts.Length} C# scripts, {metas.Length} .meta files, " +
