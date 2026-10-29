@@ -75,8 +75,6 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]cripts/Utilities/GameConstants.cs.meta
 /[Aa]ssets/[Ss]cripts/Utilities/GameConstants.cs
 
-/Assets/Scripts/Utilities/CameraShake.cs.meta
-
 # Claude Code — track studio config but ignore ephemeral session state
 !.claude/
 .claude/agent-memory/

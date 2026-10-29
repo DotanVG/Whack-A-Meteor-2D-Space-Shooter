@@ -154,12 +154,13 @@ public class GameManager : MonoBehaviour
 
         if (inputManager != null)
         {
+            // Esc is both pause and cancel. Handle pause first and skip cancel
+            // for that frame so pause toggles instead of loading the main menu.
             if (!isGameOver && inputManager.GetPause())
             {
                 TogglePause();
             }
-
-            if (!isGameOver && isPaused && inputManager.GetCancel())
+            else if (!isGameOver && isPaused && inputManager.GetCancel())
             {
                 SceneManager.LoadScene("MainMenu");
                 Time.timeScale = 1f;
