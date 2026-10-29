@@ -1,0 +1,202 @@
+{
+  "rows": [
+    {
+      "legacyId": 0,
+      "displayName": "Fire Rate",
+      "label": "Lv 1",
+      "costStardust": 500,
+      "costMetal": 0,
+      "prereqId": -1,
+      "branch": 0,
+      "newId": "autoshooter.fire_rate",
+      "level": 1
+    },
+    {
+      "legacyId": 1,
+      "displayName": "Fire Rate",
+      "label": "Lv 2",
+      "costStardust": 800,
+      "costMetal": 0,
+      "prereqId": 0,
+      "branch": 0,
+      "newId": "autoshooter.fire_rate",
+      "level": 2
+    },
+    {
+      "legacyId": 2,
+      "displayName": "Accuracy",
+      "label": "Lv 1",
+      "costStardust": 600,
+      "costMetal": 0,
+      "prereqId": 1,
+      "branch": 0,
+      "newId": "autoshooter.accuracy",
+      "level": 1
+    },
+    {
+      "legacyId": 3,
+      "displayName": "Proj. Speed",
+      "label": "Lv 1",
+      "costStardust": 700,
+      "costMetal": 0,
+      "prereqId": 2,
+      "branch": 0,
+      "newId": "autoshooter.projectile_speed",
+      "level": 1
+    },
+    {
+      "legacyId": 12,
+      "displayName": "Target Priority",
+      "label": "",
+      "costStardust": 900,
+      "costMetal": 0,
+      "prereqId": 3,
+      "branch": 0,
+      "newId": "autoshooter.target_priority",
+      "level": 1
+    },
+    {
+      "legacyId": 4,
+      "displayName": "AOE Radius",
+      "label": "Lv 1",
+      "costStardust": 500,
+      "costMetal": 0,
+      "prereqId": -1,
+      "branch": 1,
+      "newId": "hammer.radius",
+      "level": 1
+    },
+    {
+      "legacyId": 5,
+      "displayName": "AOE Radius",
+      "label": "Lv 2",
+      "costStardust": 800,
+      "costMetal": 0,
+      "prereqId": 4,
+      "branch": 1,
+      "newId": "hammer.radius",
+      "level": 2
+    },
+    {
+      "legacyId": 6,
+      "displayName": "Score Mult",
+      "label": "Lv 1",
+      "costStardust": 1000,
+      "costMetal": 0,
+      "prereqId": 5,
+      "branch": 1,
+      "newId": "hammer.score",
+      "level": 1
+    },
+    {
+      "legacyId": 7,
+      "displayName": "Slam Wave",
+      "label": "Lv 1",
+      "costStardust": 500,
+      "costMetal": 800,
+      "prereqId": 6,
+      "branch": 1,
+      "newId": "hammer.slam_wave",
+      "level": 1
+    },
+    {
+      "legacyId": 15,
+      "displayName": "Lightning",
+      "label": "Lv 1",
+      "costStardust": 700,
+      "costMetal": 200,
+      "prereqId": 7,
+      "branch": 1,
+      "newId": "hammer.lightning",
+      "level": 1
+    },
+    {
+      "legacyId": 16,
+      "displayName": "Lightning",
+      "label": "Lv 2",
+      "costStardust": 1000,
+      "costMetal": 400,
+      "prereqId": 15,
+      "branch": 1,
+      "newId": "hammer.lightning",
+      "level": 2
+    },
+    {
+      "legacyId": 17,
+      "displayName": "Lightning",
+      "label": "Lv 3",
+      "costStardust": 1400,
+      "costMetal": 700,
+      "prereqId": 16,
+      "branch": 1,
+      "newId": "hammer.lightning",
+      "level": 3
+    },
+    {
+      "legacyId": 8,
+      "displayName": "Move Speed",
+      "label": "Lv 1",
+      "costStardust": 400,
+      "costMetal": 0,
+      "prereqId": -1,
+      "branch": 2,
+      "newId": "ship.move_speed",
+      "level": 1
+    },
+    {
+      "legacyId": 9,
+      "displayName": "Move Speed",
+      "label": "Lv 2",
+      "costStardust": 650,
+      "costMetal": 0,
+      "prereqId": 8,
+      "branch": 2,
+      "newId": "ship.move_speed",
+      "level": 2
+    },
+    {
+      "legacyId": 10,
+      "displayName": "Boost Duration",
+      "label": "Lv 1",
+      "costStardust": 750,
+      "costMetal": 0,
+      "prereqId": 9,
+      "branch": 2,
+      "newId": "ship.boost_duration",
+      "level": 1
+    },
+    {
+      "legacyId": 13,
+      "displayName": "Shield",
+      "label": "Lv 1",
+      "costStardust": 600,
+      "costMetal": 0,
+      "prereqId": 10,
+      "branch": 2,
+      "newId": "ship.shield",
+      "level": 1
+    },
+    {
+      "legacyId": 14,
+      "displayName": "Shield",
+      "label": "Lv 2",
+      "costStardust": 900,
+      "costMetal": 400,
+      "prereqId": 13,
+      "branch": 2,
+      "newId": "ship.shield",
+      "level": 2
+    },
+    {
+      "legacyId": 11,
+      "displayName": "Invincibility",
+      "label": "Lv 1",
+      "costStardust": 1200,
+      "costMetal": 600,
+      "prereqId": 14,
+      "branch": 2,
+      "newId": "ship.invincibility",
+      "level": 1
+    }
+  ]
+}

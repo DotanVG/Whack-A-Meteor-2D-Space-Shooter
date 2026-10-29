@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a521b0fa67a5482acd2a0be7d30ca1c, type: 3}
+  m_Name: hammer_slam_wave
+  m_EditorClassIdentifier:
+  id: hammer.slam_wave
+  displayName: Slam Wave
+  branch: 1
+  tier: 3
+  prerequisiteIds:
+  - hammer.score
+  effect: 2
+  levels:
+  - legacyId: 7
+    label: "Lv 1"
+    costStardust: 500
+    costMetal: 800
+    modifiers:
+    - stat: 12
+      operation: 0
+      value: 1
