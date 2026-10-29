@@ -1,3 +1,4 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using UnityEngine;
 
 /// <summary>
@@ -81,3 +82,19 @@ public class DevMode : MonoBehaviour
         };
     }
 }
+#else
+using UnityEngine;
+
+/// <summary>
+/// Release-build stub. The cheat implementation above is compiled only in the Editor and
+/// development builds, so release builds can never reach god mode, infinite currency, the
+/// all-skills override (F3) or the currency dump. The class and its script GUID stay, so the
+/// component serialized in Game.unity still resolves.
+/// </summary>
+public class DevMode : MonoBehaviour
+{
+    public static bool GodMode => false;
+    public static bool InfiniteCurrency => false;
+    public static bool AllSkillsOwned => false;
+}
+#endif
