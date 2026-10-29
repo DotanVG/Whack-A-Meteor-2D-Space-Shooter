@@ -155,6 +155,7 @@ public class MeteorSplit : MonoBehaviour
     public void OnProjectileHit()
     {
         if (_hit) return;
+        _hit = true;
 
         string hitTag  = gameObject.tag;
         bool   splits  = !hitTag.StartsWith("Tiny");
@@ -182,6 +183,7 @@ public class MeteorSplit : MonoBehaviour
     public void OnHammerHit()
     {
         if (_hit) return;
+        _hit = true;
 
         string hitTag  = gameObject.tag;
         bool   splits  = !hitTag.StartsWith("Tiny");
