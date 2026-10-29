@@ -2,15 +2,15 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// ShopController — The Hyperdrive Shop.
+/// ShopController - The Hyperdrive Shop.
 ///
 /// Self-contained scene (no GameServices required).
-/// Reads Stardust + Metal + skill ownership directly from PlayerPrefs.
-/// Writes back on purchase without needing EconomyService or SkillService in the scene.
+/// Uses the shared skill service for ownership and purchases.
+/// The service supports standalone scenes without a GameServices component.
 ///
 /// Tabs: Skills | Ship Skins
 /// Navigate tabs: Q/E keyboard  or  LB/RB gamepad.
-/// Back / ESC → MainMenu.
+/// Back / ESC -> MainMenu.
 /// </summary>
 public class ShopController : MonoBehaviour
 {
@@ -20,18 +20,17 @@ public class ShopController : MonoBehaviour
 
     private InputManager inputManager;
 
-    // ── Wallet (loaded from PlayerPrefs) ──────────────────────────────────────
+    // -- Wallet (loaded from PlayerPrefs) ---
     private int  _stardust;
     private int  _metal;
     private int  _level;
-    private bool[] _skillOwned = new bool[SkillService.SkillCount];
 
-    // ── Purchase feedback ─────────────────────────────────────────────────────
+    // -- Purchase feedback ---
     private string _feedback      = "";
     private float  _feedbackTimer = 0f;
     private bool   _feedbackError = false;
 
-    // ── Styles ────────────────────────────────────────────────────────────────
+    // -- Styles ---
     private GUIStyle _titleStyle;
     private GUIStyle _subtitleStyle;
     private GUIStyle _tabActiveStyle;
@@ -47,12 +46,12 @@ public class ShopController : MonoBehaviour
 
     private static readonly string[] TabNames = { "  Skills  ", "  Ship Skins  " };
 
-    // ── Ship skins data ───────────────────────────────────────────────────────
+    // -- Ship skins data ---
     private static readonly string[] SkinNames  = { "Viper (Default)", "Inferno", "Frost", "Shadow", "Golden Eagle" };
     private static readonly string[] SkinCosts  = { "Equipped",        "1200 ★",  "1200 ★","1000 ⚙", "2000 ★ + 500 ⚙" };
     private static readonly bool[]   SkinOwned  = { true,              false,     false,   false,    false };
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    // -- Lifecycle ---
 
     void Awake()
     {
@@ -80,11 +79,10 @@ public class ShopController : MonoBehaviour
         _stardust = PlayerPrefs.GetInt("Economy.Stardust", 0);
         _metal    = PlayerPrefs.GetInt("Economy.Metal",    0);
         _level    = PlayerPrefs.GetInt("Progression.Level", 1);
-        for (int i = 0; i < SkillService.SkillCount; i++)
-            _skillOwned[i] = PlayerPrefs.GetInt($"Skill.{i}", 0) == 1;
+        SkillService.Current.Load();
     }
 
-    // ── Update ────────────────────────────────────────────────────────────────
+    // -- Update ---
 
     void Update()
     {
@@ -113,7 +111,7 @@ public class ShopController : MonoBehaviour
         }
     }
 
-    // ── OnGUI ─────────────────────────────────────────────────────────────────
+    // -- OnGUI ---
 
     void OnGUI()
     {
@@ -122,16 +120,16 @@ public class ShopController : MonoBehaviour
         float sw = Screen.width;
         float sh = Screen.height;
 
-        // ── Top bar (height 84) ────────────────────────────────────────────────
+        // -- Top bar (height 84) ---
         const float TOP_BAR = 84f;
         GUI.Box(new Rect(0, 0, sw, TOP_BAR), GUIContent.none);
 
-        // ── Background tint below the top bar only ────────────────────────────
+        // -- Background tint below the top bar only ---
         GUI.color = new Color(0f, 0f, 0f, 0.55f);
         GUI.DrawTexture(new Rect(0, TOP_BAR, sw, sh - TOP_BAR), Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        // ── Currency — top LEFT ────────────────────────────────────────────────
+        // -- Currency - top LEFT ---
         float cy = 10f;
         var sdStyle  = new GUIStyle(_currencyStyle) { normal = { textColor = new Color(1f, 0.85f, 0.2f) } };
         var metStyle = new GUIStyle(_currencyStyle) { normal = { textColor = new Color(0.75f, 0.78f, 0.82f) } };
@@ -140,17 +138,17 @@ public class ShopController : MonoBehaviour
         GUI.Label(new Rect(12, cy + 42, 180, 18), $"Level {_level}",
                   new GUIStyle(_bodyStyle) { fontSize = 12, normal = { textColor = new Color(0.6f, 0.6f, 0.6f) } });
 
-        // ── Title — center ────────────────────────────────────────────────────
+        // -- Title - center ---
         GUI.Label(new Rect(sw / 2f - 200, 10, 400, 38), "THE HYPERDRIVE SHOP", _titleStyle);
 
-        // ── Top-right buttons ─────────────────────────────────────────────────
+        // -- Top-right buttons ---
         float btnW = 130f, btnH = 28f, btnX = sw - btnW - 8f;
         if (GUI.Button(new Rect(btnX, 28, btnW, btnH), "▶  Play Game"))
             SceneManager.LoadScene("Game");
         if (GUI.Button(new Rect(btnX - btnW - 6, 28, btnW, btnH), "← Main Menu"))
             SceneManager.LoadScene("MainMenu");
 
-        // ── Tab bar ───────────────────────────────────────────────────────────
+        // -- Tab bar ---
         float tabY    = TOP_BAR + 6f;
         float tabW    = 130f;
         float tabStartX = sw / 2f - (TabNames.Length * tabW) / 2f;
@@ -184,7 +182,7 @@ public class ShopController : MonoBehaviour
                   new GUIStyle(_bodyStyle) { fontSize = 11, alignment = TextAnchor.MiddleRight,
                                              normal = { textColor = new Color(0.45f, 0.45f, 0.45f) } });
 
-        // ── Content area ──────────────────────────────────────────────────────
+        // -- Content area ---
         float contentY = tabY + 58f;
         Rect contentArea = new Rect(12, contentY, sw - 24, sh - contentY - 8);
 
@@ -195,7 +193,7 @@ public class ShopController : MonoBehaviour
         }
     }
 
-    // ── Skills tab ────────────────────────────────────────────────────────────
+    // -- Skills tab ---
 
     void DrawSkillsTab(Rect area)
     {
@@ -212,23 +210,26 @@ public class ShopController : MonoBehaviour
 
         // Pre-count nodes per column so connectors stop at the last node
         int[] colCounts = new int[3];
-        foreach (var def in SkillService.All)
-            colCounts[def.column]++;
+        foreach (var def in SkillService.Definitions)
+            colCounts[(int)def.branch] += def.MaxLevel;
 
         for (int col = 0; col < 3; col++)
         {
             float cx  = area.x + col * colW + 8;
             int   row = 0;
-            foreach (var def in SkillService.All)
+            foreach (var def in SkillService.Definitions)
             {
-                if (def.column != col) continue;
-                float ny    = rowY + row * (nodeH + gapY);
-                var   state = GetNodeState(def.id);
-                if (DrawSkillNode(cx, ny, nodeW, nodeH, def, state))
-                    TryPurchase(def.id);
-                if (row < colCounts[col] - 1)
-                    DrawConnector(cx + nodeW / 2f, ny + nodeH, gapY);
-                row++;
+                if ((int)def.branch != col) continue;
+                for (int level = 1; level <= def.MaxLevel; level++)
+                {
+                    float ny    = rowY + row * (nodeH + gapY);
+                    var   state = GetNodeState(def, level);
+                    if (DrawSkillNode(cx, ny, nodeW, nodeH, def, level, state))
+                        TryPurchase(def);
+                    if (row < colCounts[col] - 1)
+                        DrawConnector(cx + nodeW / 2f, ny + nodeH, gapY);
+                    row++;
+                }
             }
         }
 
@@ -239,47 +240,38 @@ public class ShopController : MonoBehaviour
 
     enum NodeState { Available, Locked, Owned }
 
-    NodeState GetNodeState(int id)
+    NodeState GetNodeState(SkillDefinition definition, int level)
     {
-        if (_skillOwned[id]) return NodeState.Owned;
-        int prereqId = -1;
-        foreach (var d in SkillService.All)
-            if (d.id == id) { prereqId = d.prereqId; break; }
-        if (prereqId >= 0 && !_skillOwned[prereqId]) return NodeState.Locked;
+        int owned = SkillService.Current.GetLevel(definition.id);
+        if (owned >= level) return NodeState.Owned;
+        if (level != owned + 1 || !SkillService.Current.PrerequisitesMet(definition.id))
+            return NodeState.Locked;
         return NodeState.Available;
     }
 
-    bool CanAfford(SkillService.SkillDef def)
-        => _stardust >= def.costStardust && _metal >= def.costMetal;
-
-    void TryPurchase(int id)
+    void TryPurchase(SkillDefinition definition)
     {
-        var def = SkillService.All[id];
-        if (!CanAfford(def))
+        int level = SkillService.Current.GetLevel(definition.id);
+        if (!SkillService.Current.TryPurchase(definition.id, out string reason))
         {
-            _feedback      = _metal < def.costMetal ? "Not enough Metal!" : "Not enough Stardust!";
+            _feedback = reason;
             _feedbackTimer = 2f;
             _feedbackError = true;
             return;
         }
-        _stardust -= def.costStardust;
-        _metal    -= def.costMetal;
-        PlayerPrefs.SetInt("Economy.Stardust", _stardust);
-        PlayerPrefs.SetInt("Economy.Metal",    _metal);
-        PlayerPrefs.SetInt($"Skill.{id}",      1);
-        PlayerPrefs.Save();
-        _skillOwned[id] = true;
-        _feedback      = $"✓  {def.name} {def.levelLabel} unlocked!";
+        LoadState();
+        _feedback = $"\u2713  {definition.displayName} {definition.levels[level].label} unlocked!";
         _feedbackTimer = 2.5f;
         _feedbackError = false;
     }
 
-    // ── Node drawing ──────────────────────────────────────────────────────────
+    // -- Node drawing ---
 
     /// <summary>Returns true if the node was clicked (Available nodes only).</summary>
     bool DrawSkillNode(float x, float y, float w, float h,
-                       SkillService.SkillDef def, NodeState state)
+                       SkillDefinition def, int level, NodeState state)
     {
+        var data = def.levels[level - 1];
         bool clicked = false;
         var  r       = new Rect(x, y, w, h);
 
@@ -301,7 +293,7 @@ public class ShopController : MonoBehaviour
                         : new Color(0.5f, 0.5f, 0.5f);
 
         GUI.Label(new Rect(x + 8, y + 4, w - 16, 18),
-                  $"{def.name}  {def.levelLabel}",
+                  $"{def.displayName}  {data.label}",
                   new GUIStyle(_bodyStyle) { fontStyle = FontStyle.Bold,
                                              normal    = { textColor = nameColor } });
 
@@ -314,9 +306,9 @@ public class ShopController : MonoBehaviour
         }
         else
         {
-            costStr   = FormatCost(def.costStardust, def.costMetal);
+            costStr   = FormatCost(data.costStardust, data.costMetal);
             costColor = state == NodeState.Available
-                ? (def.costMetal > 0 ? new Color(0.75f, 0.78f, 0.82f) : new Color(1f, 0.85f, 0.2f))
+                ? (data.costMetal > 0 ? new Color(0.75f, 0.78f, 0.82f) : new Color(1f, 0.85f, 0.2f))
                 : new Color(0.35f, 0.35f, 0.35f);
         }
 
@@ -364,7 +356,7 @@ public class ShopController : MonoBehaviour
                                              normal   = { textColor = new Color(0.6f, 0.6f, 0.6f) } });
     }
 
-    // ── Ship Skins tab ────────────────────────────────────────────────────────
+    // -- Ship Skins tab ---
 
     void DrawShipSkinsTab(Rect area)
     {
@@ -411,7 +403,7 @@ public class ShopController : MonoBehaviour
                                              normal    = { textColor = new Color(0.5f, 0.5f, 0.5f) } });
     }
 
-    // ── Style setup ───────────────────────────────────────────────────────────
+    // -- Style setup ---
 
     void EnsureStyles()
     {
@@ -467,19 +459,19 @@ public class ShopController : MonoBehaviour
             normal = { textColor = new Color(0.7f, 0.7f, 0.7f) },
         };
 
-        // Available — blue, clickable (button-based so hover/active work)
+        // Available - blue, clickable (button-based so hover/active work)
         _nodeAvailableStyle = new GUIStyle(GUI.skin.button)
         {
             normal = { background = MakeTex(new Color(0.12f, 0.32f, 0.55f)), textColor = Color.white },
             hover  = { background = MakeTex(new Color(0.18f, 0.45f, 0.78f)), textColor = Color.white },
             active = { background = MakeTex(new Color(0.08f, 0.22f, 0.42f)), textColor = Color.white },
         };
-        // Locked — dark grey
+        // Locked - dark grey
         _nodeLockedStyle = new GUIStyle(GUI.skin.box)
         {
             normal = { background = MakeTex(new Color(0.18f, 0.18f, 0.22f)) },
         };
-        // Owned — bronze/gold
+        // Owned - bronze/gold
         _nodeOwnedStyle = new GUIStyle(GUI.skin.box)
         {
             normal = { background = MakeTex(new Color(0.35f, 0.28f, 0.08f)) },

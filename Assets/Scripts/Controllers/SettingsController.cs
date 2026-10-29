@@ -88,7 +88,7 @@ public class SettingsController : MonoBehaviour
 
         GUILayout.Label("Settings");
 
-        // Example slider (placeholder — real audio/graphic settings go here later)
+        // Example slider (placeholder - real audio/graphic settings go here later)
         GUILayout.Label("Example Setting");
         float newVal = GUILayout.HorizontalSlider(exampleSetting, 0f, 1f);
         if (newVal != exampleSetting) { exampleSetting = newVal; changesMade = true; }
@@ -139,9 +139,7 @@ public class SettingsController : MonoBehaviour
         PlayerPrefs.DeleteKey("Economy.Metal");
         PlayerPrefs.DeleteKey("Progression.TotalXP");
         PlayerPrefs.DeleteKey("Progression.Level");
-        for (int i = 0; i < SkillService.SkillCount; i++)
-            PlayerPrefs.DeleteKey($"Skill.{i}");
-        SkillService.Instance?.ResetAll();
+        SkillService.Current.ResetAll();
         PlayerPrefs.DeleteKey("Progression.SaveSlot"); // clears run count + last score
         PlayerPrefs.Save();
         _confirmReset = false;

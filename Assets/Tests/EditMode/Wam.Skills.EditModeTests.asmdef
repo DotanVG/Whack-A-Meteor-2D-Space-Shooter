@@ -1,0 +1,6 @@
+{
+    "name": "Wam.Skills.EditModeTests",
+    "references": ["Wam.Skills"],
+    "includePlatforms": ["Editor"],
+    "optionalUnityReferences": ["TestAssemblies"]
+}

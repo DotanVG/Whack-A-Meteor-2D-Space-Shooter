@@ -1,166 +1,91 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// SkillService — single source of truth for skill ownership and gameplay multipliers.
-///
-/// Spawned as a child by GameServices in the Game scene.
-/// ShopController reads/writes PlayerPrefs directly (standalone scene, no GameServices).
-/// All gameplay scripts query Instance?.GetXxx() — null-safe; returns base value when absent.
-///
-/// PlayerPrefs keys: "Skill.0" … "Skill.14"  (1 = owned, 0 = not owned)
-/// </summary>
+/// <summary>Scene facade over the shared, data-driven progress API.</summary>
 [DefaultExecutionOrder(-90)]
 public class SkillService : MonoBehaviour
 {
     public static SkillService Instance { get; private set; }
+    private static SkillProgress progress;
+    private static SkillTree tree;
 
-    // ── Skill definitions ─────────────────────────────────────────────────────
-
-    public struct SkillDef
+    /// <summary>Available in standalone Shop/Settings scenes without GameServices.</summary>
+    public static SkillProgress Current
     {
-        public int    id;
-        public string name;
-        public string levelLabel;
-        public int    costStardust;
-        public int    costMetal;
-        public int    prereqId;   // -1 = root (no prerequisite)
-        public int    column;     // 0 = AutoShooter, 1 = Hammer, 2 = Ship
+        get
+        {
+            if (progress == null)
+            {
+                var save = new PlayerPrefsSkillSave();
+                progress = new SkillProgress(Tree, save, new SkillWallet(save), () => DevMode.AllSkillsOwned);
+                progress.OnSkillsChanged += () =>
+                {
+                    // Standalone shopping uses the same persisted wallet. Refresh a live cache too.
+                    EconomyService.Instance?.ReloadWallet();
+                    OnSkillsChanged?.Invoke();
+                };
+            }
+            return progress;
+        }
     }
 
-    /// <summary>
-    /// Visual order within each column determines shop row order.
-    /// Columns: 0 = AutoShooter (5 nodes), 1 = Hammer (4 nodes), 2 = Ship (6 nodes).
-    /// </summary>
-    public static readonly SkillDef[] All =
+    /// <summary>The only runtime catalogue; no hard-coded skill table.</summary>
+    public static SkillTree Tree
     {
-        // ── AutoShooter (column 0) ────────────────────────────────────────────
-        new SkillDef { id=0,  name="Fire Rate",       levelLabel="Lv 1", costStardust=500,  costMetal=0,   prereqId=-1, column=0 },
-        new SkillDef { id=1,  name="Fire Rate",       levelLabel="Lv 2", costStardust=800,  costMetal=0,   prereqId=0,  column=0 },
-        new SkillDef { id=2,  name="Accuracy",        levelLabel="Lv 1", costStardust=600,  costMetal=0,   prereqId=1,  column=0 },
-        new SkillDef { id=3,  name="Proj. Speed",     levelLabel="Lv 1", costStardust=700,  costMetal=0,   prereqId=2,  column=0 },
-        new SkillDef { id=12, name="Target Priority", levelLabel="",     costStardust=900,  costMetal=0,   prereqId=3,  column=0 },
+        get
+        {
+            if (tree == null) tree = Resources.Load<SkillTree>("Skills/SkillTree");
+            if (tree == null) throw new InvalidOperationException("Missing Resources/Skills/SkillTree asset.");
+            return tree;
+        }
+    }
 
-        // ── Hammer (column 1) ─────────────────────────────────────────────────
-        new SkillDef { id=4,  name="AOE Radius",      levelLabel="Lv 1", costStardust=500,  costMetal=0,   prereqId=-1, column=1 },
-        new SkillDef { id=5,  name="AOE Radius",      levelLabel="Lv 2", costStardust=800,  costMetal=0,   prereqId=4,  column=1 },
-        new SkillDef { id=6,  name="Score Mult",      levelLabel="Lv 1", costStardust=1000, costMetal=0,   prereqId=5,  column=1 },
-        new SkillDef { id=7,  name="Slam Wave",       levelLabel="Lv 1", costStardust=500,  costMetal=800, prereqId=6,  column=1 },
-        new SkillDef { id=15, name="Lightning",       levelLabel="Lv 1", costStardust=700,  costMetal=200, prereqId=7,  column=1 },
-        new SkillDef { id=16, name="Lightning",       levelLabel="Lv 2", costStardust=1000, costMetal=400, prereqId=15, column=1 },
-        new SkillDef { id=17, name="Lightning",       levelLabel="Lv 3", costStardust=1400, costMetal=700, prereqId=16, column=1 },
+    /// <summary>Definitions retain the original shop's visual order.</summary>
+    public static IReadOnlyList<SkillDefinition> Definitions => Tree.definitions;
+    public static event Action OnSkillsChanged;
 
-        // ── Ship (column 2) ───────────────────────────────────────────────────
-        new SkillDef { id=8,  name="Move Speed",      levelLabel="Lv 1", costStardust=400,  costMetal=0,   prereqId=-1, column=2 },
-        new SkillDef { id=9,  name="Move Speed",      levelLabel="Lv 2", costStardust=650,  costMetal=0,   prereqId=8,  column=2 },
-        new SkillDef { id=10, name="Boost Duration",  levelLabel="Lv 1", costStardust=750,  costMetal=0,   prereqId=9,  column=2 },
-        new SkillDef { id=13, name="Shield",          levelLabel="Lv 1", costStardust=600,  costMetal=0,   prereqId=10, column=2 },
-        new SkillDef { id=14, name="Shield",          levelLabel="Lv 2", costStardust=900,  costMetal=400, prereqId=13, column=2 },
-        new SkillDef { id=11, name="Invincibility",   levelLabel="Lv 1", costStardust=1200, costMetal=600, prereqId=14, column=2 },
-    };
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        Instance = null;
+        progress = null;
+        tree = null;
+        OnSkillsChanged = null;
+    }
 
-    public const int SkillCount = 18; // ids 0-17 (added Lightning Lv1/2/3 as ids 15/16/17)
-
-    private bool[] _owned = new bool[SkillCount];
-
-    public static event System.Action OnSkillsChanged;
-
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
-
-    void Awake()
+    private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         LoadSkills();
     }
 
-    public void LoadSkills()
-    {
-        for (int i = 0; i < SkillCount; i++)
-            _owned[i] = PlayerPrefs.GetInt($"Skill.{i}", 0) == 1;
-    }
+    private void OnDestroy() { if (Instance == this) Instance = null; }
 
-    // ── Ownership queries ─────────────────────────────────────────────────────
+    /// <summary>Refreshes shared progress when entering gameplay after shopping.</summary>
+    public void LoadSkills() => Current.Load();
+    public bool IsOwned(string id) => Current.IsOwned(id);
+    public int GetLevel(string id) => Current.GetLevel(id);
+    public bool CanPurchase(string id) => Current.CanPurchase(id);
+    public bool CanPurchase(string id, out string reason) => Current.CanPurchase(id, out reason);
+    public bool TryPurchase(string id) => Current.TryPurchase(id);
+    public bool TryPurchase(string id, out string reason) => Current.TryPurchase(id, out reason);
+    public void ResetAll() => Current.ResetAll();
+    public float GetModifier(SkillStat stat) => Current.GetModifier(stat);
 
-    public bool IsOwned(int id) => id >= 0 && id < SkillCount && (DevMode.AllSkillsOwned || _owned[id]);
-
-    // ── Multiplier / flag getters (null-safe via Instance?.) ──────────────────
-
-    /// <summary>AutoShooter: shots per second multiplier.</summary>
-    public float GetFireRateMultiplier()
-    {
-        if (IsOwned(1)) return 2.0f;
-        if (IsOwned(0)) return 1.5f;
-        return 1.0f;
-    }
-
-    /// <summary>AutoShooter: spread angle multiplier (lower = tighter).</summary>
-    public float GetSpreadMultiplier()    => IsOwned(2) ? 0.5f : 1.0f;
-
-    /// <summary>AutoShooter: projectile speed multiplier.</summary>
-    public float GetProjSpeedMultiplier() => IsOwned(3) ? 1.3f : 1.0f;
-
-    /// <summary>AutoShooter: when true, prefers enemy ships over meteors.</summary>
-    public bool GetTargetPriorityEnabled() => IsOwned(12);
-
-    /// <summary>Hammer: AOE hit-detection radius multiplier.</summary>
-    public float GetHammerRadiusMultiplier()
-    {
-        if (IsOwned(5)) return 1.65f;
-        if (IsOwned(4)) return 1.3f;
-        return 1.0f;
-    }
-
-    /// <summary>Hammer: score multiplier (base 2×, upgraded to 3×).</summary>
-    public int GetHammerScoreMult() => IsOwned(6) ? 3 : 2;
-
-    /// <summary>Hammer: true when Slam Wave (radial burst on swing) is unlocked.</summary>
-    public bool GetSlamWaveEnabled() => IsOwned(7);
-
-    /// <summary>Ship: movement speed multiplier.</summary>
-    public float GetMoveSpeedMultiplier()
-    {
-        if (IsOwned(9)) return 1.3f;
-        if (IsOwned(8)) return 1.15f;
-        return 1.0f;
-    }
-
-    /// <summary>Ship: boost duration multiplier.</summary>
-    public float GetBoostDurationMultiplier() => IsOwned(10) ? 1.5f : 1.0f;
-
-    /// <summary>Ship: number of shield charges available per run (0, 1, or 2).</summary>
-    public int GetShieldCharges()
-    {
-        if (IsOwned(14)) return 2;
-        if (IsOwned(13)) return 1;
-        return 0;
-    }
-
-    /// <summary>Ship: post-hit invincibility duration multiplier.</summary>
-    public float GetInvincibilityMultiplier() => IsOwned(11) ? 1.5f : 1.0f;
-
-    /// <summary>Hammer: number of lightning bounces on hammer hit (0 = disabled).</summary>
-    public int GetLightningBounces()
-    {
-        if (IsOwned(17)) return 6;
-        if (IsOwned(16)) return 4;
-        if (IsOwned(15)) return 2;
-        return 0;
-    }
-
-    /// <summary>Hammer: bonus damage per lightning bounce (Lv3 only).</summary>
-    public int GetLightningBonusDamage() => IsOwned(17) ? 1 : 0;
-
-    // ── Reset (called by SettingsController) ──────────────────────────────────
-
-    public void ResetAll()
-    {
-        for (int i = 0; i < SkillCount; i++)
-        {
-            _owned[i] = false;
-            PlayerPrefs.DeleteKey($"Skill.{i}");
-        }
-        PlayerPrefs.Save();
-        OnSkillsChanged?.Invoke();
-        Debug.Log("[SkillService] All skills reset.");
-    }
+    // Thin compatibility wrappers keep existing null-safe gameplay call sites unchanged.
+    public float GetFireRateMultiplier() => GetModifier(SkillStat.FireRate);
+    public float GetSpreadMultiplier() => GetModifier(SkillStat.Spread);
+    public float GetProjSpeedMultiplier() => GetModifier(SkillStat.ProjectileSpeed);
+    public bool GetTargetPriorityEnabled() => GetModifier(SkillStat.TargetPriority) != 0f;
+    public float GetHammerRadiusMultiplier() => GetModifier(SkillStat.HammerRadius);
+    public int GetHammerScoreMult() => (int)GetModifier(SkillStat.HammerScore);
+    public bool GetSlamWaveEnabled() => GetModifier(SkillStat.SlamWave) != 0f;
+    public float GetMoveSpeedMultiplier() => GetModifier(SkillStat.MoveSpeed);
+    public float GetBoostDurationMultiplier() => GetModifier(SkillStat.BoostDuration);
+    public int GetShieldCharges() => (int)GetModifier(SkillStat.ShieldCharges);
+    public float GetInvincibilityMultiplier() => GetModifier(SkillStat.Invincibility);
+    public int GetLightningBounces() => (int)GetModifier(SkillStat.LightningBounces);
+    public int GetLightningBonusDamage() => (int)GetModifier(SkillStat.LightningBonusDamage);
 }

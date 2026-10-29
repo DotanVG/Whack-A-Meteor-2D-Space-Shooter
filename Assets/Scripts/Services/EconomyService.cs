@@ -1,14 +1,14 @@
 using UnityEngine;
 
 /// <summary>
-/// EconomyService — dual-currency persistent wallet (Stardust / Metal).
+/// EconomyService - dual-currency persistent wallet (Stardust / Metal).
 ///
 /// Stardust : earned from meteor kills (any weapon). Basic currency for
 ///            skills, upgrades, and most purchases.
 /// Metal    : earned from enemy ship kills (future enemy types). Used for
 ///            special attacks, ship unlocks, and high-tier upgrades.
 ///
-/// Wallet persists across runs via PlayerPrefs — players carry their
+/// Wallet persists across runs via PlayerPrefs - players carry their
 /// earnings into the store after death. Phase 3 will migrate to a
 /// proper save slot (JSON).
 ///
@@ -40,7 +40,7 @@ public class EconomyService : MonoBehaviour
                   $"| Stardust:{Stardust}  Metal:{Metal}");
     }
 
-    // ── Public earn methods — called by kill handlers ─────────────────────────
+    // -- Public earn methods - called by kill handlers ---
 
     /// <summary>
     /// Award Stardust from any meteor kill (projectile or hammer).
@@ -75,7 +75,7 @@ public class EconomyService : MonoBehaviour
         AddMetal(amount, source);
     }
 
-    // ── Spend (Phase 3 Store will use this) ───────────────────────────────────
+    // -- Spend (Phase 3 Store will use this) ---
 
     public enum CurrencyType { Stardust, Metal }
 
@@ -108,7 +108,10 @@ public class EconomyService : MonoBehaviour
         }
     }
 
-    // ── Persistence ───────────────────────────────────────────────────────────
+    // -- Persistence ---
+
+    /// <summary>Refreshes cached balances after a shared skill-service purchase or reset.</summary>
+    public void ReloadWallet() => LoadWallet();
 
     void LoadWallet()
     {
@@ -124,7 +127,7 @@ public class EconomyService : MonoBehaviour
         PlayerPrefs.SetInt(PrefKeyMetal,    Metal);
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
+    // -- Private helpers ---
 
     public void AddStardust(int amount, string source = "Direct")
     {

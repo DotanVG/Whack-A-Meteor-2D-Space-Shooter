@@ -85,3 +85,7 @@ QA_CHECKLIST.md
 /tools/LicenseFreeChecks/bin/
 /tools/LicenseFreeChecks/obj/
 /tools/LicenseFreeChecks/.test-repo/
+
+# Unity-MCP 1.5.0 NuGet resolver output (restored on first open; never commit)
+/Assets/Plugins/
+/Assets/Plugins.meta
