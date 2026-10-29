@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b97c1015f43de209d2ad9595c8475a28, type: 3}
+  m_Name: AimedRaider
+  m_EditorClassIdentifier:
+  id: aimed_raider
+  behaviour: 0
+  hitPoints: 3
+  speed: 2.2
+  fireInterval: 2.4
+  turnDegreesPerSecond: 0
+  pursuitSeconds: 2.5
+  tint: {r: 1, g: 0.6, b: 0.6, a: 1}

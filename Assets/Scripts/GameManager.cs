@@ -33,6 +33,8 @@ public class GameManager : MonoBehaviour
     // Session timer — starts when countdown ends, used by logging
     public float SessionTime { get; private set; } = 0f;
     private bool sessionRunning = false;
+    /// <summary>True only after launch and while gameplay may advance.</summary>
+    public bool IsSessionRunning => sessionRunning && !isPaused && !isGameOver;
 
     public Texture2D lifeIcon;
     public Texture2D[] digitSprites;
@@ -116,7 +118,7 @@ public class GameManager : MonoBehaviour
             {
                 showingCountdown = false;
                 sessionRunning = true;
-                if (spawner != null)
+                if (spawner != null && _waveManager == null)
                 {
                     spawner.StartSpawning();
                 }
@@ -274,8 +276,8 @@ public class GameManager : MonoBehaviour
         // Wave number HUD (top-center)
         if (!showingCountdown && !isGameOver && _waveManager != null)
         {
-            GUI.Label(new Rect(Screen.width / 2f - 40f, 10f, 80f, 24f),
-                      $"Wave {_waveManager.currentWave}", hudStyle);
+            GUI.Label(new Rect(Screen.width / 2f - 340f, 10f, 680f, 44f),
+                      _waveManager.StatusText, hudStyle);
         }
 
         float lifeWidth = lifeIconSize.x;

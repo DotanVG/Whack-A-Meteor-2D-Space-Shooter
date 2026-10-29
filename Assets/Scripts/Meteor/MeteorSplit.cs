@@ -19,6 +19,26 @@ public class MeteorSplit : MonoBehaviour
     private bool collisionSplitEnabled = false;
     private bool _hit;
     private bool _split;
+    private Durability durability = new Durability(1);
+    private int bonusMetal;
+    /// <summary>Remaining weapon hits; independent of delayed destruction.</summary>
+    public int Health => durability.Current;
+
+    /// <summary>Profiles only affect freshly spawned roots, not their smaller split children.</summary>
+    public void Configure(MeteorProfile profile, int healthBonus)
+    {
+        durability = new Durability(profile.hitPoints + (profile.prefabSize < 2 ? Mathf.Max(0, healthBonus) : 0));
+        bonusMetal = profile.metalReward;
+    }
+
+    private bool ApplyDamage(int amount)
+    {
+        if (_hit || _split || amount <= 0) return false;
+        CombatFeedback.Hit(gameObject, amount);
+        if (!durability.Apply(amount)) return false;
+        _hit = true;
+        return true;
+    }
 
     private void Awake()
     {
@@ -44,6 +64,8 @@ public class MeteorSplit : MonoBehaviour
     {
         _hit = false;
         _split = false;
+        durability = new Durability(1);
+        bonusMetal = 0;
         collisionSplitEnabled = false;
         StartCoroutine(EnableCollisionSplit());
     }
@@ -94,6 +116,8 @@ public class MeteorSplit : MonoBehaviour
 
     private static int GetMeteorCap()
     {
+        var waves = FindObjectOfType<WaveManager>();
+        if (waves && waves.catalogue) return waves.catalogue.meteorCap;
         return BalanceService.Instance != null
             ? BalanceService.Instance.GetInt("meteor.max_active_count", 80)
             : 80;
@@ -152,10 +176,9 @@ public class MeteorSplit : MonoBehaviour
         }
     }
 
-    public void OnProjectileHit()
+    public void OnProjectileHit(int damage = 1)
     {
-        if (_hit) return;
-        _hit = true;
+        if (!ApplyDamage(damage)) return;
 
         string hitTag  = gameObject.tag;
         bool   splits  = !hitTag.StartsWith("Tiny");
@@ -173,6 +196,7 @@ public class MeteorSplit : MonoBehaviour
         ScorePopup.Spawn(transform.position, points);
 
         if (EconomyService.Instance) EconomyService.Instance.EarnFromMeteor(hitTag);
+        if (EconomyService.Instance && bonusMetal > 0) EconomyService.Instance.AddMetal(bonusMetal, "Armored meteor");
         MeteorDropSpawner.Instance?.TryDrop(transform.position, hitTag);
 
         if (projectileHitClip != null)
@@ -181,10 +205,9 @@ public class MeteorSplit : MonoBehaviour
             Instantiate(hitParticles, transform.position, Quaternion.identity);
     }
 
-    public void OnHammerHit()
+    public void OnHammerHit(int damage = 2)
     {
-        if (_hit) return;
-        _hit = true;
+        if (!ApplyDamage(damage)) return;
 
         string hitTag  = gameObject.tag;
         bool   splits  = !hitTag.StartsWith("Tiny");
@@ -202,6 +225,7 @@ public class MeteorSplit : MonoBehaviour
         ScorePopup.Spawn(transform.position, points);
 
         if (EconomyService.Instance) EconomyService.Instance.EarnFromMeteor(hitTag);
+        if (EconomyService.Instance && bonusMetal > 0) EconomyService.Instance.AddMetal(bonusMetal, "Armored meteor");
         MeteorDropSpawner.Instance?.TryDrop(transform.position, hitTag);
 
         if (hammerHitClip != null)
@@ -214,7 +238,7 @@ public class MeteorSplit : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (_split) return;
+        if (_split || Health > 1) return;
 
         if (!collisionSplitEnabled)
         {

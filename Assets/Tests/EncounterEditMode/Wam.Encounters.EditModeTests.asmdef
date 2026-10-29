@@ -1,0 +1,6 @@
+{
+    "name": "Wam.Encounters.EditModeTests",
+    "references": ["Wam.Encounters"],
+    "includePlatforms": ["Editor"],
+    "optionalUnityReferences": ["TestAssemblies"]
+}

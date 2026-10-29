@@ -1,97 +1,59 @@
 using UnityEngine;
 
-/// <summary>
-/// EnemyHealth — attaches to each meteor / enemy GameObject.
-/// Manages incoming damage, hit feedback, and death behaviour.
-///
-/// SETUP:
-///   - Attach to your meteor prefab alongside MeteorMover.
-///   - The GameObject must be tagged "Enemy" so AutoShooter and ProjectileController can find it.
-///
-/// PLANNED UPGRADES:
-///   - Spawn explosion VFX on Die() (particle system prefab via Inspector field)
-///   - Drop power-up / currency pickup on death
-///   - Variable score value per enemy type (e.g. boss = 100 pts)
-/// </summary>
+/// <summary>Initializes durability before hits and awards each death exactly once.</summary>
 public class EnemyHealth : MonoBehaviour
 {
-    [Tooltip("Total hits this enemy can take before dying.")]
     public int maxHealth = 3;
+    public GameObject explosionPrefab;
+    public GameObject bossExplosionPrefab;
+    private Durability durability;
+    private bool configured;
+    private bool dead;
+    public int Health => durability.Current;
 
-    private int _currentHealth;
+    private void Awake() { durability = new Durability(maxHealth); }
 
     private void Start()
     {
-        EnemyFaction ef = GetComponent<EnemyFaction>();
-        if (ef != null)
-        {
-            string key = $"enemy.hp_{ef.faction.ToString().ToLower()}";
-            maxHealth = BalanceService.Instance?.GetInt(key, maxHealth) ?? maxHealth;
-        }
-        _currentHealth = maxHealth;
+        if (configured || GetComponent<BossController>()) return;
+        var faction = GetComponent<EnemyFaction>();
+        if (faction && BalanceService.Instance)
+            maxHealth = BalanceService.Instance.GetInt("enemy.hp_" + faction.faction.ToString().ToLower(), maxHealth);
+        Initialize(maxHealth);
     }
 
-    /// <summary>
-    /// Called by ProjectileController.cs on collision. Reduces health and triggers die if <= 0.
-    /// Public so other damage sources (e.g. player ramming, area-of-effect) can call it directly.
-    /// </summary>
+    /// <summary>Called immediately after spawning, before the first physics step.</summary>
+    public void Initialize(int health)
+    {
+        maxHealth = Mathf.Max(1, health);
+        durability = new Durability(maxHealth);
+        configured = true;
+        dead = false;
+    }
+
+    /// <summary>Positive damage only; further hits during deferred destruction do nothing.</summary>
     public void TakeDamage(int amount)
     {
-        _currentHealth -= amount;
-
-        // Visual hit feedback — flashes the renderer red for 0.1s
-        StartCoroutine(FlashRed());
-
-        if (_currentHealth <= 0)
-        {
-            Die();
-        }
+        if (dead || amount <= 0) return;
+        CombatFeedback.Hit(gameObject, amount);
+        if (!durability.Apply(amount)) return;
+        dead = true;
+        Die();
     }
 
-    public GameObject explosionPrefab;     // Regular enemy explosion (laserBlue08-11 anim)
-    public GameObject bossExplosionPrefab; // Boss explosion (laserRed08-11 anim); falls back to explosionPrefab if null
-
-    /// <summary>
-    /// Called when health hits zero. Awards score, grants Metal, triggers VFX/drops, destroys self.
-    /// </summary>
-    void Die()
+    private void Die()
     {
         int points = BalanceService.Instance?.GetInt("score.enemy", GameConstants.ScoreEnemy) ?? GameConstants.ScoreEnemy;
         GameManager.Instance?.AddScore(points);
-
-        EnemyFaction ef = GetComponent<EnemyFaction>();
-
-        // Boss handles its own Metal award and logging
-        BossController boss = GetComponent<BossController>();
-        if (boss != null) boss.OnBossDeath();
-        else if (EconomyService.Instance) EconomyService.Instance.EarnMetalFromEnemy(ef?.faction);
-
-        // Phase 6: drop powerup
+        var faction = GetComponent<EnemyFaction>();
+        var boss = GetComponent<BossController>();
+        if (boss) boss.OnBossDeath();
+        else if (EconomyService.Instance) EconomyService.Instance.EarnMetalFromEnemy(faction ? (Faction?)faction.faction : null);
         PowerupSpawner.Instance?.TryDrop(transform.position);
-
-        // Explosion VFX — boss uses red laser anim, regular enemies use blue laser anim
-        GameObject vfxPrefab = (boss != null && bossExplosionPrefab != null) ? bossExplosionPrefab : explosionPrefab;
-        if (vfxPrefab != null)
-            Instantiate(vfxPrefab, transform.position, Quaternion.identity);
-
+        var effect = boss && bossExplosionPrefab ? bossExplosionPrefab : explosionPrefab;
+        if (effect) Instantiate(effect, transform.position, Quaternion.identity);
         ScorePopup.Spawn(transform.position, points);
-
-        GameLogger.EnemyKilledByFaction(
-            ef != null ? ef.faction.ToString() : "Unknown",
-            transform.position, points,
-            GameManager.Instance?.Score ?? 0);
-
+        GameLogger.EnemyKilledByFaction(faction ? faction.faction.ToString() : "Unknown", transform.position, points, GameManager.Instance?.Score ?? 0);
         Destroy(gameObject);
-    }
-
-    private System.Collections.IEnumerator FlashRed()
-    {
-        SpriteRenderer sr = GetComponent<SpriteRenderer>();
-        if (sr == null) yield break;
-
-        Color original = sr.color;
-        sr.color = Color.red;
-        yield return new WaitForSeconds(0.1f);
-        sr.color = original;
     }
 }

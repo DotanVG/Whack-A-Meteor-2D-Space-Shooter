@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9a3239daef65d739dc9d1fd52e25a61, type: 3}
+  m_Name: Catalogue
+  m_EditorClassIdentifier:
+  levels:
+  - {fileID: 11400000, guid: 56abf73b29b9f63100da92e6e29b48c3, type: 2}
+  - {fileID: 11400000, guid: f1ac67e5ffba30abd46115f510d6b430, type: 2}
+  - {fileID: 11400000, guid: 18f9f45cd9307ccae0e6bc31eadc071c, type: 2}
+  meteors:
+  - {fileID: 11400000, guid: 1b1ce111cbd083f92cb22869c71b6b25, type: 2}
+  - {fileID: 11400000, guid: 4ecd813d012d69b34b3b0c101d80da82, type: 2}
+  - {fileID: 11400000, guid: ddecd45acc0499c744c9983dafea35f4, type: 2}
+  enemies:
+  - {fileID: 11400000, guid: c9915204327c6f74391ecd6796b09a7b, type: 2}
+  - {fileID: 11400000, guid: 2950889da3bd13396eb649b07c0bbe2a, type: 2}
+  wavesPerLevel: 5
+  enemyIntroWave: 2
+  baseMeteorInterval: 1.5
+  minimumMeteorInterval: 0.45
+  baseEnemyInterval: 4
+  minimumEnemyInterval: 1.5
+  intervalRamp: 0.08
+  speedRamp: 0.06
+  maximumSpeedMultiplier: 2.2
+  healthStepWaves: 6
+  maximumHealthBonus: 4
+  baseStardustReward: 40
+  stardustRewardPerWave: 12
+  baseMetalReward: 6
+  metalRewardPerWave: 2
+  maximumRewardWave: 100
+  baseEliteHealth: 20
+  eliteHealthPerMilestone: 5
+  eliteMetalReward: 30
+  eliteSpeed: 1
+  eliteScale: 2.5
+  meteorCap: 60
+  enemyCap: 10

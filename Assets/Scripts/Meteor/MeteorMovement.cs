@@ -11,7 +11,7 @@ public class MeteorMovement : MonoBehaviour
     public static int ActiveCount { get; private set; } = 0;
 
     void OnEnable()  { ActiveCount++; }
-    void OnDisable() { ActiveCount--; }
+    void OnDisable() { ActiveCount = Mathf.Max(0, ActiveCount - 1); }
 
     public float minSpeed = 3f; // Minimum speed at which the meteor moves
     public float maxSpeed = 7f; // Maximum speed at which the meteor moves

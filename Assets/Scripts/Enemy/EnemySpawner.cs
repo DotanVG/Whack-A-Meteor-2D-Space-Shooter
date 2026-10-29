@@ -24,6 +24,17 @@ public class EnemySpawner : MonoBehaviour
     private bool _spawning;
     private bool _spawnBlack, _spawnBlue, _spawnGreen, _spawnRed;
     private Coroutine _spawnCoroutine;
+    private EncounterCatalog catalogue;
+    public WaveDefinition Encounter { get; private set; }
+
+    /// <summary>Sets this wave's absolute rates and bounded population.</summary>
+    public void Configure(EncounterCatalog data, WaveDefinition wave)
+    {
+        catalogue = data;
+        Encounter = wave;
+        spawnInterval = wave.enemyInterval;
+        maxEnemies = data.enemyCap;
+    }
 
     void Start()
     {
@@ -58,7 +69,13 @@ public class EnemySpawner : MonoBehaviour
         // Spawn at top-center, slightly above screen
         float topY = Camera.main.ViewportToWorldPoint(new Vector3(0.5f, 1f, 10f)).y + 1f;
         Vector3 pos = new Vector3(0f, topY, 0f);
-        Instantiate(bossPrefab, pos, Quaternion.identity);
+        var boss = Instantiate(bossPrefab, pos, Quaternion.identity);
+        if (catalogue)
+        {
+            ApplyProfile(boss, catalogue.enemies[0]);
+            var controller = boss.GetComponent<BossController>();
+            if (controller) controller.Configure(catalogue, Encounter);
+        }
     }
 
     IEnumerator SpawnLoop()
@@ -73,12 +90,25 @@ public class EnemySpawner : MonoBehaviour
 
     void SpawnEnemy()
     {
-        GameObject prefab = PickPrefab();
+        EnemyProfile profile = catalogue ? catalogue.enemies[Random.value < Encounter.level.enemyShooterWeight ? 0 : 1] : null;
+        GameObject[] pool = profile && profile.behaviour == EnemyBehaviour.AimedShooter ? redPrefabs : greenPrefabs;
+        GameObject prefab = profile && pool != null && pool.Length > 0 ? pool[Random.Range(0, pool.Length)] : PickPrefab();
         if (prefab == null) return;
 
         Vector3 pos = GetSpawnPosition();
         // Face downward (transform.up = Vector2.down → rotate 180°)
-        Instantiate(prefab, pos, Quaternion.Euler(0f, 0f, 180f));
+        var enemy = Instantiate(prefab, pos, Quaternion.Euler(0f, 0f, 180f));
+        if (profile) ApplyProfile(enemy, profile);
+    }
+
+    private void ApplyProfile(GameObject enemy, EnemyProfile profile)
+    {
+        var movement = enemy.GetComponent<EnemyController>();
+        if (movement) movement.Configure(profile, Encounter.speedMultiplier);
+        var health = enemy.GetComponent<EnemyHealth>();
+        if (health) health.Initialize(profile.hitPoints + Encounter.healthBonus);
+        var shooter = enemy.GetComponent<EnemyShooter>();
+        if (shooter) shooter.Configure(profile);
     }
 
     /// <summary>Picks randomly from all currently active faction arrays.</summary>
