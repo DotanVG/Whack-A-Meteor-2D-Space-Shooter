@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -66,19 +67,49 @@ public class LevelService : MonoBehaviour
     /// <summary>XP cost to advance from level <paramref name="level"/> to level+1.</summary>
     public int XPForLevel(int level)
     {
-        if (level >= MaxLevel) return int.MaxValue;
-        float xpBase   = Get("progression.xp_base",   5000f);
-        float xpGrowth = Get("progression.xp_growth",   1.5f);
-        return Mathf.RoundToInt(xpBase * Mathf.Pow(xpGrowth, level - 1));
+        return ClampToInt(XPCostRaw(level));
     }
 
     /// <summary>Total cumulative XP required to reach <paramref name="level"/>.</summary>
     public int CumulativeXPForLevel(int level)
     {
-        int total = 0;
-        for (int i = 1; i < level; i++)
-            total += XPForLevel(i);
+        return ClampToInt(CumulativeXPRaw(level));
+    }
+
+    // long, not int: 5000 * 1.5^32 exceeds Int32 around level 33 and used to wrap negative.
+    long XPCostRaw(int level)
+    {
+        if (level < 1) level = 1;
+        if (level >= MaxLevel) return int.MaxValue;
+
+        double xpBase   = Get("progression.xp_base",   5000f);
+        double xpGrowth = Get("progression.xp_growth",   1.5f);
+        double raw = xpBase * Math.Pow(xpGrowth, level - 1);
+        if (double.IsNaN(raw) || double.IsInfinity(raw) || raw >= long.MaxValue) return long.MaxValue;
+        if (raw <= 0d) return 0L;
+        return (long)Math.Round(raw);
+    }
+
+    long CumulativeXPRaw(int level)
+    {
+        if (level <= 1) return 0L;
+
+        long total = 0L;
+        int last = level < MaxLevel ? level : MaxLevel;
+        for (int i = 1; i < last; i++)
+        {
+            long step = XPCostRaw(i);
+            if (step >= long.MaxValue - total) return long.MaxValue;
+            total += step;
+        }
         return total;
+    }
+
+    static int ClampToInt(long value)
+    {
+        if (value >= int.MaxValue) return int.MaxValue;
+        if (value <= 0L) return 0;
+        return (int)value;
     }
 
     // ── Handlers ──────────────────────────────────────────────────────────────
@@ -99,7 +130,10 @@ public class LevelService : MonoBehaviour
 
     void AddXP(int amount)
     {
-        TotalXP += amount;
+        long sum = (long)TotalXP + amount;
+        if (sum > int.MaxValue) sum = int.MaxValue;
+        else if (sum < 0L) sum = 0L;
+        TotalXP = (int)sum;
 
         int prevLevel = Level;
         RefreshLevelFromXP();
@@ -117,22 +151,30 @@ public class LevelService : MonoBehaviour
 
     void RefreshLevelFromXP()
     {
-        // Derive Level from TotalXP — always authoritative
+        // Derive Level from TotalXP — always authoritative.
+        // Compare against the long curve so a wrapped int cost cannot skip to MaxLevel.
         int computed = 1;
-        while (computed < MaxLevel && TotalXP >= CumulativeXPForLevel(computed + 1))
+        long cumulative = 0L;
+        while (computed < MaxLevel)
+        {
+            long step = XPCostRaw(computed);
+            if (step > long.MaxValue - cumulative) break;
+            if ((long)TotalXP < cumulative + step) break;
+            cumulative += step;
             computed++;
+        }
         Level = computed;
 
-        int floor      = CumulativeXPForLevel(Level);
-        CurrentLevelXP = TotalXP - floor;
-        XPToNextLevel  = Level < MaxLevel ? XPForLevel(Level) : 0;
+        long intoLevel = (long)TotalXP - cumulative;
+        if (intoLevel < 0L) intoLevel = 0L;
+        CurrentLevelXP = ClampToInt(intoLevel);
+        XPToNextLevel  = Level < MaxLevel ? ClampToInt(XPCostRaw(Level)) : 0;
     }
 
     void SaveProgression()
     {
         PlayerPrefs.SetInt(PrefKeyXP,    TotalXP);
         PlayerPrefs.SetInt(PrefKeyLevel, Level);
-        PlayerPrefs.Save();
     }
 
     static float Get(string key, float def)

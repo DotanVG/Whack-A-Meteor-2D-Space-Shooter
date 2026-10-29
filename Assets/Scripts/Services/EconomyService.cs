@@ -92,6 +92,7 @@ public class EconomyService : MonoBehaviour
             Stardust -= amount;
             OnStardustChanged?.Invoke(Stardust);
             SaveWallet();
+            PlayerPrefs.Save();
             Debug.Log($"[Economy] -{amount} Stardust (total: {Stardust})");
             return true;
         }
@@ -101,6 +102,7 @@ public class EconomyService : MonoBehaviour
             Metal -= amount;
             OnMetalChanged?.Invoke(Metal);
             SaveWallet();
+            PlayerPrefs.Save();
             Debug.Log($"[Economy] -{amount} Metal (total: {Metal})");
             return true;
         }
@@ -120,7 +122,6 @@ public class EconomyService : MonoBehaviour
     {
         PlayerPrefs.SetInt(PrefKeyStardust, Stardust);
         PlayerPrefs.SetInt(PrefKeyMetal,    Metal);
-        PlayerPrefs.Save();
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

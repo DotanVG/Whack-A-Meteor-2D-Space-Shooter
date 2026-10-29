@@ -20,4 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/HyperdriveShop.unity
     guid: 5beeb03220781344a9482c5eb53ce7f2
+  - enabled: 1
+    path: Assets/Scenes/Credits.unity
+    guid: 35733b55c70ed0a4ab1b9bff378f2346
   m_configObjects: {}
