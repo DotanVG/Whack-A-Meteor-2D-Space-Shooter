@@ -18,6 +18,16 @@ public class MeteorSpawner : MonoBehaviour
     private Camera mainCamera;
     private Coroutine spawnRoutine;
     public bool autoStart = false; // start via GameManager after countdown
+    private EncounterCatalog catalogue;
+    private WaveDefinition encounter;
+
+    /// <summary>Applies an absolute wave snapshot; authored assets are never mutated.</summary>
+    public void Configure(EncounterCatalog data, WaveDefinition wave)
+    {
+        catalogue = data;
+        encounter = wave;
+        spawnInterval = wave.meteorInterval;
+    }
 
     void Start()
     {
@@ -59,7 +69,7 @@ public class MeteorSpawner : MonoBehaviour
     {
         // Respect the global meteor cap so the spawner doesn't add more meteors
         // while a split-cascade is already filling the scene.
-        int cap = BalanceService.Instance != null
+        int cap = catalogue ? catalogue.meteorCap : BalanceService.Instance != null
             ? BalanceService.Instance.GetInt("meteor.max_active_count", 80)
             : 80;
         if (MeteorMovement.ActiveCount >= cap)
@@ -69,19 +79,28 @@ public class MeteorSpawner : MonoBehaviour
         }
 
         Vector3 spawnPosition = GetSpawnPosition();
-        GameObject meteor = SelectMeteor();
+        MeteorProfile profile = PickProfile();
+        GameObject meteor = profile ? PrefabFor(profile) : SelectMeteor();
 
         if (meteor != null)
         {
             GameObject spawnedMeteor = Instantiate(meteor, spawnPosition, Quaternion.identity);
             spawnedMeteor.layer = meteorsLayer;
+            if (profile)
+            {
+                var split = spawnedMeteor.GetComponent<MeteorSplit>();
+                if (split) split.Configure(profile, encounter.healthBonus);
+                var sprite = spawnedMeteor.GetComponent<SpriteRenderer>();
+                if (sprite) sprite.color = profile.tint;
+            }
 
             Vector3 direction = (Vector3.zero - spawnPosition).normalized;
 
             MeteorMovement movement = spawnedMeteor.GetComponent<MeteorMovement>();
             if (movement != null)
             {
-                movement.SetInitialDirection(direction);
+                if (profile) movement.InitializeMovement(direction, profile.speed * encounter.speedMultiplier);
+                else movement.SetInitialDirection(direction);
             }
         }
         else
@@ -148,6 +167,33 @@ public class MeteorSpawner : MonoBehaviour
             return null;
         }
         return meteorArray[Random.Range(0, meteorArray.Length)];
+    }
+
+    private MeteorProfile PickProfile()
+    {
+        if (!catalogue) return null;
+        int total = 0;
+        foreach (int weight in encounter.level.meteorWeights) total += weight;
+        int roll = Random.Range(0, total);
+        for (int i = 0; i < catalogue.meteors.Count; i++)
+        {
+            roll -= encounter.level.meteorWeights[i];
+            if (roll < 0) return catalogue.meteors[i];
+        }
+        return catalogue.meteors[0];
+    }
+
+    private GameObject PrefabFor(MeteorProfile profile)
+    {
+        GameObject[] prefabs;
+        switch (profile.prefabSize)
+        {
+            case 1: prefabs = profile.grey ? mediumGreyMeteors : mediumBrownMeteors; break;
+            case 2: prefabs = profile.grey ? smallGreyMeteors : smallBrownMeteors; break;
+            case 3: prefabs = profile.grey ? tinyGreyMeteors : tinyBrownMeteors; break;
+            default: prefabs = profile.grey ? bigGreyMeteors : bigBrownMeteors; break;
+        }
+        return GetRandomMeteor(prefabs);
     }
 
 

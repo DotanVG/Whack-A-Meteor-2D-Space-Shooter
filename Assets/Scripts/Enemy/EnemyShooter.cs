@@ -14,20 +14,26 @@ public class EnemyShooter : MonoBehaviour
     private float _nextShot;
     private Transform _player;
     private bool _isBoss;
+    private EnemyProfile profile;
+
+    /// <summary>Uses authored shot cadence; divers do not fire aimed shots.</summary>
+    public void Configure(EnemyProfile data) { profile = data; }
 
     void Start()
     {
         _player = GameObject.FindGameObjectWithTag("Player")?.transform;
         _isBoss = GetComponent<BossController>() != null;
-        float rate = BalanceService.Instance?.GetFloat("enemy.red_fire_rate", 2f) ?? 2f;
+        float rate = profile ? profile.fireInterval : BalanceService.Instance?.GetFloat("enemy.red_fire_rate", 2f) ?? 2f;
         _nextShot = Time.time + rate * Random.Range(0.3f, 0.8f); // stagger first shot
     }
 
     void Update()
     {
         if (enemyProjectilePrefab == null || _player == null) return;
+        if (GameManager.Instance && !GameManager.Instance.IsSessionRunning) return;
+        if (profile && profile.behaviour != EnemyBehaviour.AimedShooter) return;
 
-        float rate = BalanceService.Instance?.GetFloat("enemy.red_fire_rate", 2f) ?? 2f;
+        float rate = profile ? profile.fireInterval : BalanceService.Instance?.GetFloat("enemy.red_fire_rate", 2f) ?? 2f;
         if (Time.time < _nextShot) return;
 
         Shoot();

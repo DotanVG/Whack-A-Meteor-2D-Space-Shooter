@@ -111,6 +111,7 @@ public class AutoShooter : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance && !GameManager.Instance.IsSessionRunning) return;
         if (projectilePrefab == null || firePoint == null) return;
         if (Time.time < _nextFireTime) return;
 
@@ -172,7 +173,7 @@ public class AutoShooter : MonoBehaviour
     /// Supports the three mover types present in the project:
     ///   MeteorMover     — homing; recomputes direction each frame toward player
     ///   MeteorMovement  — linear; constant world-space direction + speed
-    ///   EnemyController — always moves straight down in local space
+    ///   EnemyController — samples its current straight/pursuit velocity
     /// </summary>
     Vector2 GetTargetVelocity(GameObject obj)
     {
@@ -187,10 +188,10 @@ public class AutoShooter : MonoBehaviour
         if (linear != null)
             return (Vector2)(linear.CurrentDirection * linear.CurrentSpeed);
 
-        // Enemy ships: always drift straight down in world space
+        // Enemy ships may dive toward the player; use their actual current velocity.
         EnemyController enemy = obj.GetComponent<EnemyController>();
         if (enemy != null)
-            return Vector2.down * enemy.speed;
+            return enemy.Velocity;
 
         return Vector2.zero;
     }

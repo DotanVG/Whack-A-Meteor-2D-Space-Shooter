@@ -6,7 +6,7 @@ using UnityEngine;
 ///
 /// SETUP:
 ///   - Attach to your meteor prefab alongside EnemyHealth.
-///   - MeteorSpawnerGL sets the target and speed at spawn time — no manual wiring needed.
+///   - MeteorSpawner sets the target and speed at spawn time — no manual wiring needed.
 ///
 /// PLANNED UPGRADES:
 ///   - Acceleration over time (meteors get faster the longer they live)
@@ -15,10 +15,10 @@ using UnityEngine;
 /// </summary>
 public class MeteorMover : MonoBehaviour
 {
-    [Tooltip("The transform to move toward. Assigned automatically by MeteorSpawnerGL.")]
+    [Tooltip("The transform to move toward. Assigned automatically by MeteorSpawner.")]
     public Transform target;
 
-    [Tooltip("Movement speed in units/second. Set by MeteorSpawnerGL based on current difficulty.")]
+    [Tooltip("Movement speed in units/second. Set by MeteorSpawner based on current difficulty.")]
     public float speed = 3f;
 
     [Tooltip("Degrees per second for the random tumble rotation. Purely visual.")]
@@ -31,7 +31,7 @@ public class MeteorMover : MonoBehaviour
         // Each meteor tumbles on a unique random axis — avoids all meteors spinning identically
         _rotationAxis = Random.onUnitSphere;
 
-        // Fallback: if MeteorSpawnerGL didn't assign a target, find the Player by tag
+        // Fallback: if MeteorSpawner didn't assign a target, find the Player by tag
         if (target == null)
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");

@@ -1,37 +1,41 @@
 using UnityEngine;
 
-/// <summary>
-/// BossController — attach to the Boss prefab alongside EnemyHealth and EnemyController.
-/// Reads boss.hp, boss.speed, and boss.scale from BalanceService on Start() and overrides
-/// the sibling components so one prefab serves as the source of truth.
-/// Also awards bonus Metal on death (handled in EnemyHealth.Die via EconomyService faction overload).
-/// </summary>
+/// <summary>Existing elite prefab with deterministic health initialization and kill-only bounty.</summary>
 public class BossController : MonoBehaviour
 {
-    void Start()
+    private bool configured;
+    private bool rewarded;
+    private int metalDrop = 20;
+
+    /// <summary>Applies a milestone snapshot before any damage can arrive.</summary>
+    public void Configure(EncounterCatalog catalogue, WaveDefinition wave)
     {
-        int   hp    = BalanceService.Instance?.GetInt  ("boss.hp",    20)   ?? 20;
-        float spd   = BalanceService.Instance?.GetFloat("boss.speed", 1.0f) ?? 1.0f;
-        float scale = BalanceService.Instance?.GetFloat("boss.scale", 2.5f) ?? 2.5f;
-
-        EnemyHealth eh = GetComponent<EnemyHealth>();
-        if (eh != null) { eh.maxHealth = hp; }
-
-        EnemyController ec = GetComponent<EnemyController>();
-        if (ec != null) { ec.speed = spd; }
-
-        transform.localScale = Vector3.one * scale;
-
-        Debug.Log($"[Boss] Spawned — HP:{hp}  Speed:{spd}  Scale:{scale}");
+        configured = true;
+        metalDrop = catalogue.eliteMetalReward + wave.metalReward;
+        var health = GetComponent<EnemyHealth>();
+        if (health) health.Initialize(wave.eliteHealth);
+        var controller = GetComponent<EnemyController>();
+        if (controller) controller.speed = catalogue.eliteSpeed * wave.speedMultiplier;
+        transform.localScale = Vector3.one * catalogue.eliteScale;
     }
 
-    /// <summary>Called by EnemyHealth.Die() when the boss-tagged enemy dies.</summary>
+    private void Start()
+    {
+        if (configured) return;
+        var health = GetComponent<EnemyHealth>();
+        if (health) health.Initialize(BalanceService.Instance?.GetInt("boss.hp", 20) ?? 20);
+        var controller = GetComponent<EnemyController>();
+        if (controller) controller.speed = BalanceService.Instance?.GetFloat("boss.speed", 1f) ?? 1f;
+        transform.localScale = Vector3.one * (BalanceService.Instance?.GetFloat("boss.scale", 2.5f) ?? 2.5f);
+        metalDrop = BalanceService.Instance?.GetInt("boss.metal_drop", 20) ?? 20;
+    }
+
+    /// <summary>Only EnemyHealth death invokes this; escaping grants no bounty.</summary>
     public void OnBossDeath()
     {
-        int metalDrop = BalanceService.Instance?.GetInt("boss.metal_drop", 20) ?? 20;
-        EconomyService.Instance?.AddMetal(metalDrop);
-        GameLogger.BossKilled(
-            FindObjectOfType<WaveManager>()?.currentWave ?? 0,
-            Time.timeSinceLevelLoad);
+        if (rewarded) return;
+        rewarded = true;
+        if (EconomyService.Instance) EconomyService.Instance.AddMetal(metalDrop, "Elite defeated");
+        GameLogger.BossKilled(FindObjectOfType<WaveManager>()?.currentWave ?? 0, Time.timeSinceLevelLoad);
     }
 }

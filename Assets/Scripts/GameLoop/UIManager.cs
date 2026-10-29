@@ -3,7 +3,7 @@ using TMPro;
 
 /// <summary>
 /// UIManager — central hub for all in-game HUD elements.
-/// Keeps UI logic out of gameplay scripts (PlayerHealthGL, ScoreManager).
+/// Keeps UI logic out of gameplay scripts (PlayerHealth, ScoreManager).
 ///
 /// SETUP:
 ///   1. Attach to a persistent "UIManager" GameObject in the scene.
@@ -44,7 +44,7 @@ public class UIManager : MonoBehaviour
         if (scoreText != null) scoreText.text = $"Score: {score}";
     }
 
-    /// <summary>Called by PlayerHealthGL.UpdateUI every time HP changes.</summary>
+    /// <summary>Called by PlayerHealth.UpdateUI every time HP changes.</summary>
     public void UpdateHealth(int current, int max)
     {
         if (healthText != null) healthText.text = $"HP: {current}/{max}";
@@ -57,7 +57,7 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Called by PlayerHealthGL.Die().
+    /// Called by PlayerHealth.Die().
     /// Freezes time and shows the Game Over panel.
     /// </summary>
     public void ShowGameOver(int finalScore)

@@ -29,6 +29,9 @@ public class PowerupBase : MonoBehaviour
 
     private float _driftSpeed;
     private float _lifetime;
+    private Transform _player;
+    private float _magnetRadius;
+    private bool _collected;
 
     void Start()
     {
@@ -36,11 +39,23 @@ public class PowerupBase : MonoBehaviour
         _lifetime   = BalanceService.Instance?.GetFloat("powerup.lifetime",    8.0f) ?? 8.0f;
 
         GetComponent<CircleCollider2D>().isTrigger = true;
+        var player = GameObject.FindGameObjectWithTag("Player");
+        if (player) _player = player.transform;
+        _magnetRadius = SkillService.Current.GetModifier(SkillStat.PickupMagnetRadius);
         Destroy(gameObject, _lifetime);
     }
 
     void Update()
     {
+        if (GameManager.Instance && !GameManager.Instance.IsSessionRunning) return;
+        if (_player && _magnetRadius > 0f &&
+            (_player.position - transform.position).sqrMagnitude <= _magnetRadius * _magnetRadius)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, _player.position, 8f * Time.deltaTime);
+            if ((_player.position - transform.position).sqrMagnitude < .16f)
+                Collect(_player.GetComponent<PlayerPowerupHandler>());
+            return;
+        }
         transform.Translate(Vector2.down * _driftSpeed * Time.deltaTime);
         // Gentle horizontal sine sway for visual appeal
         transform.Translate(Vector2.right * Mathf.Sin(Time.time * 2f + GetInstanceID()) * 0.3f * Time.deltaTime);
@@ -51,9 +66,15 @@ public class PowerupBase : MonoBehaviour
         if (!other.CompareTag("Player")) return;
         if (!GameFeatureFlags.UsePowerups) return;
 
-        PlayerPowerupHandler handler = other.GetComponent<PlayerPowerupHandler>();
-        handler?.ApplyPowerup(type);
+        Collect(other.GetComponent<PlayerPowerupHandler>());
+    }
 
+    private void Collect(PlayerPowerupHandler handler)
+    {
+        if (_collected || !handler || !GameFeatureFlags.UsePowerups) return;
+        if (GameManager.Instance && !GameManager.Instance.IsSessionRunning) return;
+        _collected = true;
+        handler.ApplyPowerup(type);
         GameLogger.PowerupCollected(type, transform.position);
         Destroy(gameObject);
     }
