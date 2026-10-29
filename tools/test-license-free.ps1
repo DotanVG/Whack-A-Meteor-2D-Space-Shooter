@@ -24,7 +24,7 @@ function Git-Fixture {
     if ($LASTEXITCODE -ne 0) { throw 'Fixture Git command failed' }
 }
 
-function Assert-Check([string]$Name, [string]$Expected) {
+function Assert-Check([string]$Name, [string]$Expected, [int]$ExpectedExitCode = 1) {
     # Redirect stderr as well; a failing checker is the expected result in negative cases.
     $savedPreference = $ErrorActionPreference
     try {
@@ -36,7 +36,7 @@ function Assert-Check([string]$Name, [string]$Expected) {
     }
     $message = $log -join "`n"
     if ($Expected) {
-        if ($code -ne 1 -or $message -notmatch [regex]::Escape($Expected)) {
+        if ($code -ne $ExpectedExitCode -or $message -notmatch [regex]::Escape($Expected)) {
             throw "$Name failed (exit $code):`n$message"
         }
     } elseif ($code -ne 0) {
@@ -61,20 +61,29 @@ try {
     }
     Git-Fixture init --quiet
     Git-Fixture add -- Assets
-    Assert-Check 'clean tracked copy' ''
+    Assert-Check 'clean tracked copy' '0 error(s).' 0
 
     Add-Content -LiteralPath (Join-Path $fixture $script) -Value "`npublic class Broken {"
     Assert-Check 'C# syntax error' 'error CS'
     Copy-Item -LiteralPath (Join-Path $root $script) -Destination (Join-Path $fixture $script)
 
     $languageCases = @(
-        @{ Name = 'C# 10 file-scoped namespace'; Source = 'namespace Future; public class NewSyntax {}' },
-        @{ Name = 'C# 11 raw string literal'; Source = 'public class NewSyntax { string Text = """raw"""; }' },
-        @{ Name = 'C# 12 primary constructor'; Source = 'public class NewSyntax(int value) {}' }
+        @{ Name = 'C# 10 file-scoped namespace'; Diagnostic = 'CS8773'; Source = 'namespace Future; public class NewSyntax {}' },
+        @{ Name = 'C# 11 raw string literal'; Diagnostic = 'CS8773'; Source = 'public class NewSyntax { string Text = """raw"""; }' },
+        @{ Name = 'C# 12 primary constructor'; Diagnostic = 'CS8773'; Source = 'public class NewSyntax(int value) {}' },
+        @{ Name = 'C# 11 unsigned right shift (binding)'; Diagnostic = 'CS8773'; Source = 'public class NewSyntax { public int Shift(int a) => a >>> 1; }' },
+        @{ Name = 'C# 13 params collection (binding)'; Diagnostic = 'CS8773'; Source = 'public class NewSyntax { public void M(params System.ReadOnlySpan<int> values) {} }' },
+        @{ Name = 'C# 11 span constant pattern (binding)'; Diagnostic = 'CS8773'; Source = 'public class NewSyntax { public bool Match(System.ReadOnlySpan<char> text) => text is "hello"; }' },
+        @{ Name = 'C# 13 index initializer (binding)'; Diagnostic = 'CS8773'; Source = 'public class NewSyntax { public object Make() => new System.Collections.Generic.List<int> { [^1] = 1 }; }' },
+        @{ Name = 'C# 10 interpolated string handler (binding)'; Diagnostic = 'CS8773'; Source = 'public class NewSyntax { static void Log(ref System.Runtime.CompilerServices.DefaultInterpolatedStringHandler handler) {} public void M() => Log($"value {1}"); }' },
+        @{ Name = 'C# 11 static abstract interface member'; Diagnostic = 'CS8703'; Source = 'public interface NewSyntax { static abstract int M(); }' },
+        @{ Name = 'C# 14 null-conditional assignment'; Diagnostic = 'CS8652'; Source = 'public class NewSyntax { public int X; public void M(NewSyntax a) { a?.X = 1; } }' },
+        @{ Name = 'C# 11 newline in interpolation hole'; Diagnostic = 'CS8967'; Source = 'public class NewSyntax { string Text = $"{
+            1}"; }' }
     )
     foreach ($case in $languageCases) {
         [IO.File]::WriteAllText((Join-Path $fixture $script), $case.Source)
-        Assert-Check $case.Name 'error CS8773'
+        Assert-Check $case.Name "error $($case.Diagnostic)"
     }
     [IO.File]::WriteAllText((Join-Path $fixture $script), 'public record Valid { public int Value { get; init; } public static Valid Make() => new(); }')
     Assert-Check 'valid C# 9 record, init and target-typed new' ''
@@ -82,8 +91,22 @@ try {
     Assert-Check 'unresolved types remain outside the syntax gate' ''
     Copy-Item -LiteralPath (Join-Path $root $script) -Destination (Join-Path $fixture $script)
 
+    $folderCases = @(
+        @{ Name = '.gitkeep-only folder with meta'; Folder = 'Assets/Placeholder'; File = 'Assets/Placeholder/.gitkeep' },
+        @{ Name = 'Samples~-only folder with meta'; Folder = 'Assets/Pkg'; File = 'Assets/Pkg/Samples~/x.cs' }
+    )
+    foreach ($case in $folderCases) {
+        $destination = Join-Path $fixture $case.File
+        New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+        [IO.File]::WriteAllText($destination, 'deliberately invalid C# with no meta')
+        $folderMetaPath = "$($case.Folder).meta"
+        [IO.File]::WriteAllText((Join-Path $fixture $folderMetaPath), "fileFormatVersion: 2`nguid: $([guid]::NewGuid().ToString('N'))`nfolderAsset: yes`n")
+        Git-Fixture add --force -- $case.File $folderMetaPath
+        Assert-Check $case.Name ''
+    }
+
     $ignoredPaths = @(
-        'Assets/PlaceholderOnly/.gitkeep',
+        'Assets/.gitkeep',
         'Assets/.DS_Store',
         'Assets/backup.txt~',
         'Assets/Foo~/Nested/Broken.cs',
