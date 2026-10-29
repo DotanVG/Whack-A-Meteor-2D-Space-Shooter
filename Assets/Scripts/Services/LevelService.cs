@@ -132,7 +132,6 @@ public class LevelService : MonoBehaviour
     {
         PlayerPrefs.SetInt(PrefKeyXP,    TotalXP);
         PlayerPrefs.SetInt(PrefKeyLevel, Level);
-        PlayerPrefs.Save();
     }
 
     static float Get(string key, float def)

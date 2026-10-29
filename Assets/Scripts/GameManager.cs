@@ -235,6 +235,7 @@ public class GameManager : MonoBehaviour
         gameOverTimer = 0f;
         Time.timeScale = 0f;
         OnGameOver?.Invoke();
+        PlayerPrefs.Save();
         // Log is deferred to let RunStateService/ProgressionService receive the event first
         int currentWave = FindObjectOfType<WaveManager>()?.currentWave ?? 0;
         GameLogger.PlayerGameOver(Score, currentWave, SessionTime);
@@ -244,7 +245,18 @@ public class GameManager : MonoBehaviour
     {
         isPaused = !isPaused;
         Time.timeScale = isPaused ? 0f : 1f;
+        if (isPaused) PlayerPrefs.Save();
     }
+
+    // Kill rewards update PlayerPrefs in memory; flush at lifecycle boundaries.
+    void OnApplicationPause(bool paused)
+    {
+        if (paused) PlayerPrefs.Save();
+    }
+
+    void OnApplicationQuit() => PlayerPrefs.Save();
+
+    void OnDisable() => PlayerPrefs.Save();
 
     public void EndGame()
     {
