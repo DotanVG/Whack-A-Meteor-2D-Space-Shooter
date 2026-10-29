@@ -22,12 +22,15 @@ Measured from Phase 1 commit `969e2b4` with identical gameplay/assets and Brotli
 | --- | ---: | ---: | ---: | ---: |
 | MCP runtime retained | 10,443,596 (10.443596) | 5,155,509 | 5,179,310 | 67,535 |
 | MCP assemblies excluded | 10,445,071 (10.445071) | 5,156,968 | 5,179,310 | 67,535 |
+| Phase 2 release (tooling excluded) | 10,461,044 (10.461044) | 5,163,032 | 5,189,140 | 67,614 |
 
 There is no demonstrated size saving: wasm/framework are identical; the excluded variant is
 1,475 bytes larger overall, predominantly serialized data/compression variation. Do not infer
 browser runtime behavior from build success. The filter makes the development-only boundary
 explicit; this is not a size optimization claim. Baselines exclude Phase 2 gameplay additions.
 The earlier 0.63.1 package baseline was skipped to avoid another restore/build branch of the run.
+The final Phase 2 release adds 15,973 bytes over the Phase 1 excluded variant and also builds
+successfully. Numbers are on-disk compressed sizes; MB means 1,000,000 bytes.
 
 Research: [Unity-MCP upstream](https://github.com/IvanMurzak/Unity-MCP) (Apache-2.0, pinned package,
 active releases) is retained for Editor tooling. Unity's installed 2022.3 API documentation exposes
