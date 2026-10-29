@@ -13,7 +13,7 @@ using UnityEngine;
 /// SKILL TREE:
 ///   Lightning Lv1 (id=15): 2 bounces
 ///   Lightning Lv2 (id=16): 4 bounces
-///   Lightning Lv3 (id=17): 6 bounces + 2 bonus damage per hop
+///   Lightning Lv3 (id=17): 6 bounces + 1 bonus damage per hop
 /// </summary>
 public class LightningChain : MonoBehaviour
 {
@@ -41,6 +41,8 @@ public class LightningChain : MonoBehaviour
         Instance = this;
     }
 
+    void OnDestroy() { if (Instance == this) Instance = null; }
+
     /// <summary>
     /// Trigger the chain from a world position.
     /// bounces = total extra targets to hit (already-hit set prevents revisiting).
@@ -65,7 +67,8 @@ public class LightningChain : MonoBehaviour
             visited.Add(next);
 
             // Draw arc
-            StartCoroutine(DrawArc(current, next.transform.position));
+            Vector3 nextPosition = next.transform.position;
+            CombatFeedback.Arc(current, nextPosition, lightningColor, arcWidth, arcDuration);
 
             // Deal damage
             MeteorSplit ms = next.GetComponent<MeteorSplit>();
@@ -80,7 +83,7 @@ public class LightningChain : MonoBehaviour
                     eh.TakeDamage(1 + bonusDamage);
             }
 
-            current = next.transform.position;
+            current = nextPosition;
             yield return new WaitForSeconds(0.05f); // stagger hops visually
         }
     }
@@ -88,7 +91,8 @@ public class LightningChain : MonoBehaviour
     GameObject FindNearest(Vector3 from, HashSet<GameObject> exclude)
     {
         GameObject best  = null;
-        float      bestD = searchRadius * searchRadius;
+        float radius = searchRadius * SkillService.Current.GetModifier(SkillStat.LightningRange);
+        float bestD = radius * radius;
 
         foreach (string tag in TargetTags)
         {
@@ -102,38 +106,4 @@ public class LightningChain : MonoBehaviour
         return best;
     }
 
-    IEnumerator DrawArc(Vector3 from, Vector3 to)
-    {
-        GameObject arco = new GameObject("LightningArc");
-        LineRenderer lr = arco.AddComponent<LineRenderer>();
-        lr.positionCount = 8;
-        lr.startWidth    = arcWidth;
-        lr.endWidth      = arcWidth * 0.3f;
-        lr.material      = new Material(Shader.Find("Sprites/Default"));
-        lr.startColor    = lightningColor;
-        lr.endColor      = Color.white;
-        lr.useWorldSpace = true;
-
-        // Jittered path
-        for (int i = 0; i < 8; i++)
-        {
-            float t    = i / 7f;
-            Vector3 p  = Vector3.Lerp(from, to, t);
-            if (i > 0 && i < 7) p += (Vector3)Random.insideUnitCircle * 0.25f;
-            lr.SetPosition(i, p);
-        }
-
-        float elapsed = 0f;
-        while (elapsed < arcDuration)
-        {
-            float alpha = 1f - elapsed / arcDuration;
-            Color c     = lightningColor;
-            c.a = alpha;
-            lr.startColor = c;
-            lr.endColor   = new Color(1f, 1f, 1f, alpha);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-        Destroy(arco);
-    }
 }

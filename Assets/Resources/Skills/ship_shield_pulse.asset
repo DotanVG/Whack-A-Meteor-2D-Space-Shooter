@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a521b0fa67a5482acd2a0be7d30ca1c, type: 3}
+  m_Name: ship_shield_pulse
+  m_EditorClassIdentifier:
+  id: ship.shield_pulse
+  displayName: Shield Pulse
+  branch: 2
+  tier: 6
+  prerequisiteIds:
+  - ship.shield
+  effect: 9
+  levels:
+  - legacyId: -1
+    label: "Absorb hit: 2 damage in radius 3"
+    costStardust: 450
+    costMetal: 10
+    modifiers:
+    - stat: 18
+      operation: 0
+      value: 2

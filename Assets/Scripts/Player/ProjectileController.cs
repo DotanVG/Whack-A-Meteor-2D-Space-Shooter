@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class ProjectileController : MonoBehaviour
 {
     public float speed = 50f;  // Speed at which the projectile moves
@@ -7,10 +8,44 @@ public class ProjectileController : MonoBehaviour
     public AudioClip enemyHitClip;
     public GameObject hitParticles;
 
+    private bool twinSpawned;
+    private ProjectileHits hits;
+    private float criticalChance;
+    private float speedMultiplier = 1f;
+    private bool prepared;
+
+    public float EffectiveSpeed => speed * speedMultiplier;
+    public int DamageForRoll(float roll) => CombatRules.Damage(1, criticalChance, roll);
+
+    /// <summary>Shared preparation boundary for spawned shots; twins cannot recursively multiply.</summary>
+    public bool PrepareShot(SkillProgress skills, bool isTwin)
+    {
+        if (prepared) return false;
+        prepared = true;
+        hits = new ProjectileHits((int)skills.GetModifier(SkillStat.ProjectilePierce));
+        criticalChance = skills.GetModifier(SkillStat.CriticalChance);
+        speedMultiplier = skills.GetModifier(SkillStat.ProjectileSpeed);
+        bool spawnTwin = !isTwin && skills.GetModifier(SkillStat.ExtraProjectiles) > 0f;
+        twinSpawned = true;
+        return spawnTwin;
+    }
+
     void Start()
     {
-        // Initialize the projectile's velocity in the direction it's facing
-        GetComponent<Rigidbody2D>().velocity = transform.up * speed;
+        if (GameManager.Instance && !GameManager.Instance.IsSessionRunning) { Destroy(gameObject); return; }
+        if (PrepareShot(SkillService.Current, twinSpawned))
+        {
+            twinSpawned = true;
+            Quaternion direction = transform.rotation;
+            transform.rotation = direction * Quaternion.Euler(0f, 0f, -4f);
+            var twin = Instantiate(gameObject, transform.position + transform.right * .12f,
+                direction * Quaternion.Euler(0f, 0f, 4f)).GetComponent<ProjectileController>();
+            twin.twinSpawned = true;
+            twin.prepared = false;
+            twin.hits = null;
+        }
+        // Both manual and automatic projectiles use this single upgrade path.
+        GetComponent<Rigidbody2D>().velocity = transform.up * EffectiveSpeed;
 
         // Destroy the projectile after 'lifeTime' seconds if it doesn't hit anything
         Destroy(gameObject, lifeTime);
@@ -18,32 +53,21 @@ public class ProjectileController : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        // Check if the projectile hit an enemy — scoring/economy handled by EnemyHealth.Die()
-        if (other.gameObject.CompareTag("Enemy"))
+        if (hits == null || (GameManager.Instance && !GameManager.Instance.IsSessionRunning)) return;
+        var meteor = other.GetComponentInParent<MeteorSplit>();
+        var enemy = other.GetComponentInParent<EnemyHealth>();
+        GameObject target = meteor ? meteor.gameObject : enemy ? enemy.gameObject : null;
+        if (!target || !hits.TryHit(target.GetInstanceID())) return;
+        int damage = DamageForRoll(Random.value);
+        if (damage > 1) CombatFeedback.Critical(target.transform.position, damage);
+        if (meteor) meteor.OnProjectileHit(damage);
+        else enemy.TakeDamage(damage);
+        if (enemyHitClip) AudioSource.PlayClipAtPoint(enemyHitClip, transform.position);
+        if (hitParticles)
         {
-            if (enemyHitClip != null)
-                AudioSource.PlayClipAtPoint(enemyHitClip, transform.position);
-            if (hitParticles != null)
-                Instantiate(hitParticles, other.transform.position, Quaternion.identity);
-            other.GetComponent<EnemyHealth>()?.TakeDamage(1);
-            Destroy(gameObject);
+            var effect = Instantiate(hitParticles, transform.position, Quaternion.identity);
+            Destroy(effect, 1f);
         }
-        // Check if the projectile hit a meteor
-        else if (other.gameObject.CompareTag("BigBrownMeteor") ||
-                 other.gameObject.CompareTag("BigGreyMeteor") ||
-                 other.gameObject.CompareTag("MediumBrownMeteor") ||
-                 other.gameObject.CompareTag("MediumGreyMeteor") ||
-                 other.gameObject.CompareTag("SmallBrownMeteor") ||
-                 other.gameObject.CompareTag("SmallGreyMeteor") ||
-                 other.gameObject.CompareTag("TinyBrownMeteor") ||
-                 other.gameObject.CompareTag("TinyGreyMeteor"))
-        {
-            MeteorSplit meteorSplit = other.gameObject.GetComponent<MeteorSplit>();
-            if (meteorSplit != null)
-            {
-                meteorSplit.OnProjectileHit();
-            }
-            Destroy(gameObject); // Destroy the projectile
-        }
+        if (hits.Exhausted) Destroy(gameObject);
     }
 }

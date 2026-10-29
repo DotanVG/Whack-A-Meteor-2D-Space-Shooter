@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a521b0fa67a5482acd2a0be7d30ca1c, type: 3}
+  m_Name: autoshooter_twin_shots
+  m_EditorClassIdentifier:
+  id: autoshooter.twin_shots
+  displayName: Twin Shots
+  branch: 0
+  tier: 6
+  prerequisiteIds:
+  - autoshooter.fire_rate
+  effect: 6
+  levels:
+  - legacyId: -1
+    label: "Two shots per volley"
+    costStardust: 750
+    costMetal: 15
+    modifiers:
+    - stat: 14
+      operation: 0
+      value: 1

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -42,10 +43,27 @@ public class ShieldController : MonoBehaviour
     /// </summary>
     public bool TryAbsorbHit()
     {
-        if (_absorbing || _charges <= 0) return false;
+        if (_absorbing) return true;
+        if (_charges <= 0) return false;
+        _absorbing = true;
         _charges--;
         Debug.Log($"[Shield] Hit absorbed! Charges remaining: {_charges}");
         if (_charges <= 0) _visual?.Deactivate();
+        int pulseDamage = (int)SkillService.Current.GetModifier(SkillStat.ShieldPulseDamage);
+        if (pulseDamage > 0)
+        {
+            CombatFeedback.Ring(transform.position, 3f, new Color(.25f, .8f, 1f));
+            var visited = new HashSet<int>();
+            foreach (var collider in Physics2D.OverlapCircleAll(transform.position, 3f))
+            {
+                var meteor = collider.GetComponentInParent<MeteorSplit>();
+                var enemy = collider.GetComponentInParent<EnemyHealth>();
+                GameObject target = meteor ? meteor.gameObject : enemy ? enemy.gameObject : null;
+                if (!target || !visited.Add(target.GetInstanceID())) continue;
+                if (meteor) meteor.OnProjectileHit(pulseDamage);
+                else enemy.TakeDamage(pulseDamage);
+            }
+        }
         StartCoroutine(AbsorbFeedback());
         return true;
     }
@@ -66,6 +84,15 @@ public class ShieldController : MonoBehaviour
     }
 
     public int Charges => _charges;
+
+#if UNITY_EDITOR
+    /// <summary>Tests can exercise the repeat-hit guard without starting timed effects.</summary>
+    public void SetStateForTests(int charges, bool absorbing)
+    {
+        _charges = Mathf.Max(0, charges);
+        _absorbing = absorbing;
+    }
+#endif
 
     /// <summary>Add n charges from a powerup pickup, capped at the skill-tree max.</summary>
     public void AddCharge(int n)

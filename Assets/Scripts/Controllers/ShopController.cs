@@ -17,6 +17,7 @@ public class ShopController : MonoBehaviour
     private int   _activeTab  = 0;
     private float _lastTabNav = 0f;
     private const float TAB_COOLDOWN = 0.25f;
+    private Vector2 _skillsScroll;
 
     private InputManager inputManager;
 
@@ -89,6 +90,8 @@ public class ShopController : MonoBehaviour
         if (_feedbackTimer > 0f) _feedbackTimer -= Time.deltaTime;
 
         if (inputManager == null) return;
+        if (_activeTab == 0)
+            _skillsScroll.y = Mathf.Max(0f, _skillsScroll.y - inputManager.GetNavigate().y * 300f * Time.unscaledDeltaTime);
 
         if (inputManager.GetCancel())
         {
@@ -197,27 +200,29 @@ public class ShopController : MonoBehaviour
 
     void DrawSkillsTab(Rect area)
     {
-        float colW  = (area.width - 24) / 3f;
-        float nodeH = 52f;
+        var definitions = SkillService.Definitions;
+        int[] colCounts = new int[3];
+        foreach (var definition in definitions) colCounts[(int)definition.branch] += definition.MaxLevel;
+        float height = 28f + Mathf.Max(colCounts[0], Mathf.Max(colCounts[1], colCounts[2])) * 90f;
+        Rect viewport = new Rect(area.x, area.y, area.width, Mathf.Max(1f, area.height - 28f));
+        _skillsScroll = GUI.BeginScrollView(viewport, _skillsScroll, new Rect(0, 0, area.width - 20f, height));
+        Rect content = new Rect(0, 0, area.width - 20f, height);
+        float colW  = (content.width - 24) / 3f;
+        float nodeH = 72f;
         float nodeW = colW - 16f;
         float gapY  = 18f;
 
         string[] headers = { "AUTO-SHOOTER", "HAMMER", "SHIP" };
         for (int col = 0; col < 3; col++)
-            DrawColHeader(area.x + col * colW, area.y, colW, headers[col]);
+            DrawColHeader(content.x + col * colW, content.y, colW, headers[col]);
 
-        float rowY = area.y + 28f;
-
-        // Pre-count nodes per column so connectors stop at the last node
-        int[] colCounts = new int[3];
-        foreach (var def in SkillService.Definitions)
-            colCounts[(int)def.branch] += def.MaxLevel;
+        float rowY = content.y + 28f;
 
         for (int col = 0; col < 3; col++)
         {
-            float cx  = area.x + col * colW + 8;
+            float cx  = content.x + col * colW + 8;
             int   row = 0;
-            foreach (var def in SkillService.Definitions)
+            foreach (var def in definitions)
             {
                 if ((int)def.branch != col) continue;
                 for (int level = 1; level <= def.MaxLevel; level++)
@@ -233,7 +238,8 @@ public class ShopController : MonoBehaviour
             }
         }
 
-        // Legend
+        GUI.EndScrollView();
+        // Legend remains visible while later rows scroll.
         float legY = area.y + area.height - 24f;
         DrawLegend(area.x, legY, area.width);
     }
@@ -293,9 +299,12 @@ public class ShopController : MonoBehaviour
                         : new Color(0.5f, 0.5f, 0.5f);
 
         GUI.Label(new Rect(x + 8, y + 4, w - 16, 18),
-                  $"{def.displayName}  {data.label}",
+                  data.legacyId < 0 ? def.displayName : $"{def.displayName}  {data.label}",
                   new GUIStyle(_bodyStyle) { fontStyle = FontStyle.Bold,
                                              normal    = { textColor = nameColor } });
+        if (data.legacyId < 0)
+            GUI.Label(new Rect(x + 8, y + 25, w - 16, 18), data.label,
+                new GUIStyle(_bodyStyle) { fontSize = 10, normal = { textColor = nameColor } });
 
         string costStr;
         Color  costColor;
@@ -312,7 +321,7 @@ public class ShopController : MonoBehaviour
                 : new Color(0.35f, 0.35f, 0.35f);
         }
 
-        GUI.Label(new Rect(x + 8, y + 26, w - 16, 18), costStr,
+        GUI.Label(new Rect(x + 8, y + h - 22, w - 16, 18), costStr,
                   new GUIStyle(_bodyStyle) { fontSize = 11, normal = { textColor = costColor } });
 
         return clicked;

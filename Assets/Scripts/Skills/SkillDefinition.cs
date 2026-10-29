@@ -6,14 +6,16 @@ using UnityEngine;
 public enum SkillBranch { AutoShooter, Hammer, Ship }
 
 /// <summary>Describes the mechanic unlocked or upgraded by a definition.</summary>
-public enum SkillEffect { Stat, TargetPriority, SlamWave, Shield, Lightning }
+public enum SkillEffect { Stat, TargetPriority, SlamWave, Shield, Lightning, Pierce, TwinShot, Critical, Impact, Pulse, Magnet }
 
 /// <summary>Gameplay values supplied by the skill tree.</summary>
 public enum SkillStat
 {
     FireRate, Spread, ProjectileSpeed, HammerRadius, HammerScore, MoveSpeed,
     BoostDuration, ShieldCharges, Invincibility, LightningBounces,
-    LightningBonusDamage, TargetPriority, SlamWave
+    LightningBonusDamage, TargetPriority, SlamWave,
+    ProjectilePierce, ExtraProjectiles, CriticalChance, HammerDamage,
+    LightningRange, ShieldPulseDamage, PickupMagnetRadius
 }
 
 /// <summary>Set stores absolute level values, avoiding cumulative upgrade rounding.</summary>

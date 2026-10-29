@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// Controls the hammer cursor, AOE circle, and radar sweep effect in the Whack-A-Meteor game.
@@ -65,6 +66,7 @@ public class HammerCursorController : MonoBehaviour
     /// </summary>
     void Update()
     {
+        if (GameManager.Instance && !GameManager.Instance.IsSessionRunning) return;
         UpdatePosition();
         RotateRadarDot();
         UpdateCircularTrail();
@@ -304,21 +306,30 @@ public class HammerCursorController : MonoBehaviour
     /// </summary>
     private void CheckMeteorHits()
     {
+        if (GameManager.Instance && !GameManager.Instance.IsSessionRunning) return;
         Vector3 hitboxCenter = aoeCircle.transform.position;
+        int impact = (int)SkillService.Current.GetModifier(SkillStat.HammerDamage);
+        int meteorDamage = 2 + impact;
+        int enemyDamage = (BalanceService.Instance?.GetInt("hammer.enemy_damage", 2) ?? 2) + impact;
+        var visited = new HashSet<int>();
+        CombatFeedback.Ring(hitboxCenter, aoeRadius, new Color(1f, .7f, .2f));
 
         // ── Primary hit (normal aoeRadius) ───────────────────────────────────
         Collider2D[] primary = Physics2D.OverlapCircleAll(hitboxCenter, aoeRadius);
         foreach (Collider2D col in primary)
         {
-            MeteorSplit ms = col.GetComponent<MeteorSplit>();
-            if (ms != null) { ms.OnHammerHit(); continue; }
+            MeteorSplit ms = col.GetComponentInParent<MeteorSplit>();
+            if (ms != null)
+            {
+                if (visited.Add(ms.GetInstanceID())) ms.OnHammerHit(meteorDamage);
+                continue;
+            }
 
             // Hammer also damages enemy ships
-            EnemyHealth eh = col.GetComponent<EnemyHealth>();
-            if (eh != null)
+            EnemyHealth eh = col.GetComponentInParent<EnemyHealth>();
+            if (eh != null && visited.Add(eh.GetInstanceID()))
             {
-                int dmg = BalanceService.Instance?.GetInt("hammer.enemy_damage", 2) ?? 2;
-                eh.TakeDamage(dmg);
+                eh.TakeDamage(enemyDamage);
             }
         }
 
@@ -326,18 +337,22 @@ public class HammerCursorController : MonoBehaviour
         if (SkillService.Instance?.GetSlamWaveEnabled() == true)
         {
             float waveRadius = aoeRadius * 2f;
+            CombatFeedback.Ring(hitboxCenter, waveRadius, new Color(1f, .5f, .15f));
             Collider2D[] wave = Physics2D.OverlapCircleAll(hitboxCenter, waveRadius);
             foreach (Collider2D col in wave)
             {
                 if (Vector3.Distance(hitboxCenter, col.transform.position) <= aoeRadius) continue;
-                MeteorSplit ms = col.GetComponent<MeteorSplit>();
-                if (ms != null) { ms.OnHammerHit(); continue; }
-
-                EnemyHealth eh = col.GetComponent<EnemyHealth>();
-                if (eh != null)
+                MeteorSplit ms = col.GetComponentInParent<MeteorSplit>();
+                if (ms != null)
                 {
-                    int dmg = BalanceService.Instance?.GetInt("hammer.enemy_damage", 2) ?? 2;
-                    eh.TakeDamage(dmg);
+                    if (visited.Add(ms.GetInstanceID())) ms.OnHammerHit(meteorDamage);
+                    continue;
+                }
+
+                EnemyHealth eh = col.GetComponentInParent<EnemyHealth>();
+                if (eh != null && visited.Add(eh.GetInstanceID()))
+                {
+                    eh.TakeDamage(enemyDamage);
                 }
             }
             CameraShake.Instance?.Shake(0.15f, 0.08f);

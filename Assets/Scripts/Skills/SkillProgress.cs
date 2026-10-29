@@ -172,7 +172,13 @@ public sealed class SkillProgress
             case SkillStat.LightningBounces:
             case SkillStat.LightningBonusDamage:
             case SkillStat.TargetPriority:
-            case SkillStat.SlamWave: return 0f;
+            case SkillStat.SlamWave:
+            case SkillStat.ProjectilePierce:
+            case SkillStat.ExtraProjectiles:
+            case SkillStat.CriticalChance:
+            case SkillStat.HammerDamage:
+            case SkillStat.ShieldPulseDamage:
+            case SkillStat.PickupMagnetRadius: return 0f;
             default: return 1f;
         }
     }
