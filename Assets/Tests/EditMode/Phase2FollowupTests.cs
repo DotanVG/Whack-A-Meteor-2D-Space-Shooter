@@ -6,7 +6,6 @@ using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class Phase2FollowupTests
 {
@@ -18,19 +17,17 @@ public class Phase2FollowupTests
         .GetField(field, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(target, value);
 
     private readonly List<GameObject> objects = new List<GameObject>();
-    private Scene scene;
-    private Scene previousScene;
     private HashSet<GameObject> existingFeedback;
+    private object previousFeedback;
 
     [SetUp]
     public void SetUp()
     {
-        previousScene = SceneManager.GetActiveScene();
-        scene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
-            UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
-            UnityEditor.SceneManagement.NewSceneMode.Additive);
         existingFeedback = new HashSet<GameObject>(UnityEngine.Object.FindObjectsOfType<MonoBehaviour>()
             .Where(item => item.GetType().Name == "CombatFeedback").Select(item => item.gameObject));
+        var singleton = RuntimeType("CombatFeedback").GetField("instance", BindingFlags.Static | BindingFlags.NonPublic);
+        previousFeedback = singleton.GetValue(null);
+        singleton.SetValue(null, null);
     }
 
     [TearDown]
@@ -41,15 +38,14 @@ public class Phase2FollowupTests
         foreach (var feedback in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>()
             .Where(item => item.GetType().Name == "CombatFeedback" && !existingFeedback.Contains(item.gameObject)))
             UnityEngine.Object.DestroyImmediate(feedback.gameObject);
-        if (previousScene.IsValid() && previousScene.isLoaded) SceneManager.SetActiveScene(previousScene);
-        UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+        RuntimeType("CombatFeedback").GetField("instance", BindingFlags.Static | BindingFlags.NonPublic)
+            .SetValue(null, previousFeedback);
     }
 
     private GameObject Host(string name, Vector2 position)
     {
         var host = new GameObject(name);
         objects.Add(host);
-        SceneManager.MoveGameObjectToScene(host, scene);
         // Keep test colliders away from any project scene left open by the batch runner.
         host.transform.position = position + new Vector2(1000f, 1000f);
         return host;
@@ -85,7 +81,6 @@ public class Phase2FollowupTests
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Projectiles/Projectile.prefab");
         var host = UnityEngine.Object.Instantiate(prefab);
         objects.Add(host);
-        SceneManager.MoveGameObjectToScene(host, scene);
         var type = RuntimeType("ProjectileController");
         var shot = host.GetComponent(type);
         float authoredSpeed = (float)type.GetField("speed").GetValue(prefab.GetComponent(type));
@@ -136,7 +131,7 @@ public class Phase2FollowupTests
             healthField.SetValue(target, Activator.CreateInstance(healthField.FieldType, new object[] { 100 }));
         }
         else target = Enemy(Vector2.up);
-        Call(shot, "OnTriggerEnter2D", target.GetComponent<Collider2D>());
+        Call(shot, "ResolveHit", target.GetComponent<Collider2D>(), critical ? 0f : 1f);
         var feedbackType = RuntimeType("CombatFeedback");
         var hub = feedbackType.GetField("instance", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
         var labels = (IList)feedbackType.GetField("labels", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(hub);

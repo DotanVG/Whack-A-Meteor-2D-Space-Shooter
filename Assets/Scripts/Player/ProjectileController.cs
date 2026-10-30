@@ -100,14 +100,17 @@ public class ProjectileController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other) => HandleHit(other);
 
-    private void HandleHit(Collider2D other)
+    private void HandleHit(Collider2D other) => ResolveHit(other, null);
+
+    // Explicit rolls let EditMode verify the complete feedback path without random state.
+    private void ResolveHit(Collider2D other, float? roll)
     {
         if (hits == null || (GameManager.Instance && !GameManager.Instance.IsSessionRunning)) return;
         var meteor = other.GetComponentInParent<MeteorSplit>();
         var enemy = other.GetComponentInParent<EnemyHealth>();
         GameObject target = meteor ? meteor.gameObject : enemy ? enemy.gameObject : null;
         if (!target || !hits.TryHit(target.GetInstanceID())) return;
-        int damage = DamageForRoll(Random.value);
+        int damage = DamageForRoll(roll ?? Random.value);
         if (meteor) meteor.OnProjectileHit(damage, damage > 1);
         else enemy.TakeDamage(damage, damage > 1);
         if (enemyHitClip) AudioSource.PlayClipAtPoint(enemyHitClip, transform.position);
