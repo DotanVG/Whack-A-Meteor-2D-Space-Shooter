@@ -30,6 +30,7 @@ public class PowerupBase : MonoBehaviour
     private float _driftSpeed;
     private float _lifetime;
     private Transform _player;
+    private PlayerPowerupHandler _playerHandler;
     private float _magnetRadius;
     private bool _collected;
 
@@ -40,25 +41,35 @@ public class PowerupBase : MonoBehaviour
 
         GetComponent<CircleCollider2D>().isTrigger = true;
         var player = GameObject.FindGameObjectWithTag("Player");
-        if (player) _player = player.transform;
+        if (player)
+        {
+            _player = player.transform;
+            _playerHandler = player.GetComponent<PlayerPowerupHandler>();
+        }
         _magnetRadius = SkillService.Current.GetModifier(SkillStat.PickupMagnetRadius);
         Destroy(gameObject, _lifetime);
     }
 
     void Update()
     {
-        if (GameManager.Instance && !GameManager.Instance.IsSessionRunning) return;
-        if (_player && _magnetRadius > 0f &&
-            (_player.position - transform.position).sqrMagnitude <= _magnetRadius * _magnetRadius)
-        {
-            transform.position = Vector3.MoveTowards(transform.position, _player.position, 8f * Time.deltaTime);
-            if ((_player.position - transform.position).sqrMagnitude < .16f)
-                Collect(_player.GetComponent<PlayerPowerupHandler>());
-            return;
-        }
+        if (_collected || (GameManager.Instance && !GameManager.Instance.IsSessionRunning)) return;
+        if (TryMagnet(Time.deltaTime)) return;
         transform.Translate(Vector2.down * _driftSpeed * Time.deltaTime);
         // Gentle horizontal sine sway for visual appeal
         transform.Translate(Vector2.right * Mathf.Sin(Time.time * 2f + GetInstanceID()) * 0.3f * Time.deltaTime);
+    }
+
+    private bool TryMagnet(float deltaTime)
+    {
+        if (!_collected && _player && _playerHandler && _magnetRadius > 0f &&
+            (_player.position - transform.position).sqrMagnitude <= _magnetRadius * _magnetRadius)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, _player.position, 8f * deltaTime);
+            if ((_player.position - transform.position).sqrMagnitude < .16f)
+                Collect(_playerHandler);
+            return true;
+        }
+        return false;
     }
 
     void OnTriggerEnter2D(Collider2D other)
