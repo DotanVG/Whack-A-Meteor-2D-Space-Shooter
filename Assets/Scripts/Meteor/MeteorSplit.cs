@@ -31,10 +31,10 @@ public class MeteorSplit : MonoBehaviour
         bonusMetal = profile.metalReward;
     }
 
-    private bool ApplyDamage(int amount)
+    private bool ApplyDamage(int amount, bool critical = false)
     {
         if (_hit || _split || amount <= 0) return false;
-        CombatFeedback.Hit(gameObject, amount);
+        CombatFeedback.Hit(gameObject, amount, critical);
         if (!durability.Apply(amount)) return false;
         _hit = true;
         return true;
@@ -176,9 +176,12 @@ public class MeteorSplit : MonoBehaviour
         }
     }
 
-    public void OnProjectileHit(int damage = 1)
+    public void OnProjectileHit(int damage = 1) => OnProjectileHit(damage, false);
+
+    /// <summary>Projectile damage and its single label share the same critical decision.</summary>
+    public void OnProjectileHit(int damage, bool critical)
     {
-        if (!ApplyDamage(damage)) return;
+        if (!ApplyDamage(damage, critical)) return;
 
         string hitTag  = gameObject.tag;
         bool   splits  = !hitTag.StartsWith("Tiny");

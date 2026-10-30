@@ -97,9 +97,8 @@ public class ProjectileController : MonoBehaviour
         GameObject target = meteor ? meteor.gameObject : enemy ? enemy.gameObject : null;
         if (!target || !hits.TryHit(target.GetInstanceID())) return;
         int damage = DamageForRoll(Random.value);
-        if (damage > 1) CombatFeedback.Critical(target.transform.position, damage);
-        if (meteor) meteor.OnProjectileHit(damage);
-        else enemy.TakeDamage(damage);
+        if (meteor) meteor.OnProjectileHit(damage, damage > 1);
+        else enemy.TakeDamage(damage, damage > 1);
         if (enemyHitClip) AudioSource.PlayClipAtPoint(enemyHitClip, transform.position);
         if (hitParticles)
         {
