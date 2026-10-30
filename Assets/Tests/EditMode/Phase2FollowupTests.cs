@@ -19,12 +19,16 @@ public class Phase2FollowupTests
 
     private readonly List<GameObject> objects = new List<GameObject>();
     private Scene scene;
+    private Scene previousScene;
     private HashSet<GameObject> existingFeedback;
 
     [SetUp]
     public void SetUp()
     {
-        scene = SceneManager.CreateScene("Followup isolated physics", new CreateSceneParameters(LocalPhysicsMode.Physics2D));
+        previousScene = SceneManager.GetActiveScene();
+        scene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
+            UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
+            UnityEditor.SceneManagement.NewSceneMode.Additive);
         existingFeedback = new HashSet<GameObject>(UnityEngine.Object.FindObjectsOfType<MonoBehaviour>()
             .Where(item => item.GetType().Name == "CombatFeedback").Select(item => item.gameObject));
     }
@@ -37,6 +41,7 @@ public class Phase2FollowupTests
         foreach (var feedback in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>()
             .Where(item => item.GetType().Name == "CombatFeedback" && !existingFeedback.Contains(item.gameObject)))
             UnityEngine.Object.DestroyImmediate(feedback.gameObject);
+        if (previousScene.IsValid() && previousScene.isLoaded) SceneManager.SetActiveScene(previousScene);
         UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
     }
 
@@ -45,7 +50,8 @@ public class Phase2FollowupTests
         var host = new GameObject(name);
         objects.Add(host);
         SceneManager.MoveGameObjectToScene(host, scene);
-        host.transform.position = position;
+        // Keep test colliders away from any project scene left open by the batch runner.
+        host.transform.position = position + new Vector2(1000f, 1000f);
         return host;
     }
 
@@ -102,7 +108,8 @@ public class Phase2FollowupTests
         var child = Host("QA compound collider", new Vector2(0f, .6f));
         child.transform.SetParent(near.transform, true);
         child.AddComponent<BoxCollider2D>().size = new Vector2(.08f, .08f);
-        scene.GetPhysicsScene2D().Simulate(.0001f);
+        // Register collider transforms for queries without advancing any open scene.
+        Physics2D.SyncTransforms();
         Call(shot, "FixedUpdate");
         Call(shot, "OnTriggerEnter2D", near.GetComponent<Collider2D>());
         Call(shot, "FixedUpdate");
