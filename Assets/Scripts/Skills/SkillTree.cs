@@ -7,10 +7,30 @@ using UnityEngine;
 public class SkillTree : ScriptableObject
 {
     public List<SkillDefinition> definitions = new List<SkillDefinition>();
+    private List<SkillDefinition> cachedSource;
+    private SkillDefinition[] cachedDefinitions;
+    private int[] cachedTiers;
+    private IReadOnlyList<SkillDefinition> orderedDefinitions;
 
-    /// <summary>Stable tier ordering; equal tiers retain authored list order.</summary>
-    public List<SkillDefinition> OrderedDefinitions()
+    private void OnEnable() => orderedDefinitions = null;
+    private void OnValidate() => orderedDefinitions = null;
+
+    private bool OrderCacheMatches()
     {
+        if (orderedDefinitions == null || !ReferenceEquals(cachedSource, definitions) ||
+            cachedDefinitions.Length != definitions.Count) return false;
+        for (int index = 0; index < definitions.Count; index++)
+            if (!ReferenceEquals(cachedDefinitions[index], definitions[index]) ||
+                cachedTiers[index] != definitions[index].tier) return false;
+        return true;
+    }
+
+    /// <summary>Cached read-only tier ordering; equal tiers retain authored list order.</summary>
+    public IReadOnlyList<SkillDefinition> OrderedDefinitions()
+    {
+        // The public authoring list remains compatible with runtime callers that edit it.
+        // Detect same-count replacements, reorderings and tier edits without allocating.
+        if (OrderCacheMatches()) return orderedDefinitions;
         var ordered = new List<SkillDefinition>();
         foreach (var definition in definitions)
         {
@@ -18,7 +38,12 @@ public class SkillTree : ScriptableObject
             while (index > 0 && ordered[index - 1].tier > definition.tier) index--;
             ordered.Insert(index, definition);
         }
-        return ordered;
+        cachedSource = definitions;
+        cachedDefinitions = definitions.ToArray();
+        cachedTiers = new int[definitions.Count];
+        for (int index = 0; index < definitions.Count; index++) cachedTiers[index] = definitions[index].tier;
+        orderedDefinitions = ordered.AsReadOnly();
+        return orderedDefinitions;
     }
 
     /// <summary>Same alphabet and segments as the original anchored id expression.</summary>

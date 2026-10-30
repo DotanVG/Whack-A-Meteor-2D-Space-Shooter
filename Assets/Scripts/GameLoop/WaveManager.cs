@@ -11,6 +11,32 @@ public class WaveManager : MonoBehaviour
     public string StatusText { get; private set; } = "Prepare for launch";
     public WaveDefinition Current { get; private set; }
     private EnemySpawner enemies;
+    private bool statusCached, statusRegroup, statusElite;
+    private int statusSeconds, statusWave, statusStardust, statusMetal;
+    private string statusSector;
+
+    private void UpdateStatusText(bool regroup, float remaining)
+    {
+        int seconds = Mathf.CeilToInt(remaining);
+        string sector = regroup ? null : Current.level.displayName;
+        bool elite = !regroup && Current.elite;
+        int stardust = regroup ? Current.stardustReward : 0;
+        int metal = regroup ? Current.metalReward : 0;
+        if (statusCached && statusRegroup == regroup && statusSeconds == seconds &&
+            statusWave == currentWave && statusSector == sector && statusElite == elite &&
+            statusStardust == stardust && statusMetal == metal) return;
+        statusCached = true;
+        statusRegroup = regroup;
+        statusSeconds = seconds;
+        statusWave = currentWave;
+        statusSector = sector;
+        statusElite = elite;
+        statusStardust = stardust;
+        statusMetal = metal;
+        StatusText = regroup
+            ? $"Wave {currentWave} survived: +{stardust} Stardust / +{metal} Metal  |  Regroup {seconds}s"
+            : $"{sector}  |  Wave {currentWave}{(elite ? " ELITE" : "")}  |  {seconds}s";
+    }
 
     private IEnumerator Start()
     {
@@ -37,7 +63,7 @@ public class WaveManager : MonoBehaviour
             float remaining = Current.level.activeSeconds;
             while (remaining > 0f)
             {
-                StatusText = $"{Current.level.displayName}  |  Wave {currentWave}{(Current.elite ? " ELITE" : "")}  |  {Mathf.CeilToInt(remaining)}s";
+                UpdateStatusText(false, remaining);
                 if (GameManager.Instance && GameManager.Instance.IsSessionRunning) remaining -= Time.deltaTime;
                 yield return null;
             }
@@ -53,7 +79,7 @@ public class WaveManager : MonoBehaviour
             remaining = Current.level.regroupSeconds;
             while (remaining > 0f)
             {
-                StatusText = $"Wave {currentWave} survived: +{Current.stardustReward} Stardust / +{Current.metalReward} Metal  |  Regroup {Mathf.CeilToInt(remaining)}s";
+                UpdateStatusText(true, remaining);
                 if (GameManager.Instance && GameManager.Instance.IsSessionRunning) remaining -= Time.deltaTime;
                 yield return null;
             }

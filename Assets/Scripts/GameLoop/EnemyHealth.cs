@@ -32,10 +32,13 @@ public class EnemyHealth : MonoBehaviour
     }
 
     /// <summary>Positive damage only; further hits during deferred destruction do nothing.</summary>
-    public void TakeDamage(int amount)
+    public void TakeDamage(int amount) => TakeDamage(amount, false);
+
+    /// <summary>Uses one damage label, preserving the critical color and number when requested.</summary>
+    public void TakeDamage(int amount, bool critical)
     {
         if (dead || amount <= 0) return;
-        CombatFeedback.Hit(gameObject, amount);
+        CombatFeedback.Hit(gameObject, amount, critical);
         if (!durability.Apply(amount)) return;
         dead = true;
         Die();

@@ -41,7 +41,10 @@ public class ShieldController : MonoBehaviour
     /// Call before applying damage. Returns true if this hit was absorbed
     /// by a shield charge (caller should skip life loss and destroy the hazard).
     /// </summary>
-    public bool TryAbsorbHit()
+    public bool TryAbsorbHit() => TryAbsorbHazard(null);
+
+    /// <summary>Absorbs a hit while excluding its source (including child colliders) from the pulse.</summary>
+    public bool TryAbsorbHazard(GameObject hazard)
     {
         if (_absorbing) return true;
         if (_charges <= 0) return false;
@@ -59,13 +62,20 @@ public class ShieldController : MonoBehaviour
                 var meteor = collider.GetComponentInParent<MeteorSplit>();
                 var enemy = collider.GetComponentInParent<EnemyHealth>();
                 GameObject target = meteor ? meteor.gameObject : enemy ? enemy.gameObject : null;
-                if (!target || !visited.Add(target.GetInstanceID())) continue;
+                if (!IsPulseTarget(target, hazard) || !visited.Add(target.GetInstanceID())) continue;
                 if (meteor) meteor.OnProjectileHit(pulseDamage);
                 else enemy.TakeDamage(pulseDamage);
             }
         }
         StartCoroutine(AbsorbFeedback());
         return true;
+    }
+
+    /// <summary>The caller destroys the absorbed hazard without weapon damage, loot or splitting.</summary>
+    public static bool IsPulseTarget(GameObject target, GameObject hazard)
+    {
+        return target && (!hazard || (target != hazard &&
+            !hazard.transform.IsChildOf(target.transform) && !target.transform.IsChildOf(hazard.transform)));
     }
 
     IEnumerator AbsorbFeedback()

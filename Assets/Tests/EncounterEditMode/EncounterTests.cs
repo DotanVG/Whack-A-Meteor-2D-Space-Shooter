@@ -131,7 +131,7 @@ public sealed class EncounterTests
         {
             var meteor = go.AddComponent(type);
             type.GetMethod("Configure").Invoke(meteor, new object[] { catalogue.meteors.Single(item => item.id == "armored_ore"), 0 });
-            type.GetMethod("OnProjectileHit").Invoke(meteor, new object[] { 1 });
+            type.GetMethod("OnProjectileHit", new[] { typeof(int) }).Invoke(meteor, new object[] { 1 });
             type.GetMethod("OnHammerHit").Invoke(meteor, new object[] { 2 });
             Assert.That(type.GetProperty("Health").GetValue(meteor), Is.EqualTo(2));
         }
