@@ -44,6 +44,41 @@ public class ShopController : MonoBehaviour
     private GUIStyle _feedbackStyle;
     private GUIStyle _feedbackErrorStyle;
     private bool _stylesReady;
+    private GUIStyle _stardustStyle, _metalStyle, _levelStyle, _navigationStyle, _escapeStyle;
+    private GUIStyle _nodeNameStyle, _nodeDetailStyle, _nodeCostStyle, _columnStyle, _legendStyle;
+    private readonly int[] _columnCounts = new int[3];
+    private static readonly string[] SkillHeaders = { "AUTO-SHOOTER", "HAMMER", "SHIP" };
+    private string _stardustText, _metalText, _levelText;
+    private readonly System.Collections.Generic.Dictionary<SkillLevel, RowLabels> _rowLabels =
+        new System.Collections.Generic.Dictionary<SkillLevel, RowLabels>();
+
+    private sealed class RowLabels
+    {
+        public string displayName, levelLabel, title, cost;
+        public int legacyId, stardust, metal;
+    }
+
+    private RowLabels GetRowLabels(SkillDefinition definition, SkillLevel level)
+    {
+        if (!_rowLabels.TryGetValue(level, out var labels))
+        {
+            labels = new RowLabels();
+            _rowLabels.Add(level, labels);
+        }
+        if (labels.title == null || labels.displayName != definition.displayName ||
+            labels.levelLabel != level.label || labels.legacyId != level.legacyId ||
+            labels.stardust != level.costStardust || labels.metal != level.costMetal)
+        {
+            labels.displayName = definition.displayName;
+            labels.levelLabel = level.label;
+            labels.legacyId = level.legacyId;
+            labels.stardust = level.costStardust;
+            labels.metal = level.costMetal;
+            labels.title = level.legacyId < 0 ? definition.displayName : $"{definition.displayName}  {level.label}";
+            labels.cost = FormatCost(level.costStardust, level.costMetal);
+        }
+        return labels;
+    }
 
     private static readonly string[] TabNames = { "  Skills  ", "  Ship Skins  " };
 
@@ -80,6 +115,9 @@ public class ShopController : MonoBehaviour
         _stardust = PlayerPrefs.GetInt("Economy.Stardust", 0);
         _metal    = PlayerPrefs.GetInt("Economy.Metal",    0);
         _level    = PlayerPrefs.GetInt("Progression.Level", 1);
+        _stardustText = $"Stardust:  {_stardust}";
+        _metalText = $"Metal:     {_metal}";
+        _levelText = $"Level {_level}";
         SkillService.Current.Load();
     }
 
@@ -134,12 +172,9 @@ public class ShopController : MonoBehaviour
 
         // -- Currency - top LEFT ---
         float cy = 10f;
-        var sdStyle  = new GUIStyle(_currencyStyle) { normal = { textColor = new Color(1f, 0.85f, 0.2f) } };
-        var metStyle = new GUIStyle(_currencyStyle) { normal = { textColor = new Color(0.75f, 0.78f, 0.82f) } };
-        GUI.Label(new Rect(12, cy,      180, 20), $"Stardust:  {_stardust}", sdStyle);
-        GUI.Label(new Rect(12, cy + 20, 180, 20), $"Metal:     {_metal}",    metStyle);
-        GUI.Label(new Rect(12, cy + 42, 180, 18), $"Level {_level}",
-                  new GUIStyle(_bodyStyle) { fontSize = 12, normal = { textColor = new Color(0.6f, 0.6f, 0.6f) } });
+        GUI.Label(new Rect(12, cy,      180, 20), _stardustText, _stardustStyle);
+        GUI.Label(new Rect(12, cy + 20, 180, 20), _metalText, _metalStyle);
+        GUI.Label(new Rect(12, cy + 42, 180, 18), _levelText, _levelStyle);
 
         // -- Title - center ---
         GUI.Label(new Rect(sw / 2f - 200, 10, 400, 38), "THE HYPERDRIVE SHOP", _titleStyle);
@@ -165,8 +200,7 @@ public class ShopController : MonoBehaviour
         // Tab nav hint
         GUI.Label(new Rect(sw / 2f - 120, tabY + 34, 240, 16),
                   "  Q / LB  ◄   ►  E / RB",
-                  new GUIStyle(_bodyStyle) { fontSize = 11, alignment = TextAnchor.MiddleCenter,
-                                             normal = { textColor = new Color(0.5f, 0.5f, 0.5f) } });
+                  _navigationStyle);
 
         // Purchase feedback message (fades out)
         if (_feedbackTimer > 0f)
@@ -182,8 +216,7 @@ public class ShopController : MonoBehaviour
         // ESC hint bottom-right
         GUI.Label(new Rect(sw - 200, sh - 24, 190, 20),
                   "ESC / B — Main Menu",
-                  new GUIStyle(_bodyStyle) { fontSize = 11, alignment = TextAnchor.MiddleRight,
-                                             normal = { textColor = new Color(0.45f, 0.45f, 0.45f) } });
+                  _escapeStyle);
 
         // -- Content area ---
         float contentY = tabY + 58f;
@@ -201,7 +234,8 @@ public class ShopController : MonoBehaviour
     void DrawSkillsTab(Rect area)
     {
         var definitions = SkillService.Definitions;
-        int[] colCounts = new int[3];
+        int[] colCounts = _columnCounts;
+        System.Array.Clear(colCounts, 0, colCounts.Length);
         foreach (var definition in definitions) colCounts[(int)definition.branch] += definition.MaxLevel;
         float height = 28f + Mathf.Max(colCounts[0], Mathf.Max(colCounts[1], colCounts[2])) * 90f;
         Rect viewport = new Rect(area.x, area.y, area.width, Mathf.Max(1f, area.height - 28f));
@@ -212,9 +246,8 @@ public class ShopController : MonoBehaviour
         float nodeW = colW - 16f;
         float gapY  = 18f;
 
-        string[] headers = { "AUTO-SHOOTER", "HAMMER", "SHIP" };
         for (int col = 0; col < 3; col++)
-            DrawColHeader(content.x + col * colW, content.y, colW, headers[col]);
+            DrawColHeader(content.x + col * colW, content.y, colW, SkillHeaders[col]);
 
         float rowY = content.y + 28f;
 
@@ -278,6 +311,7 @@ public class ShopController : MonoBehaviour
                        SkillDefinition def, int level, NodeState state)
     {
         var data = def.levels[level - 1];
+        var labels = GetRowLabels(def, data);
         bool clicked = false;
         var  r       = new Rect(x, y, w, h);
 
@@ -298,13 +332,12 @@ public class ShopController : MonoBehaviour
                         : state == NodeState.Available  ? Color.white
                         : new Color(0.5f, 0.5f, 0.5f);
 
-        GUI.Label(new Rect(x + 8, y + 4, w - 16, 18),
-                  data.legacyId < 0 ? def.displayName : $"{def.displayName}  {data.label}",
-                  new GUIStyle(_bodyStyle) { fontStyle = FontStyle.Bold,
-                                             normal    = { textColor = nameColor } });
+        _nodeNameStyle.normal.textColor = nameColor;
+        _nodeDetailStyle.normal.textColor = nameColor;
+        GUI.Label(new Rect(x + 8, y + 4, w - 16, 18), labels.title, _nodeNameStyle);
         if (data.legacyId < 0)
             GUI.Label(new Rect(x + 8, y + 25, w - 16, 18), data.label,
-                new GUIStyle(_bodyStyle) { fontSize = 10, normal = { textColor = nameColor } });
+                _nodeDetailStyle);
 
         string costStr;
         Color  costColor;
@@ -315,14 +348,14 @@ public class ShopController : MonoBehaviour
         }
         else
         {
-            costStr   = FormatCost(data.costStardust, data.costMetal);
+            costStr   = labels.cost;
             costColor = state == NodeState.Available
                 ? (data.costMetal > 0 ? new Color(0.75f, 0.78f, 0.82f) : new Color(1f, 0.85f, 0.2f))
                 : new Color(0.35f, 0.35f, 0.35f);
         }
 
-        GUI.Label(new Rect(x + 8, y + h - 22, w - 16, 18), costStr,
-                  new GUIStyle(_bodyStyle) { fontSize = 11, normal = { textColor = costColor } });
+        _nodeCostStyle.normal.textColor = costColor;
+        GUI.Label(new Rect(x + 8, y + h - 22, w - 16, 18), costStr, _nodeCostStyle);
 
         return clicked;
     }
@@ -338,7 +371,7 @@ public class ShopController : MonoBehaviour
     void DrawColHeader(float x, float y, float colW, string label)
     {
         GUI.Label(new Rect(x + 8, y + 2, colW - 16, 22), label,
-                  new GUIStyle(_subtitleStyle) { alignment = TextAnchor.MiddleCenter });
+                  _columnStyle);
     }
 
     void DrawConnector(float cx, float y, float height)
@@ -361,8 +394,7 @@ public class ShopController : MonoBehaviour
     {
         GUI.Box(new Rect(x, y, 14, 14), GUIContent.none, style);
         GUI.Label(new Rect(x + 18, y - 1, 155, 16), label,
-                  new GUIStyle(_bodyStyle) { fontSize = 11,
-                                             normal   = { textColor = new Color(0.6f, 0.6f, 0.6f) } });
+                  _legendStyle);
     }
 
     // -- Ship Skins tab ---
@@ -438,6 +470,19 @@ public class ShopController : MonoBehaviour
         {
             fontSize = 13, normal = { textColor = Color.white },
         };
+        _stardustStyle = new GUIStyle(_currencyStyle) { normal = { textColor = new Color(1f, .85f, .2f) } };
+        _metalStyle = new GUIStyle(_currencyStyle) { normal = { textColor = new Color(.75f, .78f, .82f) } };
+        _levelStyle = new GUIStyle(_bodyStyle) { fontSize = 12, normal = { textColor = new Color(.6f, .6f, .6f) } };
+        _navigationStyle = new GUIStyle(_bodyStyle) { fontSize = 11, alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = new Color(.5f, .5f, .5f) } };
+        _escapeStyle = new GUIStyle(_bodyStyle) { fontSize = 11, alignment = TextAnchor.MiddleRight,
+            normal = { textColor = new Color(.45f, .45f, .45f) } };
+        _nodeNameStyle = new GUIStyle(_bodyStyle) { fontStyle = FontStyle.Bold };
+        _nodeDetailStyle = new GUIStyle(_bodyStyle) { fontSize = 10 };
+        _nodeCostStyle = new GUIStyle(_bodyStyle) { fontSize = 11 };
+        _columnStyle = new GUIStyle(_subtitleStyle) { alignment = TextAnchor.MiddleCenter };
+        _legendStyle = new GUIStyle(_bodyStyle) { fontSize = 11,
+            normal = { textColor = new Color(.6f, .6f, .6f) } };
         _feedbackStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize  = 13, fontStyle = FontStyle.Bold,
