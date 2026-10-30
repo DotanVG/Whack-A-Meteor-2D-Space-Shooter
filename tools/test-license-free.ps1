@@ -4,8 +4,8 @@ $root = Split-Path $PSScriptRoot -Parent
 $tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
 $fixtureName = 'wam-license-free-' + [guid]::NewGuid().ToString('N')
 $fixture = Join-Path $tempRoot $fixtureName
-$shell = (Get-Process -Id $PID).Path
-$checker = Join-Path $PSScriptRoot 'check-license-free.ps1'
+$checker = Join-Path $PSScriptRoot 'LicenseFreeChecks/bin/Release/net8.0/LicenseFreeChecks.dll'
+if (-not (Test-Path -LiteralPath $checker)) { throw 'Run tools/check-license-free.ps1 before the regression harness.' }
 
 function Remove-Fixture {
     $resolved = [IO.Path]::GetFullPath($fixture)
@@ -31,7 +31,7 @@ function Assert-Check([string]$Name, [string]$Expected, [int]$ExpectedExitCode =
     $savedPreference = $ErrorActionPreference
     try {
         $ErrorActionPreference = 'Continue' # Windows PowerShell wraps native stderr in ErrorRecord.
-        $log = & $shell -NoProfile -File $checker -RepositoryRoot $fixture 2>&1
+        $log = & dotnet $checker $fixture 2>&1
         $code = $LASTEXITCODE
     } finally {
         $ErrorActionPreference = $savedPreference
@@ -82,7 +82,7 @@ try {
     Remove-Item -LiteralPath (Join-Path $fixture $script)
     Assert-Check 'tracked + gitignored file deleted from working tree' "Tracked file is missing from the working tree: $script" -ExactMessage
     Copy-Item -LiteralPath (Join-Path $root $script) -Destination (Join-Path $fixture $script)
-    Remove-Item -LiteralPath $gitignore
+    Remove-Item -LiteralPath $gitignore -Force
     Git-Fixture add -A -- .gitignore
 
     Add-Content -LiteralPath (Join-Path $fixture $script) -Value "`npublic class Broken {"
@@ -142,7 +142,7 @@ try {
         [IO.File]::WriteAllText($destination, 'deliberately invalid C# with no meta')
         Git-Fixture add --force -- $path
         Assert-Check "Unity-ignored $path" ''
-        Remove-Item -LiteralPath $destination
+        Remove-Item -LiteralPath $destination -Force
         Assert-Check "Unity-ignored tracked file deleted: $path" "Tracked file is missing from the working tree: $path" -ExactMessage
         [IO.File]::WriteAllText($destination, 'deliberately invalid C# with no meta')
     }

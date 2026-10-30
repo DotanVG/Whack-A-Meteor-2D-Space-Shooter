@@ -10,6 +10,8 @@ From the repository root (Windows PowerShell 5.1 or PowerShell 7, Git and .NET S
 The first command is exactly what CI runs. The second exercises a disposable copy
 of the tracked Assets in a unique Git repository under the system temp folder,
 with deliberate failures.
+Run the first command after changing the checker; the harness invokes its built
+Release DLL directly so every case tests the same binary without repeated builds.
 Stage new/deleted assets before checking locally: Git's index defines tracked files;
 the checker reads their working-tree contents. Untracked assets are not checked.
 
