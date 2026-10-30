@@ -8,14 +8,17 @@ From the repository root (Windows PowerShell 5.1 or PowerShell 7, Git and .NET S
 ```
 
 The first command is exactly what CI runs. The second exercises a disposable copy
-of the tracked Assets in an ignored nested Git repository, with deliberate failures.
+of the tracked Assets in a unique Git repository under the system temp folder,
+with deliberate failures.
+Run the first command after changing the checker; the harness invokes its built
+Release DLL directly so every case tests the same binary without repeated builds.
 Stage new/deleted assets before checking locally: Git's index defines tracked files;
 the checker reads their working-tree contents. Untracked assets are not checked.
 
 - Roslyn parses every imported, tracked `Assets/**/*.cs` as C# 9 (Unity 2022.3)
   and fails on syntax errors and language-version diagnostics `CS8773`, `CS8703`,
   `CS8652` and `CS8967`, with file/line diagnostics. Binding uses the checker's
-  .NET 8 runtime `System.Private.CoreLib` and `System.Runtime` metadata so features
+  .NET 8 runtime `System.Private.CoreLib` metadata so features
   such as unsigned right shift, params collections, span constant patterns, index
   initializers and interpolated string handlers are checked too. Other compilation
   diagnostics are ignored; no Unity assemblies or license are needed.
@@ -36,12 +39,22 @@ The workflow runs on PRs targeting `dev` or `main`, with read-only contents
 permission, SHA-pinned official actions, no persisted checkout credentials, and a
 three-minute job timeout. CI also runs the disposable-copy regression tests.
 Runs on the same workflow/ref cancel stale runs; the SDK is pinned to `8.0.427`.
-The harness removes stale `.test-repo` copies and cleans up on success or failure,
-including failures while creating the fixture. Linked fixture paths are rejected.
+The harness cleans up its temporary repository on success or failure, including
+failures while creating the fixture. Linked fixture paths are rejected. Fixture Git
+line-ending conversion is disabled so local settings do not affect the tests.
 NuGet dependencies are pinned by `packages.lock.json`
 and restored in locked mode. No repository secrets or Unity installation are used.
 
 ## Limits
+
+Git's index defines the files to check, independently of `.gitignore`. A tracked
+file under `Assets` that also matches `.gitignore` is checked normally: being ignored
+alone is not an error, and a valid file present on disk passes. A tracked file deleted
+from the working tree fails with exit code 1 and
+`Tracked file is missing from the working tree: <path>`, including Git-ignored and
+Unity-ignored paths. Stage an intentional deletion to remove it from the index;
+metadata and other checks still apply. Unity-ignored names only skip the C#, GUID
+and own-meta rules described above; they do not skip the existence check.
 
 This gate is necessary but not sufficient: its C# checks cover syntax and language
 version only. The BCL references enable feature detection, not a Unity compile.

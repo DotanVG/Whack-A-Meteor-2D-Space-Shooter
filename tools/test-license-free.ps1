@@ -1,14 +1,16 @@
-# Run after check-license-free.ps1. Mutations are confined to an ignored temp copy.
+# Run after check-license-free.ps1. Mutations are confined to a disposable temp copy.
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
-$fixture = Join-Path $PSScriptRoot 'LicenseFreeChecks/.test-repo'
-$shell = (Get-Process -Id $PID).Path
-$checker = Join-Path $PSScriptRoot 'check-license-free.ps1'
+$tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
+$fixtureName = 'wam-license-free-' + [guid]::NewGuid().ToString('N')
+$fixture = Join-Path $tempRoot $fixtureName
+$checker = Join-Path $PSScriptRoot 'LicenseFreeChecks/bin/Release/net8.0/LicenseFreeChecks.dll'
+if (-not (Test-Path -LiteralPath $checker)) { throw 'Run tools/check-license-free.ps1 before the regression harness.' }
 
 function Remove-Fixture {
     $resolved = [IO.Path]::GetFullPath($fixture)
-    $expected = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'LicenseFreeChecks/.test-repo'))
-    if ($resolved -ne $expected -or -not $resolved.StartsWith([IO.Path]::GetFullPath($root) + [IO.Path]::DirectorySeparatorChar)) {
+    $expected = [IO.Path]::GetFullPath((Join-Path $tempRoot $fixtureName))
+    if ($resolved -ne $expected -or (Split-Path $resolved -Parent) -ne $tempRoot.TrimEnd([IO.Path]::DirectorySeparatorChar)) {
         throw 'Refusing to remove an unexpected fixture path'
     }
     if (Test-Path -LiteralPath $resolved) {
@@ -24,19 +26,21 @@ function Git-Fixture {
     if ($LASTEXITCODE -ne 0) { throw 'Fixture Git command failed' }
 }
 
-function Assert-Check([string]$Name, [string]$Expected, [int]$ExpectedExitCode = 1) {
+function Assert-Check([string]$Name, [string]$Expected, [int]$ExpectedExitCode = 1, [switch]$ExactMessage) {
     # Redirect stderr as well; a failing checker is the expected result in negative cases.
     $savedPreference = $ErrorActionPreference
     try {
         $ErrorActionPreference = 'Continue' # Windows PowerShell wraps native stderr in ErrorRecord.
-        $log = & $shell -NoProfile -File $checker -RepositoryRoot $fixture 2>&1
+        $log = & dotnet $checker $fixture 2>&1
         $code = $LASTEXITCODE
     } finally {
         $ErrorActionPreference = $savedPreference
     }
     $message = $log -join "`n"
     if ($Expected) {
-        if ($code -ne $ExpectedExitCode -or $message -notmatch [regex]::Escape($Expected)) {
+        $pattern = [regex]::Escape($Expected)
+        if ($ExactMessage) { $pattern = '(?m)^' + $pattern + '\r?$' }
+        if ($code -ne $ExpectedExitCode -or $message -notmatch $pattern) {
             throw "$Name failed (exit $code):`n$message"
         }
     } elseif ($code -ne 0) {
@@ -50,7 +54,6 @@ $meta = "$script.meta"
 $folderMeta = 'Assets/Scripts.meta'
 $orphan = 'Assets/DeliberatelyOrphaned.txt.meta'
 try {
-    Remove-Fixture # Recover a disposable copy left by an interrupted run.
     New-Item -ItemType Directory -Path $fixture | Out-Null
     $files = @(git -C $root ls-files -- Assets)
     if ($LASTEXITCODE -ne 0 -or $files.Count -eq 0) { throw 'Cannot enumerate tracked Assets' }
@@ -60,8 +63,27 @@ try {
         Copy-Item -LiteralPath (Join-Path $root $file) -Destination $destination
     }
     Git-Fixture init --quiet
+    # Avoid machine-specific line-ending warnings becoming errors in Windows PowerShell.
+    Git-Fixture config core.autocrlf false
     Git-Fixture add -- Assets
     Assert-Check 'clean tracked copy' '0 error(s).' 0
+
+    Remove-Item -LiteralPath (Join-Path $fixture $script)
+    Assert-Check 'tracked file deleted from working tree' "Tracked file is missing from the working tree: $script" -ExactMessage
+    Copy-Item -LiteralPath (Join-Path $root $script) -Destination (Join-Path $fixture $script)
+
+    # Git ignores do not remove existing index entries or exempt tracked files.
+    $gitignore = Join-Path $fixture '.gitignore'
+    [IO.File]::WriteAllText($gitignore, "/$script`n")
+    Git-Fixture add -- .gitignore
+    Git-Fixture check-ignore --no-index --quiet -- $script
+    Git-Fixture ls-files --error-unmatch -- $script | Out-Null
+    Assert-Check 'tracked + gitignored file present' '0 error(s).' 0
+    Remove-Item -LiteralPath (Join-Path $fixture $script)
+    Assert-Check 'tracked + gitignored file deleted from working tree' "Tracked file is missing from the working tree: $script" -ExactMessage
+    Copy-Item -LiteralPath (Join-Path $root $script) -Destination (Join-Path $fixture $script)
+    Remove-Item -LiteralPath $gitignore -Force
+    Git-Fixture add -A -- .gitignore
 
     Add-Content -LiteralPath (Join-Path $fixture $script) -Value "`npublic class Broken {"
     Assert-Check 'C# syntax error' 'error CS'
@@ -120,6 +142,9 @@ try {
         [IO.File]::WriteAllText($destination, 'deliberately invalid C# with no meta')
         Git-Fixture add --force -- $path
         Assert-Check "Unity-ignored $path" ''
+        Remove-Item -LiteralPath $destination -Force
+        Assert-Check "Unity-ignored tracked file deleted: $path" "Tracked file is missing from the working tree: $path" -ExactMessage
+        [IO.File]::WriteAllText($destination, 'deliberately invalid C# with no meta')
     }
 
     Remove-Item -LiteralPath (Join-Path $fixture $meta)
@@ -150,10 +175,6 @@ try {
     [IO.File]::WriteAllText($otherMeta, [regex]::Replace($original, 'guid: [a-f0-9]{32}', 'guid: invalid'))
     Assert-Check 'malformed GUID' 'Expected exactly one 32-hex GUID'
     [IO.File]::WriteAllText($otherMeta, $original)
-
-    Remove-Item -LiteralPath (Join-Path $fixture $script)
-    Assert-Check 'tracked file missing on disk' 'Tracked file is missing from the working tree'
-    Copy-Item -LiteralPath (Join-Path $root $script) -Destination (Join-Path $fixture $script)
 
     Assert-Check 'restored clean copy' ''
 } finally {
