@@ -118,11 +118,9 @@ foreach (var script in scripts)
 
 // Binding needs BCL types to produce feature-version errors such as >>> and span patterns.
 // Use the checker's .NET 8 runtime on Windows and Linux; no Unity assemblies are loaded.
-var runtimeDirectory = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
 var references = new[]
 {
-    MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-    MetadataReference.CreateFromFile(Path.Combine(runtimeDirectory, "System.Runtime.dll"))
+    MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
 };
 var compilation = CSharpCompilation.Create("LanguageVersionCheck", trees, references);
 // Keep this a language-version gate: unresolved Unity types and other semantic errors
