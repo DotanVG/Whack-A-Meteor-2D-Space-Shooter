@@ -53,20 +53,20 @@ public class PlayerHealth : MonoBehaviour
             obj.CompareTag("SmallBrownMeteor")  || obj.CompareTag("SmallGreyMeteor")  ||
             obj.CompareTag("TinyBrownMeteor")   || obj.CompareTag("TinyGreyMeteor"))
         {
-            if (shield != null && shield.TryAbsorbHit()) { Destroy(obj); return; }
+            if (shield != null && shield.TryAbsorbHazard(obj)) { Destroy(obj); return; }
             TakeDamage(obj.tag);
             Destroy(obj);
         }
         else if (obj.CompareTag("Enemy"))
         {
-            if (shield != null && shield.TryAbsorbHit()) { Destroy(obj); return; }
+            if (shield != null && shield.TryAbsorbHazard(obj)) { Destroy(obj); return; }
             TakeDamage(obj.tag);
             Destroy(obj);
         }
         else if (obj.CompareTag("EnemyProjectile"))
         {
             // EnemyProjectile already destroyed itself in EnemyProjectile.OnTriggerEnter2D
-            if (shield != null && shield.TryAbsorbHit()) return;
+            if (shield != null && shield.TryAbsorbHazard(obj)) return;
             TakeDamage(obj.tag);
         }
     }
