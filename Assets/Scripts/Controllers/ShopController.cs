@@ -236,7 +236,11 @@ public class ShopController : MonoBehaviour
         var definitions = SkillService.Definitions;
         int[] colCounts = _columnCounts;
         System.Array.Clear(colCounts, 0, colCounts.Length);
-        foreach (var definition in definitions) colCounts[(int)definition.branch] += definition.MaxLevel;
+        for (int index = 0; index < definitions.Count; index++)
+        {
+            var definition = definitions[index];
+            colCounts[(int)definition.branch] += definition.MaxLevel;
+        }
         float height = 28f + Mathf.Max(colCounts[0], Mathf.Max(colCounts[1], colCounts[2])) * 90f;
         Rect viewport = new Rect(area.x, area.y, area.width, Mathf.Max(1f, area.height - 28f));
         _skillsScroll = GUI.BeginScrollView(viewport, _skillsScroll, new Rect(0, 0, area.width - 20f, height));
@@ -255,8 +259,9 @@ public class ShopController : MonoBehaviour
         {
             float cx  = content.x + col * colW + 8;
             int   row = 0;
-            foreach (var def in definitions)
+            for (int index = 0; index < definitions.Count; index++)
             {
+                var def = definitions[index];
                 if ((int)def.branch != col) continue;
                 for (int level = 1; level <= def.MaxLevel; level++)
                 {

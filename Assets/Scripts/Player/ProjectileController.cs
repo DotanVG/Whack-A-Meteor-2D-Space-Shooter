@@ -79,7 +79,18 @@ public class ProjectileController : MonoBehaviour
         filter.SetLayerMask((Physics2D.GetLayerCollisionMask(gameObject.layer) |
             shotCollider.includeLayers.value) & ~shotCollider.excludeLayers.value);
         int count = shotCollider.Cast(displacement.normalized, filter, sweepHits, displacement.magnitude);
-        // Cast results are nearest first; piercing therefore keeps its travel order.
+        // Keep piercing in travel order without relying on physics query ordering.
+        for (int index = 1; index < count; index++)
+        {
+            var hit = sweepHits[index];
+            int previous = index - 1;
+            while (previous >= 0 && sweepHits[previous].distance > hit.distance)
+            {
+                sweepHits[previous + 1] = sweepHits[previous];
+                previous--;
+            }
+            sweepHits[previous + 1] = hit;
+        }
         for (int index = 0; index < count && !hits.Exhausted; index++)
         {
             var other = sweepHits[index].collider;
